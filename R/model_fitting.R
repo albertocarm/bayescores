@@ -30,11 +30,11 @@ fit_bayesian_cure_model <- function(data,
     data[[arm_col]] <- as.factor(data[[arm_col]])
   }
 
+  # final path
   stan_model_path <- system.file("stan", "cure_model.stan", package = "bayesCure")
   if (stan_model_path == "") {
-    stop("Could not find Stan model file 'cure_model.stan'.")
+    stop("Could not find Stan model file 'cure_model.stan'. Is the package installed correctly?")
   }
-
   stan_data <- list(
     N = nrow(data),
     tiempo = data[[time_col]],
