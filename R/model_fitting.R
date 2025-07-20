@@ -30,8 +30,8 @@ fit_bayesian_cure_model <- function(data,
     data[[arm_col]] <- as.factor(data[[arm_col]])
   }
 
-  # final path
-  stan_model_path <- system.file("stan", "cure_model.stan", package = "bayesCure")
+  # final path --
+  stan_model_path <- system.file("stan", "cure_model.stan", package = "bayescores")
   if (stan_model_path == "") {
     stop("Could not find Stan model file 'cure_model.stan'. Is the package installed correctly?")
   }
