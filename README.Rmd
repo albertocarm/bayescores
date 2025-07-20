@@ -1,0 +1,163 @@
+---
+output: github_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials using Bayesian AFT Cure Models 
+**`bayescores`** provides a comprehensive toolkit for analyzing randomized controlled trials (RCTs). This package introduces the **Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to quantify the magnitude of clinical benefit by accounting for both survival prolongation and cure rates.
+
+The package includes functions to:
+
+* Simulate realistic survival data from a mixture cure model.
+* Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan.
+* Visualize model results and diagnostics.
+* Calculate and visualize BayeScores to provide a holistic measure of clinical benefit.
+
+## Installation
+
+You can install the development version of `bayescores` from GitHub with:
+
+```r
+# install.packages("devtools")
+devtools::install_github("albertocarm/bayescores")
+```
+
+## Full example
+
+This example demonstrates the complete workflow, from data simulation to benefit score visualization.
+
+### Step 1: Load the Package
+
+First, we load the `bayescores` library to get access to all its functions.
+
+```{r load-library}
+library(bayescores)
+```
+
+### Step 2: Simulate Survival Data
+
+We begin by simulating a dataset for a two-arm clinical trial using a Weibull cure model. This function allows us to define the cure rates and survival characteristics for each arm.
+
+```{r simulate-data}
+sim_data <- simulate_weibull_cure_data(
+  n_patients = 200,
+  cure_fraction_ctrl = 0.20,
+  cure_fraction_exp = 0.40,
+  max_follow_up = 60,
+  weibull_shape = 1.2,
+  median_survival_ctrl = 18,
+  time_ratio_exp = 1.5
+)
+
+# Visualize the simulated data with Kaplan-Meier curves
+plot_km_curves(sim_data)
+
+# The library also includes multiple digitized datasets from actual clinical trials (facsimiles) across curative and non-curative settings, featuring various therapies such as chemotherapy, targeted therapies, and immunotherapy. The datasets include survival curves with diverse morphologies, late effects, crossing hazards, etc.
+
+data(package = "bayescores")
+
+```
+
+### Step 3: Fit the Bayesian Cure Model
+
+Next, we fit our Bayesian AFT cure model to the simulated data. For a real analysis, you should use a higher number of iterations (e.g., `iter = 4000`).
+
+```{r fit-model}
+# Note: Using fewer iterations for this example to run quickly.
+bayesian_fit <- fit_bayesian_cure_model(sim_data,
+  time_col = "time",
+  event_col = "event",
+  arm_col = "arm",
+  iter = 2500, chains = 4)
+```
+
+### Step 4: Analyze and Visualize Model Results
+
+Once the model is fitted, we can inspect the results.
+
+First, a **numerical summary** of the key parameters helps us understand the model's estimates for the treatment effect on the cure and survival components.
+
+```{r numerical-summary}
+# Check the numerical results for the main parameters
+print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
+```
+
+We can then **visualize the posterior distributions** of these parameters. This is crucial for understanding the uncertainty and the magnitude of the effects.
+
+```{r plot-densities, fig.cap="Figure 1: Posterior density distributions for the Time Ratio, Odds Ratio of being cured, and the difference in cure probability."}
+# Plot the posterior densities of the main effect parameters
+plot_densities(bayesian_fit)
+```
+
+We can also generate a **posterior predictive check**, which overlays the model's predicted survival curves on top of the empirical Kaplan-Meier curves. A good fit means the red lines (model) should closely follow the black lines (data).
+
+```{r plot-model-fit, fig.cap="Figure 2: Posterior predictive check. The model's predicted survival curves (red) are overlaid on the Kaplan-Meier curves from the data (black)."}
+# Plot the model fit against the data
+plot(bayesian_fit)
+```
+
+### Step 5: Calculate the BayeScores
+
+With the model fitted, we extract the posterior samples for the Time Ratio and the cure rate difference. These are the two pillars of clinical benefit that we will use to calculate the BayeScores.
+
+```{r calculate-scores}
+# Extract MCMC draws for the two benefit components
+tr_draws <- extract_mcmc_time_ratios(bayesian_fit)
+cure_diff_draws <- extract_mcmc_cure_diffs(bayesian_fit)
+
+# Calculate the BayeScores based on predefined utility thresholds
+scores_list <- calculate_bayescores(
+  tr_posterior_samples = tr_draws,
+  cure_posterior_samples = cure_diff_draws,
+  tr_mean = 1.25,
+  tr_max = 1.5,
+  cure_mean = 0.1,
+  cure_max = 0.2,
+  tr_weight = 0.8
+)
+
+# Print a numerical summary of the final score
+summarize_bayescores(scores_list)
+```
+
+### Step 6: Visualize the Final Clinical Benefit
+
+Finally, we visualize the BayeScore result. The **donut plot** provides an intuitive summary of the overall benefit and its sources.
+
+```{r plot-donut, fig.cap="Figure 3: BayeScore donut plot, showing the final median score and the contribution from the Time Ratio and Cure Rate components."}
+# Generate the donut plot from the scores list
+plot_bayes_donut(scores_list)
+```
+
+To fully appreciate the **uncertainty**, we also plot the entire posterior distribution of the final score. A narrow, peaked distribution indicates higher confidence in the result.
+
+```{r plot-score-density, fig.cap="Figure 4: Posterior distribution of the final BayeScore, illustrating the uncertainty around the median estimate."}
+# Visualize the full posterior distribution of the score
+plot_bayes_dist(scores_list)
+```
+
+## Why BayeScores? A More Meaningful Approach
+
+The BayeScores framework is designed to overcome the limitations of traditional metrics like the **Hazard Ratio (HR)**.
+
+* **Clinically Interpretable**: It moves beyond the HR, which is a relative measure that is often misinterpreted. BayeScores, based on survival time and cure rates, are more intuitive.
+* **Accounts for Cure Scenarios**: It explicitly models and distinguishes between curative and non-curative scenarios by incorporating a cure fraction.
+* **Embraces Uncertainty**: Thanks to the **Bayesian framework**, it doesn't just provide a single number. It carries forward the full spectrum of uncertainty into the final score, providing a transparent and honest assessment of the evidence, which is crucial for high-stakes decisions by clinicians and payers.
+
+## Citation
+
+If you use `bayesCure` in your research, please cite the package and the associated publication.
+
+```r
+# To get citation information for the package
+citation("bayesCure")
+```
+
