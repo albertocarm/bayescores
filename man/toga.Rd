@@ -5,7 +5,17 @@
 \alias{toga}
 \title{Data from the toga Trial}
 \format{
-A data frame with three variables:
+A data frame with three variables
+\describe{
+  \item{time}{A numeric vector representing the survival time.}
+  \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
+  \item{arm}{A factor or character vector for the treatment arm.}
+  \item{id}{A unique identifier for each subject.}
+  \item{group2}{An additional grouping variable.}
+  \item{Intercept}{A numeric vector for the intercept term.}
+}
+
+A data frame with three variables
 \describe{
   \item{time}{A numeric vector representing the survival time.}
   \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
@@ -17,11 +27,17 @@ A data frame with three variables:
 }
 \source{
 \url{http://link.to.the.publication/toga}
+
+\url{http://link.to.the.publication/toga}
 }
 \usage{
 toga
+
+toga
 }
 \description{
+A dataset containing digitized survival data from a clinical trial.
+
 A dataset containing digitized survival data from a clinical trial.
 }
 \keyword{datasets}

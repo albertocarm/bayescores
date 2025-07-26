@@ -1,8 +1,8 @@
 # =============================================================================
 #
-# bayesCure: Package Functions v2.0
+# bayescores: Package Functions v2.0
 #
-# This script contains all functions for the bayesCure package.
+# This script contains all functions for the bayescores package.
 # Alberto Carmona-Bayonas - Murcia, 2025
 #
 # =============================================================================

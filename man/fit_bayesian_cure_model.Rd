@@ -24,14 +24,17 @@ fit_bayesian_cure_model(
 
 \item{chains, iter, warmup, seed}{Numeric arguments passed to `rstan::stan`.}
 
-\item{adapt_delta}{Target acceptance rate for Stan's NUTS algorithm. A higher
-value (e.g., 0.99) can help with divergent transitions.}
+\item{adapt_delta}{Target acceptance rate for Stan's NUTS algorithm.}
 
 \item{...}{Additional arguments passed to `rstan::stan`.}
 }
 \value{
-A custom S3 object of class `bcm_fit`.
+A custom S3 object of class `bcm_fit`, a list with elements:
+  - `stan_fit`: the original `stanfit` object
+  - `original_data`: the input data frame
+  - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
+  - `posterior_draws`: list of posterior samples for each parameter
 }
 \description{
-Prepares data and calls the external Stan cure model.
+Prepares data, calls the external Stan cure model, and stores MCMC draws.
 }

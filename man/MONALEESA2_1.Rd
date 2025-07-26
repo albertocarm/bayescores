@@ -5,7 +5,7 @@
 \alias{MONALEESA2_1}
 \title{Data from the MONALEESA2_1 Trial}
 \format{
-A data frame with three variables:
+A data frame with three variables
 \describe{
   \item{time}{Numeric vector representing the survival time (e.g., in months).}
   \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}

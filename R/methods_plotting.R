@@ -127,6 +127,15 @@ plot.bcm_fit <- function(x, ...) {
     ggplot2::theme_minimal(base_size = 14)
   print(final_plot)
 }
+
+
+
+
+
+
+
+
+
 #' Plot Posterior Densities
 #'
 #' A generic function to visualize posterior densities of key parameters
@@ -153,7 +162,7 @@ plot_densities.bcm_fit <- function(x, ...) {
 
   # --- Plot 1: Time Ratio ---
   time_ratio_draws <- exp(posterior_samples$beta_surv_arm)
-  density_surv <- density(time_ratio_draws, n = 4500) # Curva suave
+  density_surv <- density(time_ratio_draws, n = 4500)
   df_surv <- data.frame(x = density_surv$x, y = density_surv$y)
 
   plot_surv <- ggplot2::ggplot(df_surv, ggplot2::aes(x = x, y = y)) +
@@ -174,7 +183,7 @@ plot_densities.bcm_fit <- function(x, ...) {
   prob_cure_ctrl <- 1 / (1 + exp(-posterior_samples$beta_cure_intercept))
   prob_cure_exp <- 1 / (1 + exp(-(posterior_samples$beta_cure_intercept + posterior_samples$beta_cure_arm)))
   cure_rate_diff <- prob_cure_exp - prob_cure_ctrl
-  density_diff <- density(cure_rate_diff, n = 2048) # Curva suave
+  density_diff <- density(cure_rate_diff, n = 2048)
   df_diff <- data.frame(x = density_diff$x, y = density_diff$y)
 
   plot_diff <- ggplot2::ggplot(df_diff, ggplot2::aes(x = x, y = y)) +
@@ -191,12 +200,14 @@ plot_densities.bcm_fit <- function(x, ...) {
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none")
 
-  # --- Plot 3: Odds Ratio ---
+  # --- Plot 3: Odds Ratio (CORREGIDO) ---
   odds_ratio_draws <- exp(posterior_samples$beta_cure_arm)
   upper_limit <- quantile(odds_ratio_draws, probs = 0.95)
-  density_cure <- density(odds_ratio_draws, n = 6000) # Curva suave
+
+  # La corrección está aquí:
+  density_cure <- density(odds_ratio_draws, n = 6000, from = 0, to = upper_limit)
+
   df_cure <- data.frame(x = density_cure$x, y = density_cure$y)
-  df_cure <- df_cure[df_cure$x >= 0 & df_cure$x <= upper_limit, ]
 
   plot_cure <- ggplot2::ggplot(df_cure, ggplot2::aes(x = x, y = y)) +
     ggplot2::geom_segment(ggplot2::aes(xend = x, yend = 0, colour = x)) +
@@ -213,12 +224,16 @@ plot_densities.bcm_fit <- function(x, ...) {
     ggplot2::theme(legend.position = "none")
 
   # --- Combinar y mostrar Gráficos ---
-  final_plot <- patchwork::plot_layout(patchwork::wrap_plots(plot_surv, plot_cure, plot_diff))
-  # 1. Se imprime el gráfico en el panel de visualización
-  print(final_plot$ncol)
+  final_plot <- patchwork::wrap_plots(plot_surv, plot_cure, plot_diff)
 
-
+  # Imprimir el objeto ggplot combinado
+  print(final_plot)
 }
+
+
+
+
+
 
 #' @method model_diagnostics bcm_fit
 #' @importFrom rstan stan_trace

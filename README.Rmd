@@ -1,8 +1,9 @@
+
 ---
 output: github_document
 ---
 
-```{r, include = FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -11,19 +12,20 @@ knitr::opts_chunk$set(
 )
 ```
 
-# bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials using Bayesian AFT Cure Models 
-**`bayescores`** provides a comprehensive toolkit for analyzing randomized controlled trials (RCTs). This package introduces the **Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to quantify the magnitude of clinical benefit by accounting for both survival prolongation and cure rates.
+# bayescores: Comprehensive quantification of clinical benefit in randomized controlled trials using Bayesian AFT cure models
+
+**`bayescores`** provides a comprehensive toolkit for analyzing randomized controlled trials (RCTs). This package introduces the **Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to quantify clinical benefit by accounting for both survival prolongation and cure rates.
 
 The package includes functions to:
 
-* Simulate realistic survival data from a mixture cure model.
-* Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan.
-* Visualize model results and diagnostics.
-* Calculate and visualize BayeScores to provide a holistic measure of clinical benefit.
+- Simulate realistic survival data from a mixture cure model.
+- Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan.
+- Visualize model results and diagnostics.
+- Calculate and visualize BayeScores to provide a holistic measure of clinical benefit.
 
 ## Installation
 
-You can install the development version of `bayescores` from GitHub with:
+Install the development version of `bayescores` from GitHub:
 
 ```r
 # install.packages("devtools")
@@ -32,132 +34,230 @@ devtools::install_github("albertocarm/bayescores")
 
 ## Full example
 
-This example demonstrates the complete workflow, from data simulation to benefit score visualization.
+This example illustrates the complete workflow—from data simulation to visualization of benefit scores. Here, simulated RCTs enable clear observation of how parameter changes influence BayeScores.
 
-### Step 1: Load the Package
-
-First, we load the `bayescores` library to get access to all its functions.
+### Step 1: Load the package
 
 ```{r load-library}
 library(bayescores)
 ```
 
-### Step 2: Simulate Survival Data
+### Step 2: Simulate survival data
 
-We begin by simulating a dataset for a two-arm clinical trial using a Weibull cure model. This function allows us to define the cure rates and survival characteristics for each arm.
+Simulate a 300-patient trial with long-term survival fractions of 40% (experimental) and 20% (control), with median survival of 12 months in the control arm. The experimental treatment extends survival by 50% among non-cured patients.
 
 ```{r simulate-data}
+# to work with real data, you must digitize the curves from the original paper using tools such as WebPlotDigitizer (https://automeris.io/)
+# and apply the “reconstructing individual-level data” method to invert the Kaplan–Meier equations; see a tutorial at https://pharmasug.org/proceedings/2024/RW/PharmaSUG-2024-RW-125.pdf
+
+
+set.seed(123)
+
 sim_data <- simulate_weibull_cure_data(
-  n_patients = 200,
+  n_patients = 300,
   cure_fraction_ctrl = 0.20,
   cure_fraction_exp = 0.40,
   max_follow_up = 60,
   weibull_shape = 1.2,
-  median_survival_ctrl = 18,
+  median_survival_ctrl = 12,
   time_ratio_exp = 1.5
 )
 
-# Visualize the simulated data with Kaplan-Meier curves
 plot_km_curves(sim_data)
 
-# The library also includes multiple digitized datasets from actual clinical trials (facsimiles) across curative and non-curative settings, featuring various therapies such as chemotherapy, targeted therapies, and immunotherapy. The datasets include survival curves with diverse morphologies, late effects, crossing hazards, etc.
-
 data(package = "bayescores")
-
 ```
 
-### Step 3: Fit the Bayesian Cure Model
+### Step 3: Simulate study toxicity
 
-Next, we fit our Bayesian AFT cure model to the simulated data. For a real analysis, you should use a higher number of iterations (e.g., `iter = 4000`).
+Generate toxicity data for a trial with 1:1 randomization (300 control patients), baseline toxicity of 50% (any-grade), 20% severe events (G3–4), and 1.5× higher toxicity in the experimental arm. QoL outcomes assume "Significant Improvement" with "Very High" evidence.
+
+**Quality of Life Parameters:**
+
+- `qol_scenario` (expected QoL outcome):
+  - `1`: **Significant Improvement**
+  - `2`: **Stabilization / Probable Benefit**
+  - `3`: **No Difference / Marginal Benefit**
+  - `4`: **Deterioration**
+  - `5`: **Insufficient Data / Unknown**
+
+- `qol_strength` (confidence in QoL evidence):
+  - `1`: **Very Low**
+  - `2`: **Low**
+  - `3`: **Moderate**
+  - `4`: **High**
+  - `5`: **Very High**
+
+```{r simulate-toxicity}
+toxicity_trial <- simulate_trial_data(
+  n_control = 300,
+  ratio_str = "1:1",
+  control_g1_4_pct = 50,
+  control_g3_4_pct = 20,
+  tox_ratio = 1.5,
+  qol_scenario = 1,
+  qol_strength = 5
+)
+```
+
+Visualize toxicity with AMIT plots:
+
+**Any-grade toxicity (Grades 1–4)**
+
+```{r plot-any-grade-toxicity}
+create_amit_plot(
+  trial_object = toxicity_trial,
+  grade_type = "any_grade",
+  main_title = "Example: Any-Grade Toxicity Profile",
+  data_element = "toxicity",
+  n_element = "N_patients"
+)
+```
+
+**Severe toxicity (Grades 3+)**
+
+```{r plot-severe-toxicity}
+create_amit_plot(
+  trial_object = toxicity_trial,
+  grade_type = "severe_grade",
+  main_title = "Example: Severe-Grade (G3+) Toxicity Profile",
+  data_element = "toxicity",
+  n_element = "N_patients"
+)
+```
+
+### Step 4: Fit the Bayesian cure model
+
+Fit the Bayesian AFT cure model (use higher `iter` in practice):
 
 ```{r fit-model}
-# Note: Using fewer iterations for this example to run quickly.
-bayesian_fit <- fit_bayesian_cure_model(sim_data,
+bayesian_fit <- fit_bayesian_cure_model(
+  sim_data,
   time_col = "time",
   event_col = "event",
   arm_col = "arm",
-  iter = 2500, chains = 4)
+  iter = 2500,
+  chains = 4
+)
 ```
 
-### Step 4: Analyze and Visualize Model Results
+### Step 5: Analyze and visualize model results
 
-Once the model is fitted, we can inspect the results.
+The mixture cure model separates individuals into:
 
-First, a **numerical summary** of the key parameters helps us understand the model's estimates for the treatment effect on the cure and survival components.
+- **Cured (long-term survivors)**: negligible event risk long-term.
+- **Susceptible (uncured)**: ongoing event risk; survival prolonged but not cured.
+
+Inspect numerical summaries and visualize posterior distributions. You can verify that the model satisfactorily recovers the time ratio and the fractions of long‑term survivors:
 
 ```{r numerical-summary}
-# Check the numerical results for the main parameters
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
+outcomes(bayesian_fit)
 ```
 
-We can then **visualize the posterior distributions** of these parameters. This is crucial for understanding the uncertainty and the magnitude of the effects.
+**Posterior distributions**
 
-```{r plot-densities, fig.cap="Figure 1: Posterior density distributions for the Time Ratio, Odds Ratio of being cured, and the difference in cure probability."}
-# Plot the posterior densities of the main effect parameters
+```{r plot-parameters, fig.cap="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference."}
 plot_densities(bayesian_fit)
 ```
 
-We can also generate a **posterior predictive check**, which overlays the model's predicted survival curves on top of the empirical Kaplan-Meier curves. A good fit means the red lines (model) should closely follow the black lines (data).
+**Posterior predictive check**
+You can observe how the model’s predictions align satisfactorily with the Kaplan–Meier estimator:
 
-```{r plot-model-fit, fig.cap="Figure 2: Posterior predictive check. The model's predicted survival curves (red) are overlaid on the Kaplan-Meier curves from the data (black)."}
-# Plot the model fit against the data
+```{r plot-model-fit, fig.cap="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)."}
 plot(bayesian_fit)
 ```
 
-### Step 5: Calculate the BayeScores
+### Step 6: Integrate toxicity data
 
-With the model fitted, we extract the posterior samples for the Time Ratio and the cure rate difference. These are the two pillars of clinical benefit that we will use to calculate the BayeScores.
+Toxicity is summarized by a burden‑of‑toxicity score, which weights both the severity and the category of toxicity (see technical documentation). Estimates below zero, as observed here, indicate greater toxicity in the experimental arm, consistent with the simulation:
 
-```{r calculate-scores}
-# Extract MCMC draws for the two benefit components
-tr_draws <- extract_mcmc_time_ratios(bayesian_fit)
-cure_diff_draws <- extract_mcmc_cure_diffs(bayesian_fit)
-
-# Calculate the BayeScores based on predefined utility thresholds
-scores_list <- calculate_bayescores(
-  tr_posterior_samples = tr_draws,
-  cure_posterior_samples = cure_diff_draws,
-  tr_mean = 1.25,
-  tr_max = 1.5,
-  cure_mean = 0.1,
-  cure_max = 0.2,
-  tr_weight = 0.8
+```{r toxicity-integration, fig.cap="Figure 3: Distribution of burden-of-toxicity score."}
+toxicity_output <- calculate_toxicity_adjustment(
+  trial_data = toxicity_trial,
+  n_simulations = length(bayesian_fit$posterior_draws)
 )
 
-# Print a numerical summary of the final score
-summarize_bayescores(scores_list)
+plot_toxicity_adjustment(toxicity_output)
 ```
 
-### Step 6: Visualize the Final Clinical Benefit
+### Step 7: Quality-of-life weighting
 
-Finally, we visualize the BayeScore result. The **donut plot** provides an intuitive summary of the overall benefit and its sources.
+QoL adjustments modeled using multinomial distribution:
 
-```{r plot-donut, fig.cap="Figure 3: BayeScore donut plot, showing the final median score and the contribution from the Time Ratio and Cure Rate components."}
-# Generate the donut plot from the scores list
-plot_bayes_donut(scores_list)
+```{r qol-weighting, fig.cap="Figure 4: Multinomial distribution of QoL levels."}
+qol_scores <- sample_qol_scores(
+  prob_vector = toxicity_trial$qol,
+  n_samples = length(bayesian_fit$posterior_draws)
+)
+
+plot_qol_histogram(qol_scores)
 ```
 
-To fully appreciate the **uncertainty**, we also plot the entire posterior distribution of the final score. A narrow, peaked distribution indicates higher confidence in the result.
+We have chosen this methodology because quality‑of‑life data are published very inconsistently—indeed, the data are a mess—and the approach will likely evolve over time. Therefore, you must read the paper, qualitatively interpret the results, and assess both the impact on quality of life and the strength of evidence. The outcome will be a multinomial distribution, as shown below. It is quite straightforward: to work with real data, the package includes the function generate_qol_vector(), which interactively generates a quality‑of‑life (QoL) probability vector.
 
-```{r plot-score-density, fig.cap="Figure 4: Posterior distribution of the final BayeScore, illustrating the uncertainty around the median estimate."}
-# Visualize the full posterior distribution of the score
-plot_bayes_dist(scores_list)
+
+### Step 8: Extract posterior samples and compute BayeScores
+
+Okay, we have everything: efficacy, toxicity, QoL. It’s time to extract posterior samples and compute BayeScores.
+
+To obtain utility, a cumulative logistic function is used, anchored by the minimum clinically relevant benefit values, which we—two oncologists—have agreed upon as the time ratio of 1.15 (e.g., extending OS from 10 to 11.5 months) or a long‑term survival increase of 4 %.
+
+Inspired by multi‑attribute utility theory (MAUT), we have also chosen the thresholds at which drugs become not only active but promising: a time ratio of 1.35 and a survival‑rate difference of 12 %.
+
+Now, look at the output. To derive final utilities, an adaptive policy is applied: the function has detected that this clinical trial increases the long‑term survivor rate and has adjusted the weighting scores relative to the predefined ones (see technical specification).
+
+
+```{r calculate-scores}
+efficacy_inputs <- list(
+  tr_posterior_samples = extract_mcmc_time_ratios(bayesian_fit),
+  cure_posterior_samples = extract_mcmc_cure_diffs(bayesian_fit)
+)
+
+final_utilities <- summarize_final_utility(
+  efficacy_scores = efficacy_inputs,
+  toxicity_scores = toxicity_output$adjustment_vector,
+  qol_scores = qol_scores,
+  weights_if_no_cure = c(tr=0.7, cure=0.1, tox=0.1, qol=0.1),
+  weights_if_cure = c(tr=0.15, cure=0.6, tox=0.15, qol=0.1),
+  tr_min_if_no_cure = 1.15,
+  tr_hopeful = 1.35,
+  cure_min_relevant = 0.04,
+  cure_hopeful = 0.12
+)
+
+print(final_utilities$component_summary)
 ```
 
-## Why BayeScores? A More Meaningful Approach
+### Step 9: Visualize final clinical benefit
 
-The BayeScores framework is designed to overcome the limitations of traditional metrics like the **Hazard Ratio (HR)**.
+**BayeScore donut plot**
 
-* **Clinically Interpretable**: It moves beyond the HR, which is a relative measure that is often misinterpreted. BayeScores, based on survival time and cure rates, are more intuitive.
-* **Accounts for Cure Scenarios**: It explicitly models and distinguishes between curative and non-curative scenarios by incorporating a cure fraction.
-* **Embraces Uncertainty**: Thanks to the **Bayesian framework**, it doesn't just provide a single number. It carries forward the full spectrum of uncertainty into the final score, providing a transparent and honest assessment of the evidence, which is crucial for high-stakes decisions by clinicians and payers.
+After these analyses, the tool delivers a final *clinical utility score* derived from all the weightings, representing the drug’s ultimate evaluation. This score is based on a simulation that assumed benefit but also factored in some toxicity, yet still resulted in an improvement in quality of life.
+
+```{r plot-donut, fig.cap="Figure 5: BayeScore donut plot."}
+plot_utility_donut(final_utilities)
+```
+
+**Final score posterior distribution**
+
+It’s clear that estimating clinical benefit carries substantial uncertainty—studies are noisy, and sample sizes are limited. We’ve rigorously propagated every source of uncertainty throughout the analysis, so that you alone judge the credibility of the results.  
+
+That is the power of the BayeScore: it isn’t a single point estimate but a full Bayesian distribution!  
+
+```{r plot-score-density, fig.cap="Figure 6: Final BayeScore posterior distribution."}
+plot_final_utility_density(final_utilities)
+```
+
+## Why bayescores? a more meaningful approach
+
+- **Clinically interpretable**: time ratios are more intuitive than hazard ratios; cure models resolve the issue of double counting benefit—first in HR terms and again as the long‑term bonus. this ensures both metrics remain independent.  
+- **Accounts for cure scenarios**: explicit modeling of cure rates and long‑term survivor fractions in immunotherapy studies.  
+- **Embraces uncertainty**: the Bayesian framework transparently conveys uncertainty.  
+- **No thresholds**: there are parameters and weights, but the approach is gradual; it avoids all‑or‑nothing decisions and is transparent and customizable.  
 
 ## Citation
 
-If you use `bayesCure` in your research, please cite the package and the associated publication.
-
 ```r
-# To get citation information for the package
-citation("bayesCure")
+citation("bayescores")
 ```
-

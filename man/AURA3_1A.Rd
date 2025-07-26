@@ -5,7 +5,14 @@
 \alias{AURA3_1A}
 \title{Data from the AURA3_1A Trial}
 \format{
-A data frame with three variables:
+A data frame with three variables
+\describe{
+  \item{time}{Numeric vector representing the survival time (e.g., in months).}
+  \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}
+  \item{arm}{Factor or character vector for treatment arm (e.g., 'Control', 'Experimental').}
+}
+
+A data frame with three variables
 \describe{
   \item{time}{A numeric vector representing the survival time.}
   \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
@@ -14,11 +21,17 @@ A data frame with three variables:
 }
 \source{
 \url{http://link.to.the.publication/AURA3_1A}
+
+\url{http://link.to.the.publication/AURA3_1A}
 }
 \usage{
 AURA3_1A
+
+AURA3_1A
 }
 \description{
+A dataset containing digitized survival data from a clinical trial.
+
 A dataset containing digitized survival data from a clinical trial.
 }
 \keyword{datasets}

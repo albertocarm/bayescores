@@ -5,7 +5,7 @@
 \alias{DART0105_2A}
 \title{Data from the DART0105_2A Trial}
 \format{
-A data frame with three variables:
+A data frame with three variables
 \describe{
   \item{time}{Numeric vector representing the survival time (e.g., in months).}
   \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}

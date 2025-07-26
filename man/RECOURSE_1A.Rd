@@ -5,7 +5,7 @@
 \alias{RECOURSE_1A}
 \title{Data from the RECOURSE_1A Trial}
 \format{
-A data frame with three variables:
+A data frame with three variables
 \describe{
   \item{time}{Numeric vector representing the survival time (e.g., in months).}
   \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}

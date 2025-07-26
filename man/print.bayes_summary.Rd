@@ -12,5 +12,5 @@
 \item{...}{further arguments passed to or from other methods.}
 }
 \description{
-Print method for bayes_summary objects
+Displays a formatted summary of the disaggregated and final scores.
 }
