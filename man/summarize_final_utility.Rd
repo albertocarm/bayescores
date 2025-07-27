@@ -15,6 +15,7 @@ summarize_final_utility(
   tr_hopeful = 1.25,
   cure_min_relevant = 0.04,
   cure_hopeful = 0.12,
+  tr_calibration_k = 0.35,
   weights_if_cure = c(tr = 0.15, cure = 0.6, tox = 0.15, qol = 0.1),
   weights_if_no_cure = c(tr = 0.7, cure = 0.1, tox = 0.1, qol = 0.1)
 )
@@ -39,6 +40,8 @@ summarize_final_utility(
 \item{cure_min_relevant}{Numeric. The minimum cure fraction considered clinically relevant.}
 
 \item{cure_hopeful}{Numeric. The cure fraction threshold for a "hopeful" or highly desirable outcome.}
+
+\item{tr_calibration_k}{Numeric. The calibration exponent (k) applied to the Time Ratio (TR) utility scores. Default is 0.35.}
 
 \item{weights_if_cure}{A named numeric vector of weights for `c(tr, cure, tox, qol)` if a "Cure" profile is detected.}
 

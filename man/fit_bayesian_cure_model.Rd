@@ -34,6 +34,7 @@ A custom S3 object of class `bcm_fit`, a list with elements:
   - `original_data`: the input data frame
   - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
   - `posterior_draws`: list of posterior samples for each parameter
+  - `n_draws`: the total number of post-warmup posterior draws
 }
 \description{
 Prepares data, calls the external Stan cure model, and stores MCMC draws.
