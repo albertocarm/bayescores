@@ -175,7 +175,7 @@ Toxicity is summarized by a burden‑of‑toxicity score, which weights both the
 ```{r toxicity-integration, fig.cap="Figure 3: Distribution of burden-of-toxicity score."}
 toxicity_output <- calculate_toxicity_adjustment(
   trial_data = toxicity_trial,
-  n_simulations = length(bayesian_fit$posterior_draws)
+  n_simulations = bayesian_fit$n_draws
 )
 
 plot_toxicity_adjustment(toxicity_output)
@@ -188,7 +188,7 @@ QoL adjustments modeled using multinomial distribution:
 ```{r qol-weighting, fig.cap="Figure 4: Multinomial distribution of QoL levels."}
 qol_scores <- sample_qol_scores(
   prob_vector = toxicity_trial$qol,
-  n_samples = length(bayesian_fit$posterior_draws)
+  n_samples = bayesian_fit$n_draws
 )
 
 plot_qol_histogram(qol_scores)

@@ -12,17 +12,18 @@
 #'   - `original_data`: the input data frame
 #'   - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
 #'   - `posterior_draws`: list of posterior samples for each parameter
+#'   - `n_draws`: the total number of post-warmup posterior draws
 #'
 #' @importFrom rstan stan extract
 #' @export
 fit_bayesian_cure_model <- function(data,
-                                    time_col   = "time",
-                                    event_col  = "event",
-                                    arm_col    = "arm",
-                                    chains     = 4,
-                                    iter       = 2000,
-                                    warmup     = 1000,
-                                    seed       = 555,
+                                    time_col    = "time",
+                                    event_col   = "event",
+                                    arm_col     = "arm",
+                                    chains      = 4,
+                                    iter        = 2000,
+                                    warmup      = 1000,
+                                    seed        = 555,
                                     adapt_delta = 0.99,
                                     ...) {
 
@@ -64,6 +65,9 @@ fit_bayesian_cure_model <- function(data,
   # Extract posterior draws (excluding warmup)
   posterior_draws <- rstan::extract(stan_fit, permuted = TRUE, inc_warmup = FALSE)
 
+  # Calculate the total number of post-warmup draws
+  n_draws <- chains * (iter - warmup)
+
   # Assemble result
   result <- list(
     stan_fit        = stan_fit,
@@ -73,13 +77,13 @@ fit_bayesian_cure_model <- function(data,
       event_col = event_col,
       arm_col   = arm_col
     ),
-    posterior_draws = posterior_draws
+    posterior_draws = posterior_draws,
+    n_draws         = n_draws # Added the total number of draws to the list
   )
   class(result) <- "bcm_fit"
 
   return(result)
 }
-
 #' Plot Model Diagnostics
 #'
 #' @description A generic function to plot model diagnostics.
