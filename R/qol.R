@@ -268,6 +268,7 @@ sample_qol_scores <- function(prob_vector, n_samples) {
 #' @param tr_hopeful Numeric. The Time Ratio threshold for a "hopeful" or highly desirable outcome.
 #' @param cure_min_relevant Numeric. The minimum cure fraction considered clinically relevant.
 #' @param cure_hopeful Numeric. The cure fraction threshold for a "hopeful" or highly desirable outcome.
+#' @param tr_calibration_k Numeric. The calibration exponent (k) applied to the Time Ratio (TR) utility scores. Default is 0.35.
 #' @param weights_if_cure A named numeric vector of weights for `c(tr, cure, tox, qol)` if a "Cure" profile is detected.
 #' @param weights_if_no_cure A named numeric vector of weights for `c(tr, cure, tox, qol)` if a "Survival" (no cure) profile is detected.
 #'
@@ -287,6 +288,7 @@ summarize_final_utility <- function(
     tr_hopeful = 1.25,
     cure_min_relevant = 0.04,
     cure_hopeful = 0.12,
+    tr_calibration_k = 0.35,
     weights_if_cure = c(tr = 0.15, cure = 0.60, tox = 0.15, qol = 0.10),
     weights_if_no_cure = c(tr = 0.7, cure = 0.10, tox = 0.10, qol = 0.10)
 ) {
@@ -332,8 +334,7 @@ summarize_final_utility <- function(
   # Convert Time Ratio (TR) scores
   tr_params <- solve_logistic_params(tr_min_relevant_to_use, utility_min, tr_hopeful, 38)
   tr_scores_original <- 100 * stats::plogis(tr_posterior_samples, location = tr_params$location, scale = tr_params$scale)
-  k_calibration <- 0.35
-  tr_scores <- 100 * (tr_scores_original / 100)^k_calibration
+  tr_scores <- 100 * (tr_scores_original / 100)^tr_calibration_k
 
   # Convert Cure Fraction scores
   cure_params <- solve_logistic_params(cure_min_relevant, 10, cure_hopeful, 38)
@@ -428,7 +429,7 @@ summarize_final_utility <- function(
   final_utility_vector <- tr_contribution + cure_contribution + toxicity_contribution + qol_contribution
   final_utility_vector <- pmax(0, final_utility_vector)
 
-  # ... (El código del summary_df y el return no cambia) ...
+  # ... (The summary_df and return code does not change) ...
   summary_df <- data.frame(
     Component = c("1. -> Score TR (Calibrated)", "2. -> Score Cure (0-100)", "3. -> Score Toxicity (scaled)", "4. -> Score QoL (scaled)",
                   "Contribution TR (Weighted)", "Contribution Cure (Weighted)", "Contribution Toxicity (Weighted)", "Contribution QoL (Weighted)",
@@ -457,9 +458,12 @@ summarize_final_utility <- function(
 #'
 #' @param final_utility_results The list object returned by `summarize_final_utility`.
 #' @param trial_name Optional. A character string for the trial name. If NULL,
-#'   the function will prompt the user to enter a name.
+#'  the function will prompt the user to enter a name.
 #'
 #' @return A ggplot2 object representing the gauge plot.
+#' @importFrom graphics plot
+#' @importFrom grDevices dev.off png
+#' @importFrom stats median
 #' @export
 #'
 plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
@@ -496,8 +500,8 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
 
   # --- 5. Generar el gráfico ---
   donut_plot <- ggplot2::ggplot() +
-    ggplot2::geom_rect(aes(ymax = plot_max_value, ymin = 0, xmax = 4, xmin = 3), fill = "#F0F0F0") +
-    ggplot2::geom_rect(aes(ymax = median_final_clamped, ymin = 0, xmax = 4, xmin = 3), fill = final_score_color) +
+    ggplot2::geom_rect(ggplot2::aes(ymax = plot_max_value, ymin = 0, xmax = 4, xmin = 3), fill = "#F0F0F0") +
+    ggplot2::geom_rect(ggplot2::aes(ymax = median_final_clamped, ymin = 0, xmax = 4, xmin = 3), fill = final_score_color) +
     ggplot2::annotate("text", x = 0, y = 0,
                       label = paste0(
                         "Efficacy: ", ifelse(median_eff_total_contribution >= 0, "+", ""), round(median_eff_total_contribution, 1),
@@ -516,11 +520,12 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
     ggplot2::theme_void() +
     ggplot2::theme(
       legend.position = "none",
-      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 16, margin = margin(b = 5))
+      plot.title = ggplot2::element_text(hjust = 0.5, face = "bold", size = 16, margin = ggplot2::margin(b = 5))
     )
 
   return(donut_plot)
 }
+
 
 
 #' Plot an Elegant Histogram of QoL Outcomes

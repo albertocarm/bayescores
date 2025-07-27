@@ -151,8 +151,8 @@ bayesian_fit <- fit_bayesian_cure_model(
 #> 
 #> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
 #> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.000159 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.59 seconds.
+#> Chain 1: Gradient evaluation took 0.000745 seconds
+#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 7.45 seconds.
 #> Chain 1: Adjust your expectations accordingly!
 #> Chain 1: 
 #> Chain 1: 
@@ -169,15 +169,15 @@ bayesian_fit <- fit_bayesian_cure_model(
 #> Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
 #> Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
 #> Chain 1: 
-#> Chain 1:  Elapsed Time: 2.865 seconds (Warm-up)
-#> Chain 1:                3.015 seconds (Sampling)
-#> Chain 1:                5.88 seconds (Total)
+#> Chain 1:  Elapsed Time: 10.058 seconds (Warm-up)
+#> Chain 1:                10.807 seconds (Sampling)
+#> Chain 1:                20.865 seconds (Total)
 #> Chain 1: 
 #> 
 #> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
 #> Chain 2: 
-#> Chain 2: Gradient evaluation took 0.000117 seconds
-#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.17 seconds.
+#> Chain 2: Gradient evaluation took 0.000452 seconds
+#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 4.52 seconds.
 #> Chain 2: Adjust your expectations accordingly!
 #> Chain 2: 
 #> Chain 2: 
@@ -194,15 +194,15 @@ bayesian_fit <- fit_bayesian_cure_model(
 #> Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
 #> Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
 #> Chain 2: 
-#> Chain 2:  Elapsed Time: 2.621 seconds (Warm-up)
-#> Chain 2:                3.06 seconds (Sampling)
-#> Chain 2:                5.681 seconds (Total)
+#> Chain 2:  Elapsed Time: 8.706 seconds (Warm-up)
+#> Chain 2:                10.754 seconds (Sampling)
+#> Chain 2:                19.46 seconds (Total)
 #> Chain 2: 
 #> 
 #> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
 #> Chain 3: 
-#> Chain 3: Gradient evaluation took 0.000156 seconds
-#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.56 seconds.
+#> Chain 3: Gradient evaluation took 0.000237 seconds
+#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 2.37 seconds.
 #> Chain 3: Adjust your expectations accordingly!
 #> Chain 3: 
 #> Chain 3: 
@@ -219,15 +219,15 @@ bayesian_fit <- fit_bayesian_cure_model(
 #> Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
 #> Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
 #> Chain 3: 
-#> Chain 3:  Elapsed Time: 2.71 seconds (Warm-up)
-#> Chain 3:                3.936 seconds (Sampling)
-#> Chain 3:                6.646 seconds (Total)
+#> Chain 3:  Elapsed Time: 9.195 seconds (Warm-up)
+#> Chain 3:                11.503 seconds (Sampling)
+#> Chain 3:                20.698 seconds (Total)
 #> Chain 3: 
 #> 
 #> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
 #> Chain 4: 
-#> Chain 4: Gradient evaluation took 0.000149 seconds
-#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.49 seconds.
+#> Chain 4: Gradient evaluation took 0.000796 seconds
+#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 7.96 seconds.
 #> Chain 4: Adjust your expectations accordingly!
 #> Chain 4: 
 #> Chain 4: 
@@ -244,9 +244,9 @@ bayesian_fit <- fit_bayesian_cure_model(
 #> Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
 #> Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
 #> Chain 4: 
-#> Chain 4:  Elapsed Time: 4.155 seconds (Warm-up)
-#> Chain 4:                4.938 seconds (Sampling)
-#> Chain 4:                9.093 seconds (Total)
+#> Chain 4:  Elapsed Time: 13.607 seconds (Warm-up)
+#> Chain 4:                15.559 seconds (Sampling)
+#> Chain 4:                29.166 seconds (Total)
 #> Chain 4:
 ```
 
@@ -273,7 +273,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
 #> beta_surv_arm 0.57    0.00 0.15 0.31 0.47 0.56 0.65  0.88  3232    1
 #> alpha         1.33    0.00 0.09 1.16 1.27 1.33 1.39  1.50  4060    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Sun Jul 27 01:49:32 2025.
+#> Samples were drawn using NUTS(diag_e) at Sun Jul 27 10:59:09 2025.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
