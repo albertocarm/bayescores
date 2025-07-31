@@ -1,165 +1,5 @@
 
 
-################################################################################
-#
-#        SCRIPT FOR CLINICAL TOXICiTY ANALYSIS
-#
-################################################################################
-## --------------------------------------------------------------------------##
-## PART 1: THE ANALYSIS ENGINE (CORE FUNCTIONS) ----
-## --------------------------------------------------------------------------##
-# These functions perform the calculations and do not need to be edited.
-
-################################################################################
-#
-#       DEFINITIVE SCRIPT WITH CLINICALLY-ADJUSTED WEIGHTS
-#
-# This script uses updated SOC weights to better reflect the severity of
-# hematologic toxicities and provides a more clinically-aligned result.
-#
-################################################################################
-
-## --------------------------------------------------------------------------##
-## PART 1: THE ANALYSIS ENGINE (WITH ADJUSTED WEIGHTS) ----
-## --------------------------------------------------------------------------##
-
-#' Calculate Toxicity Scores and Adjustment Distribution
-#'
-#' Merges the calculation of summary toxicity scores and the generation of the
-#' posterior adjustment distribution into a single, streamlined function.
-#'
-#' @param trial_data A list object from simulation, containing 'toxicity' and 'N_patients'.
-#' @param n_simulations The number of simulations for the posterior distribution vector.
-#'
-#' @return A list containing two elements:
-#' \item{summary_scores}{A data frame with the total weighted toxicity scores.}
-#' \item{adjustment_vector}{A numeric vector of the posterior distribution (-1 to +1).}
-#' @importFrom stats rbeta
-#' @export
-#'
-calculate_toxicity_adjustment <- function(trial_data, n_simulations) {
-
-  # --- Input Validation ---
-  if (!is.list(trial_data) || !all(c("toxicity", "N_patients") %in% names(trial_data))) {
-    stop("Input 'trial_data' must be a list containing 'toxicity' and 'N_patients'.")
-  }
-
-  # --- Part 1: Calculate Scores (Logic from the first function) ---
-  soc_weights <- c(
-    "Gastrointestinal disorders" = 1.2,
-    "Blood and lymphatic system disorders" = 1.6,
-    "General, metabolic, and other disorders" = 1.3,
-    "Dermatologic disorders" = 1.1,
-    "Infections and infestations" = 1.6,
-    "Respiratory, thoracic and mediastinal disorders" = 2.5
-  )
-  W_prom_1_2 <- 1.5
-  W_prom_3_4 <- 6.0
-
-  datos_toxicidad <- trial_data$toxicity
-  inc_g1_2_exp <- pmax(0, datos_toxicidad$Incidence_G1_4_Experimental - datos_toxicidad$Incidence_G3_4_Experimental)
-  inc_g1_2_con <- pmax(0, datos_toxicidad$Incidence_G1_4_Control - datos_toxicidad$Incidence_G3_4_Control)
-  score_base_exp <- (inc_g1_2_exp / 100 * W_prom_1_2) + (datos_toxicidad$Incidence_G3_4_Experimental / 100 * W_prom_3_4)
-  score_base_con <- (inc_g1_2_con / 100 * W_prom_1_2) + (datos_toxicidad$Incidence_G3_4_Control / 100 * W_prom_3_4)
-  w_soc_applied <- soc_weights[datos_toxicidad$SystemOrganClass]
-  w_soc_applied[is.na(w_soc_applied)] <- 1.0
-  score_os_exp <- score_base_exp * w_soc_applied
-  score_os_con <- score_base_con * w_soc_applied
-
-  summary_scores <- data.frame(
-    Score = "WTS-A-OS (Adjusted)",
-    Experimental = sum(score_os_exp),
-    Control = sum(score_os_con)
-  )
-
-  # --- Part 2: Generate Distribution Vector (Logic from the second function) ---
-  score_exp <- summary_scores$Experimental
-  score_ctrl <- summary_scores$Control
-  if (score_ctrl == 0) { score_ctrl <- 1e-9 }
-
-  n_experimental <- trial_data$N_patients['Experimental']
-  n_control <- trial_data$N_patients['Control']
-
-  ratio_estimate <- score_exp / score_ctrl
-  prob_exp_worse_estimate <- (ratio_estimate ^ 2) / ((ratio_estimate ^ 2) + 1)
-  kappa <- n_experimental + n_control
-  alpha <- prob_exp_worse_estimate * kappa
-  beta <- (1 - prob_exp_worse_estimate) * kappa
-
-  prob_exp_worse_dist <- rbeta(n_simulations, shape1 = alpha, shape2 = beta)
-  toxicity_utility_dist <- 1 - prob_exp_worse_dist
-  adjustment_vector <- 2 * (toxicity_utility_dist - 0.5)
-
-  # --- Return a list with both results ---
-  return(list(
-    summary_scores = summary_scores,
-    adjustment_vector = adjustment_vector
-  ))
-}
-
-
-#' Plot the Toxicity Adjustment Distribution
-#'
-#' Creates a density ridge plot for the toxicity adjustment factor.
-#'
-#' @param toxicity_results A list object returned by `calculate_toxicity_adjustment`.
-#' @param trial_name A character string for the trial name.
-#'
-#' @return A ggplot2 object.
-#' @importFrom ggplot2 ggplot aes labs theme_minimal theme element_blank element_text annotate after_stat unit geom_vline
-#' @importFrom ggplot2 scale_fill_viridis_c
-#' @export
-#'
-plot_toxicity_adjustment <- function(toxicity_results, trial_name = "Trial") {
-
-  # --- Extract the vector from the results object ---
-  adjustment_vector <- toxicity_results$adjustment_vector
-
-  # Validate that the vector exists
-  if (is.null(adjustment_vector)) {
-    stop("The 'toxicity_results' object must contain an element named 'adjustment_vector'.")
-  }
-
-  # The rest of the function remains unchanged
-  plot_data <- data.frame(
-    AdjustmentFactor = adjustment_vector,
-    Analysis = "Toxicity"
-  )
-  mean_val <- mean(adjustment_vector)
-
-  p <- ggplot(plot_data, aes(x = AdjustmentFactor, y = Analysis)) +
-    ggridges::geom_density_ridges_gradient(
-      aes(fill = after_stat(x)),
-      scale = 3, rel_min_height = 0.01, show.legend = FALSE
-    ) +
-    scale_fill_viridis_c(option = "plasma") +
-    geom_vline(xintercept = 0, linetype = "dashed", color = "white", linewidth = 0.7, alpha = 0.8) +
-    geom_vline(xintercept = mean_val, linetype = "solid", color = "black", linewidth = 1) +
-    annotate(
-      "text", x = mean_val, y = 0.15, label = paste("Mean =", format(mean_val, digits = 2)),
-      angle = 90, hjust = 0, vjust = 1.5, fontface = "bold", color = "black"
-    ) +
-    labs(
-      title = paste("Toxicity Adjustment Distribution:", trial_name),
-      x = "Toxicity Adjustment Factor",
-      y = NULL,
-      caption = "Factor > 0 indicates experimental arm is less toxic | Factor < 0 indicates more toxic"
-    ) +
-    theme_minimal(base_size = 14) +
-    theme(
-      axis.text.y = element_blank(),
-      axis.ticks.y = element_blank(),
-      panel.grid.major.y = element_blank(),
-      panel.grid.minor.y = element_blank(),
-      plot.title = element_text(face = "bold"),
-      plot.caption = element_text(hjust = 0, size = 10, face = "italic")
-    )
-
-  return(p)
-}
-
-
-
 #' Create an AMIT plot (Adverse Event Dot Plot) from a clinical trial object.
 #'
 #' This version is flexible and allows specifying the names of the elements
@@ -249,5 +89,89 @@ create_amit_plot <- function(trial_object,
     ...
   )
 }
+#' @title Calculate a complete toxicity analysis
+#' @description Calculates weighted toxicity scores (WTS).
+#' @param trial_data A list containing the toxicity data.
+#' @param n_simulations An integer for the number of simulations.
+#' @param unacceptable_rel_increase A number for the unacceptable increase limit.
+#' @param k_uncertainty A number for the uncertainty constant.
+#' @return A list containing the results.
+#' @export
+#' @importFrom stats rnorm
+calculate_toxicity_analysis <- function(
+    trial_data,
+    n_simulations,
+    unacceptable_rel_increase = 0.5,
+    k_uncertainty = 5
+) {
 
-# --- END OF FUNCTION ---
+  # --- 1. Calculate Weighted Toxicity Scores (WTS) ---
+  soc_weights <- c(
+    "Gastrointestinal disorders" = 1.2, "Blood and lymphatic system disorders" = 1.6,
+    "General, metabolic, and other disorders" = 1.3, "Dermatologic disorders" = 1.1,
+    "Infections and infestations" = 1.6, "Respiratory, thoracic and mediastinal disorders" = 2.5
+  )
+  W_prom_1_2 <- 1.5; W_prom_3_4 <- 6.0
+  toxicity_data <- trial_data$toxicity
+  inc_g1_2_exp <- pmax(0, toxicity_data$Incidence_G1_4_Experimental - toxicity_data$Incidence_G3_4_Experimental)
+  inc_g1_2_con <- pmax(0, toxicity_data$Incidence_G1_4_Control - toxicity_data$Incidence_G3_4_Control)
+  score_base_exp <- (inc_g1_2_exp / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Experimental / 100 * W_prom_3_4)
+  score_base_con <- (inc_g1_2_con / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Control / 100 * W_prom_3_4)
+  w_soc_applied <- soc_weights[toxicity_data$SystemOrganClass]
+  w_soc_applied[is.na(w_soc_applied)] <- 1.0
+  wts_scores <- data.frame(
+    Experimental = sum(score_base_exp * w_soc_applied),
+    Control = sum(score_base_con * w_soc_applied)
+  )
+
+  # --- 2. Calculate Parameters for the Normal Distribution ---
+  wts_diff_estimate <- wts_scores$Experimental - wts_scores$Control
+  dynamic_unacceptable_diff <- pmax(wts_scores$Control, 1) * unacceptable_rel_increase
+  mu <- (wts_diff_estimate / dynamic_unacceptable_diff) * -1
+  total_n <- sum(trial_data$N_patients)
+  sigma <- k_uncertainty / sqrt(total_n)
+
+  # --- 3. Generate Posterior Distribution ---
+  toxicity_effect_dist <- rnorm(n_simulations, mean = mu, sd = sigma)
+
+  # --- 4. Return Final Results Object ---
+  results <- list(
+    wts_scores = wts_scores,
+    toxicity_effect_vector = pmax(-1, pmin(1, toxicity_effect_dist))
+  )
+  return(results)
+}
+
+
+
+#' @title Plot Toxicity Score Density
+#' @description Creates a modern density plot of the toxicity effect score.
+#' @param analysis_output A list produced by `calculate_toxicity_analysis`.
+#' @return A ggplot object.
+#'
+plot_toxicity_density <- function(analysis_output) {
+
+  if (!requireNamespace("ggplot2", quietly = TRUE) || !requireNamespace("ggridges", quietly = TRUE)) {
+    stop("Packages 'ggplot2' and 'ggridges' are needed.", call. = FALSE)
+  }
+
+  # Extraer el vector necesario de la lista de entrada.
+  # Esto resuelve el punto que mencionaste: sabe buscar dentro del objeto.
+  toxicity_effect_vector <- analysis_output$toxicity_effect_vector
+
+  plot_data <- data.frame(effect = toxicity_effect_vector, category = "Probability Density")
+  mean_effect <- mean(plot_data$effect)
+
+  p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = effect, y = category)) +
+    # AJUSTE: 'scale' reducido a un valor más estándar para evitar picos extremos.
+    ggridges::geom_density_ridges_gradient(ggplot2::aes(fill = after_stat(x)), rel_min_height = 0.01, scale = 2) +
+    ggplot2::scale_fill_gradient2(low = "#440154FF", mid = "#440154FF", high = "#FDE725FF", midpoint = 0) +
+    ggplot2::geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +
+    ggplot2::geom_vline(xintercept = mean_effect, linetype = "dotted", color = "black", size = 1) +
+    ggplot2::annotate("text", x = mean_effect, y = Inf, label = paste("Mean =", round(mean_effect, 2)), vjust = 1.5, hjust = if (mean_effect > 0) 1.1 else -0.1, fontface = "bold", size = 4) +
+    ggplot2::labs(title = "Density of the Toxicity Effect Score", subtitle = "Distribution of the difference in WTS (Experimental vs. Control)", x = "Toxicity Effect Score", y = "") +
+    ggridges::theme_ridges(font_size = 14, grid = TRUE) +
+    ggplot2::theme(legend.position = "none", axis.text.y = element_blank(), axis.ticks.y = element_blank(), plot.margin = margin(6, 12, 6, 6))
+
+  return(p)
+}

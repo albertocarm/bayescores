@@ -39,35 +39,30 @@ library(bayescores)
 
 ### Step 2: Simulate survival data
 
-Simulate a 300-patient trial with long-term survival fractions of 40%
+Simulate a 600-patient trial with long-term survival fractions of 40%
 (experimental) and 20% (control), with median survival of 12 months in
 the control arm. The experimental treatment extends survival by 50%
 among non-cured patients.
 
 ``` r
-# to work with real data, you must digitize the curves from the original paper using tools such as WebPlotDigitizer (https://automeris.io/)
-# and apply the “reconstructing individual-level data” method to invert the Kaplan–Meier equations; see a tutorial at https://pharmasug.org/proceedings/2024/RW/PharmaSUG-2024-RW-125.pdf
-
-
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
-  n_patients = 300,
+  n_patients = 600,
   cure_fraction_ctrl = 0.20,
-  cure_fraction_exp = 0.40,
+  cure_fraction_exp = 0.30,
   max_follow_up = 60,
   weibull_shape = 1.2,
   median_survival_ctrl = 12,
-  time_ratio_exp = 1.5
+  time_ratio_exp = 1.25
 )
 
 plot_km_curves(sim_data)
 ```
 
-<img src="man/figures/README-simulate-data-1.png" width="100%" />
+![](README_files/figure-gfm/simulate-data-1.png)<!-- -->
 
 ``` r
-
 data(package = "bayescores")
 ```
 
@@ -81,27 +76,38 @@ assume “Significant Improvement” with “Very High” evidence.
 **Quality of Life Parameters:**
 
 - `qol_scenario` (expected QoL outcome):
-  - `1`: **Significant Improvement**
-  - `2`: **Stabilization / Probable Benefit**
-  - `3`: **No Difference / Marginal Benefit**
-  - `4`: **Deterioration**
-  - `5`: **Insufficient Data / Unknown**
+
+- `1`: **Significant Improvement**
+
+- `2`: **Stabilization / Probable Benefit**
+
+- `3`: **No Difference / Marginal Benefit**
+
+- `4`: **Deterioration**
+
+- `5`: **Insufficient Data / Unknown**
+
 - `qol_strength` (confidence in QoL evidence):
-  - `1`: **Very Low**
-  - `2`: **Low**
-  - `3`: **Moderate**
-  - `4`: **High**
-  - `5`: **Very High**
+
+- `1`: **Very Low**
+
+- `2`: **Low**
+
+- `3`: **Moderate**
+
+- `4`: **High**
+
+- `5`: **Very High**
 
 ``` r
 toxicity_trial <- simulate_trial_data(
-  n_control = 300,
-  ratio_str = "1:1",
-  control_g1_4_pct = 50,
-  control_g3_4_pct = 20,
-  tox_ratio = 1.5,
-  qol_scenario = 1,
-  qol_strength = 5
+n_control = 300,
+ratio_str = "1:1",
+control_g1_4_pct = 50,
+control_g3_4_pct = 20,
+tox_ratio = 1.5,
+qol_scenario = 1,
+qol_strength = 5
 )
 ```
 
@@ -111,29 +117,29 @@ Visualize toxicity with AMIT plots:
 
 ``` r
 create_amit_plot(
-  trial_object = toxicity_trial,
-  grade_type = "any_grade",
-  main_title = "Example: Any-Grade Toxicity Profile",
-  data_element = "toxicity",
-  n_element = "N_patients"
+trial_object = toxicity_trial,
+grade_type = "any_grade",
+main_title = "Example: Any-Grade Toxicity Profile",
+data_element = "toxicity",
+n_element = "N_patients"
 )
 ```
 
-<img src="man/figures/README-plot-any-grade-toxicity-1.png" width="100%" />
+![](README_files/figure-gfm/plot-any-grade-toxicity-1.png)<!-- -->
 
 **Severe toxicity (Grades 3+)**
 
 ``` r
 create_amit_plot(
-  trial_object = toxicity_trial,
-  grade_type = "severe_grade",
-  main_title = "Example: Severe-Grade (G3+) Toxicity Profile",
-  data_element = "toxicity",
-  n_element = "N_patients"
+trial_object = toxicity_trial,
+grade_type = "severe_grade",
+main_title = "Example: Severe-Grade (G3+) Toxicity Profile",
+data_element = "toxicity",
+n_element = "N_patients"
 )
 ```
 
-<img src="man/figures/README-plot-severe-toxicity-1.png" width="100%" />
+![](README_files/figure-gfm/plot-severe-toxicity-1.png)<!-- -->
 
 ### Step 4: Fit the Bayesian cure model
 
@@ -141,114 +147,115 @@ Fit the Bayesian AFT cure model (use higher `iter` in practice):
 
 ``` r
 bayesian_fit <- fit_bayesian_cure_model(
-  sim_data,
-  time_col = "time",
-  event_col = "event",
-  arm_col = "arm",
-  iter = 2500,
-  chains = 4
+sim_data,
+time_col = "time",
+event_col = "event",
+arm_col = "arm",
+iter = 2500,
+chains = 4
 )
-#> 
-#> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
-#> Chain 1: 
-#> Chain 1: Gradient evaluation took 0.000148 seconds
-#> Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.48 seconds.
-#> Chain 1: Adjust your expectations accordingly!
-#> Chain 1: 
-#> Chain 1: 
-#> Chain 1: Iteration:    1 / 2500 [  0%]  (Warmup)
-#> Chain 1: Iteration:  250 / 2500 [ 10%]  (Warmup)
-#> Chain 1: Iteration:  500 / 2500 [ 20%]  (Warmup)
-#> Chain 1: Iteration:  750 / 2500 [ 30%]  (Warmup)
-#> Chain 1: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-#> Chain 1: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-#> Chain 1: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-#> Chain 1: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-#> Chain 1: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-#> Chain 1: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-#> Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-#> Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
-#> Chain 1: 
-#> Chain 1:  Elapsed Time: 2.865 seconds (Warm-up)
-#> Chain 1:                3.01 seconds (Sampling)
-#> Chain 1:                5.875 seconds (Total)
-#> Chain 1: 
-#> 
-#> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
-#> Chain 2: 
-#> Chain 2: Gradient evaluation took 0.000115 seconds
-#> Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.15 seconds.
-#> Chain 2: Adjust your expectations accordingly!
-#> Chain 2: 
-#> Chain 2: 
-#> Chain 2: Iteration:    1 / 2500 [  0%]  (Warmup)
-#> Chain 2: Iteration:  250 / 2500 [ 10%]  (Warmup)
-#> Chain 2: Iteration:  500 / 2500 [ 20%]  (Warmup)
-#> Chain 2: Iteration:  750 / 2500 [ 30%]  (Warmup)
-#> Chain 2: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-#> Chain 2: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-#> Chain 2: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-#> Chain 2: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-#> Chain 2: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-#> Chain 2: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-#> Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-#> Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
-#> Chain 2: 
-#> Chain 2:  Elapsed Time: 2.569 seconds (Warm-up)
-#> Chain 2:                3.052 seconds (Sampling)
-#> Chain 2:                5.621 seconds (Total)
-#> Chain 2: 
-#> 
-#> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
-#> Chain 3: 
-#> Chain 3: Gradient evaluation took 0.000144 seconds
-#> Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.44 seconds.
-#> Chain 3: Adjust your expectations accordingly!
-#> Chain 3: 
-#> Chain 3: 
-#> Chain 3: Iteration:    1 / 2500 [  0%]  (Warmup)
-#> Chain 3: Iteration:  250 / 2500 [ 10%]  (Warmup)
-#> Chain 3: Iteration:  500 / 2500 [ 20%]  (Warmup)
-#> Chain 3: Iteration:  750 / 2500 [ 30%]  (Warmup)
-#> Chain 3: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-#> Chain 3: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-#> Chain 3: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-#> Chain 3: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-#> Chain 3: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-#> Chain 3: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-#> Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-#> Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
-#> Chain 3: 
-#> Chain 3:  Elapsed Time: 2.698 seconds (Warm-up)
-#> Chain 3:                3.709 seconds (Sampling)
-#> Chain 3:                6.407 seconds (Total)
-#> Chain 3: 
-#> 
-#> SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
-#> Chain 4: 
-#> Chain 4: Gradient evaluation took 0.000135 seconds
-#> Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.35 seconds.
-#> Chain 4: Adjust your expectations accordingly!
-#> Chain 4: 
-#> Chain 4: 
-#> Chain 4: Iteration:    1 / 2500 [  0%]  (Warmup)
-#> Chain 4: Iteration:  250 / 2500 [ 10%]  (Warmup)
-#> Chain 4: Iteration:  500 / 2500 [ 20%]  (Warmup)
-#> Chain 4: Iteration:  750 / 2500 [ 30%]  (Warmup)
-#> Chain 4: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-#> Chain 4: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-#> Chain 4: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-#> Chain 4: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-#> Chain 4: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-#> Chain 4: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-#> Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-#> Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
-#> Chain 4: 
-#> Chain 4:  Elapsed Time: 4.074 seconds (Warm-up)
-#> Chain 4:                5.044 seconds (Sampling)
-#> Chain 4:                9.118 seconds (Total)
-#> Chain 4:
 ```
+
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000281 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.81 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 1: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 1: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 1: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 1: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 1: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 6.673 seconds (Warm-up)
+    ## Chain 1:                10.262 seconds (Sampling)
+    ## Chain 1:                16.935 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
+    ## Chain 2: 
+    ## Chain 2: Gradient evaluation took 0.000237 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 2.37 seconds.
+    ## Chain 2: Adjust your expectations accordingly!
+    ## Chain 2: 
+    ## Chain 2: 
+    ## Chain 2: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 2: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 2: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 2: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 2: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 2: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 2: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 2: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 2: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 2: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 2: 
+    ## Chain 2:  Elapsed Time: 6.276 seconds (Warm-up)
+    ## Chain 2:                8.299 seconds (Sampling)
+    ## Chain 2:                14.575 seconds (Total)
+    ## Chain 2: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
+    ## Chain 3: 
+    ## Chain 3: Gradient evaluation took 0.000357 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.57 seconds.
+    ## Chain 3: Adjust your expectations accordingly!
+    ## Chain 3: 
+    ## Chain 3: 
+    ## Chain 3: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 3: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 3: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 3: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 3: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 3: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 3: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 3: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 3: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 3: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 3: 
+    ## Chain 3:  Elapsed Time: 7.018 seconds (Warm-up)
+    ## Chain 3:                12.331 seconds (Sampling)
+    ## Chain 3:                19.349 seconds (Total)
+    ## Chain 3: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
+    ## Chain 4: 
+    ## Chain 4: Gradient evaluation took 0.000265 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 2.65 seconds.
+    ## Chain 4: Adjust your expectations accordingly!
+    ## Chain 4: 
+    ## Chain 4: 
+    ## Chain 4: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 4: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 4: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 4: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 4: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 4: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 4: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 4: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 4: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 4: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 4: 
+    ## Chain 4:  Elapsed Time: 6.527 seconds (Warm-up)
+    ## Chain 4:                9.491 seconds (Sampling)
+    ## Chain 4:                16.018 seconds (Total)
+    ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
 
@@ -264,29 +271,34 @@ fractions of long‑term survivors:
 
 ``` r
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
-#> Inference for Stan model: anon_model.
-#> 4 chains, each with iter=2500; warmup=1000; thin=1; 
-#> post-warmup draws per chain=1500, total post-warmup draws=6000.
-#> 
-#>               mean se_mean   sd 2.5%  25%  50%  75% 97.5% n_eff Rhat
-#> beta_cure_arm 0.71    0.01 0.29 0.15 0.53 0.71 0.91  1.27  2971    1
-#> beta_surv_arm 0.57    0.00 0.15 0.31 0.47 0.56 0.65  0.88  3232    1
-#> alpha         1.33    0.00 0.09 1.16 1.27 1.33 1.39  1.50  4060    1
-#> 
-#> Samples were drawn using NUTS(diag_e) at Sun Jul 27 16:36:15 2025.
-#> For each parameter, n_eff is a crude measure of effective sample size,
-#> and Rhat is the potential scale reduction factor on split chains (at 
-#> convergence, Rhat=1).
-outcomes(bayesian_fit)
-#> # A tibble: 5 × 2
-#>   Metric                                     `Result (95% CI)`    
-#>   <chr>                                      <chr>                
-#> 1 Time Ratio (TR)                            1.75 (1.36 - 2.42)   
-#> 2 Odds Ratio (OR) for Cure                   2.04 (1.16 - 3.55)   
-#> 3 Long-Term Survival Rate (%) - Control      22.80 (16.29 - 30.10)
-#> 4 Long-Term Survival Rate (%) - Experimental 37.79 (27.67 - 46.35)
-#> 5 Absolute Difference in Survival Rate (%)   14.84 (2.99 - 25.83)
 ```
+
+    ## Inference for Stan model: anon_model.
+    ## 4 chains, each with iter=2500; warmup=1000; thin=1; 
+    ## post-warmup draws per chain=1500, total post-warmup draws=6000.
+    ## 
+    ##               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
+    ## beta_cure_arm 0.24       0 0.19 -0.14 0.11 0.24 0.36  0.60  3129    1
+    ## beta_surv_arm 0.11       0 0.09 -0.06 0.05 0.11 0.17  0.28  2637    1
+    ## alpha         1.26       0 0.06  1.16 1.22 1.26 1.30  1.37  3785    1
+    ## 
+    ## Samples were drawn using NUTS(diag_e) at Thu Jul 31 22:14:39 2025.
+    ## For each parameter, n_eff is a crude measure of effective sample size,
+    ## and Rhat is the potential scale reduction factor on split chains (at 
+    ## convergence, Rhat=1).
+
+``` r
+outcomes(bayesian_fit)
+```
+
+    ## # A tibble: 5 × 2
+    ##   Metric                                     `Result (95% CI)`    
+    ##   <chr>                                      <chr>                
+    ## 1 Time Ratio (TR)                            1.12 (0.94 - 1.33)   
+    ## 2 Odds Ratio (OR) for Cure                   1.27 (0.87 - 1.82)   
+    ## 3 Long-Term Survival Rate (%) - Control      24.07 (19.43 - 29.45)
+    ## 4 Long-Term Survival Rate (%) - Experimental 28.67 (23.65 - 34.08)
+    ## 5 Absolute Difference in Survival Rate (%)   4.61 (-2.78 - 11.51)
 
 **Posterior distributions**
 
@@ -294,16 +306,13 @@ outcomes(bayesian_fit)
 plot_densities(bayesian_fit)
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-plot-parameters-1.png" alt="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference." width="100%" />
-<p class="caption">
-
-Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of
-Cure, and Cure Probability Difference.
-</p>
-
-</div>
+<figure>
+<img src="README_files/figure-gfm/plot-parameters-1.png"
+alt="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference." />
+<figcaption aria-hidden="true">Figure 1: Posterior density distributions
+for Time Ratio, Odds Ratio of Cure, and Cure Probability
+Difference.</figcaption>
+</figure>
 
 **Posterior predictive check** You can observe how the model’s
 predictions align satisfactorily with the Kaplan–Meier estimator:
@@ -312,42 +321,104 @@ predictions align satisfactorily with the Kaplan–Meier estimator:
 plot(bayesian_fit)
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-plot-model-fit-1.png" alt="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)." width="100%" />
-<p class="caption">
-
-Figure 2: Posterior predictive check (model vs Kaplan-Meier data).
-</p>
-
-</div>
+<figure>
+<img src="README_files/figure-gfm/plot-model-fit-1.png"
+alt="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)." />
+<figcaption aria-hidden="true">Figure 2: Posterior predictive check
+(model vs Kaplan-Meier data).</figcaption>
+</figure>
 
 ### Step 6: Integrate toxicity data
 
 Toxicity is summarized by a burden‑of‑toxicity score, which weights both
 the severity and the category of toxicity (see technical documentation).
+
 Estimates below zero, as observed here, indicate greater toxicity in the
 experimental arm, consistent with the simulation:
 
 ``` r
-toxicity_output <- calculate_toxicity_adjustment(
-  trial_data = toxicity_trial,
-  n_simulations = bayesian_fit$n_draws
+set.seed(123)
+toxicity_output <- calculate_toxicity_analysis(
+trial_data = toxicity_trial,
+n_simulations = bayesian_fit$n_draws,
+ unacceptable_rel_increase = 0.5,
+k_uncertainty = 5
 )
-
-plot_toxicity_adjustment(toxicity_output)
-#> Picking joint bandwidth of 0.00582
 ```
 
-<div class="figure">
+# Understanding the Toxicity Analysis in Practice
 
-<img src="man/figures/README-toxicity-integration-1.png" alt="Figure 3: Distribution of burden-of-toxicity score." width="100%" />
-<p class="caption">
+The toxicity analysis provides a nuanced view of a drug’s safety
+profile. Let’s break down the key parameters using a practical example
+where the function returns these scores:
 
-Figure 3: Distribution of burden-of-toxicity score.
-</p>
+``` r
+toxicity_output$wts_scores
+```
 
-</div>
+**1. What are the WTS (Weighted Toxicity Scores)?**
+
+Think of the WTS as a *total harm score* for each arm of the trial. It’s
+not just a simple count of side effects. Instead, it’s a composite score
+where:
+
+- *Severity matters*: High-grade toxicities (Grade 3-4) add much more to
+  the score than low-grade ones.
+- *Type matters*: Clinically relevant toxicities (e.g., blood disorders)
+  are weighted more heavily than less critical ones (e.g., skin
+  disorders).
+
+In our example, the experimental drug accumulated a total *harm score*
+of **2.7495**, while the standard control drug had a score of
+**1.877**.  
+This gives us a clear, initial indication that the new drug is more
+toxic than the control.  
+But is it *too* toxic? That’s where the next parameter comes in.
+
+------------------------------------------------------------------------
+
+**2. Defining “Unacceptable” (`unacceptable_rel_increase = 0.5`)**
+
+This parameter is your *toxicity budget*. It doesn’t set a fixed limit,
+but a relative one based on the control arm.  
+A value of `0.5` means:
+
+> “I am willing to accept a new drug that is up to 50% more toxic than
+> the control. Anything beyond that, I consider unacceptable.”
+
+Let’s apply this to our scores:
+
+- **Your Budget** (in WTS points): `1.877 * 0.5 = 0.9385`
+- **The Observed Cost**: `2.7495 - 0.9385 = 1.811`
+
+**Conclusion**: The observed increase in harm (**1.811**) is greater
+than your budget (**0.9385**).  
+Therefore, according to your own definition, the toxicity of the new
+drug is *unacceptable*.
+
+This comparison is used to center the final probability distribution.
+
+------------------------------------------------------------------------
+
+**3. Calibrating Uncertainty (`k_uncertainty`)**
+
+The real world has uncertainty. The `k_uncertainty` parameter lets you
+define how skeptical you are of the results, which influences the
+*confidence* of the final output. It directly controls the width of the
+final probability distribution.
+
+- A low `k` (e.g., 5) means you have high confidence in the data. You
+  believe the observed difference is close to the true difference. This
+  results in a narrow, sharp probability distribution, leading to a more
+  decisive conclusion.
+- A high `k` (e.g., 30) means you are more skeptical. You believe the
+  observed difference could be due to random chance, especially with a
+  small number of patients. This results in a wide, flat probability
+  distribution, indicating less certainty in the outcome.
+
+In short, `k_uncertainty` allows you to calibrate the model based on the
+quality and size of the trial data, ensuring the final result reflects
+an appropriate level of statistical confidence.
 
 ### Step 7: Quality-of-life weighting
 
@@ -355,22 +426,19 @@ QoL adjustments modeled using multinomial distribution:
 
 ``` r
 qol_scores <- sample_qol_scores(
-  prob_vector = toxicity_trial$qol,
-  n_samples = bayesian_fit$n_draws
+prob_vector = toxicity_trial$qol,
+n_samples = bayesian_fit$n_draws
 )
 
 plot_qol_histogram(qol_scores)
 ```
 
-<div class="figure">
-
-<img src="man/figures/README-qol-weighting-1.png" alt="Figure 4: Multinomial distribution of QoL levels." width="100%" />
-<p class="caption">
-
-Figure 4: Multinomial distribution of QoL levels.
-</p>
-
-</div>
+<figure>
+<img src="README_files/figure-gfm/qol-weighting-1.png"
+alt="Figure 4: Multinomial distribution of QoL levels." />
+<figcaption aria-hidden="true">Figure 4: Multinomial distribution of QoL
+levels.</figcaption>
+</figure>
 
 We have chosen this methodology because quality‑of‑life data are
 published very inconsistently—indeed, the data are a mess—and the
@@ -407,34 +475,50 @@ efficacy_inputs <- list(
   cure_posterior_samples = extract_mcmc_cure_diffs(bayesian_fit)
 )
 
-final_utilities <- summarize_final_utility(
-  efficacy_scores = efficacy_inputs,
-  toxicity_scores = toxicity_output$adjustment_vector,
-  qol_scores = qol_scores,
-  weights_if_no_cure = c(tr=0.7, cure=0.1, tox=0.1, qol=0.1),
-  weights_if_cure = c(tr=0.15, cure=0.6, tox=0.15, qol=0.1),
-  tr_min_if_no_cure = 1.15,
-  tr_hopeful = 1.35,
-  cure_min_relevant = 0.04,
-  cure_hopeful = 0.12
-)
-#> Info: P(Cure Benefit > 0.02) = 0.98. Profile detected: 'Cure'.
-#> Info: 'Cure' profile. Median cure diff=0.148 -> Dominance Factor=0.62
-#> Info: QoL magnitude is 0.50. Applying gradual weighting.
-#> Info: Final adjusted weights -> tr 0.302, cure 0.49, tox 0.158, qol 0.05
 
-print(final_utilities$component_summary)
-#>                          Component     Median Lower_95_CrI Upper_95_CrI
-#> 1      1. -> Score TR (Calibrated)  93.009516    71.845939    99.689848
-#> 2         2. -> Score Cure (0-100)  52.921441     8.224687    92.141417
-#> 3    3. -> Score Toxicity (scaled) -42.417455   -49.520258   -35.306316
-#> 4         4. -> Score QoL (scaled)  50.000000  -100.000000   100.000000
-#> 5       Contribution TR (Weighted)  28.074121    21.686078    30.090522
-#> 6     Contribution Cure (Weighted)  25.922260     4.028660    45.133196
-#> 7 Contribution Toxicity (Weighted)  -6.716097    -7.840708    -5.590167
-#> 8      Contribution QoL (Weighted)   2.500000    -5.000000     5.000000
-#> 9              FINAL UTILITY SCORE  48.707666    26.812621    69.192432
+# 1. Define the Final Calibration Settings ---
+my_final_calibration <- list(
+  efficacy = list(
+    # Aggressive curve for Cure
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    
+    # Slower curve for TR
+    tr_utility_target = list(effect_value = 1.25, utility_value = 50)
+  )
+)
+
+
+# 2. Run the Bayescores Function on Your Data ---
+# The function takes your data objects directly as inputs.
+final_utilities <- get_bayescores(
+  efficacy_inputs = efficacy_inputs,
+  qol_scores = qol_scores,
+  toxicity_scores = toxicity_output$toxicity_effect_vector,
+  calibration_args = my_final_calibration
+)
+cat("--- Final Bayescores Summary ---\n")
 ```
+
+    ## --- Final Bayescores Summary ---
+
+``` r
+print(final_utilities$component_summary)
+```
+
+    ##                                                     Component    Median
+    ## Utility TR (0-100)                         Utility TR (0-100)  27.67119
+    ## Utility Cure (0-100)                     Utility Cure (0-100)  27.37536
+    ## Efficacy Score (Combined)           Efficacy Score (Combined)  47.99946
+    ## QoL Contribution (points)           QoL Contribution (points)  12.12045
+    ## Toxicity Contribution (points) Toxicity Contribution (points) -19.72996
+    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE  36.85705
+    ##                                Lower_95_CrI.2.5% Upper_95_CrI.97.5%
+    ## Utility TR (0-100)                      0.000000          59.568890
+    ## Utility Cure (0-100)                    0.000000          54.958276
+    ## Efficacy Score (Combined)               9.341862          74.593677
+    ## QoL Contribution (points)             -23.946715          24.981138
+    ## Toxicity Contribution (points)        -24.974410          -4.891113
+    ## FINAL UTILITY SCORE                     1.107186          82.657790
 
 ### Step 9: Visualize final clinical benefit
 
@@ -448,18 +532,16 @@ quality of life.
 
 ``` r
 plot_utility_donut(final_utilities)
-#> Enter the trial name for the plot title:
 ```
 
-<div class="figure">
+    ## Enter the trial name for the plot title:
 
-<img src="man/figures/README-plot-donut-1.png" alt="Figure 5: BayeScore donut plot." width="100%" />
-<p class="caption">
-
-Figure 5: BayeScore donut plot.
-</p>
-
-</div>
+<figure>
+<img src="README_files/figure-gfm/plot-donut-1.png"
+alt="Figure 5: BayeScore donut plot." />
+<figcaption aria-hidden="true">Figure 5: BayeScore donut
+plot.</figcaption>
+</figure>
 
 **Final score posterior distribution**
 
@@ -475,15 +557,124 @@ a full Bayesian distribution!
 plot_final_utility_density(final_utilities)
 ```
 
-<div class="figure">
+<figure>
+<img src="README_files/figure-gfm/plot-score-density-1.png"
+alt="Figure 6: Final BayeScore posterior distribution." />
+<figcaption aria-hidden="true">Figure 6: Final BayeScore posterior
+distribution.</figcaption>
+</figure>
 
-<img src="man/figures/README-plot-score-density-1.png" alt="Figure 6: Final BayeScore posterior distribution." width="100%" />
-<p class="caption">
+**Sensitivity Analysis Dashboard** To help understand the overall effect
+of parameter selection on the final Bayescore and to assist in model
+calibration, we have developed a comprehensive sensitivity analysis
+dashboard.
 
-Figure 6: Final BayeScore posterior distribution.
-</p>
+This function generates an 8-panel plot that visualizes how the final
+utility score responds to changes in the core model parameters, such as
+Time Ratio (TR), Cure Rate, Quality of Life (QoL), and Toxicity. It
+provides a global view of the model’s behavior under different
+conditions.
 
-</div>
+``` r
+# First, we define any custom calibration arguments.
+# We can use an empty list to accept the model's defaults.
+calibration_settings <- list(
+  efficacy = list(
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    tr_utility_target = list(effect_value = 1.25, utility_value = 50)
+  )
+)
+
+
+# Now, we generate the complete 8-panel dashboard
+# The function will print its progress as it generates the data.
+dashboard <- generate_sensitivity_dashboard(
+  calibration_args = calibration_settings
+)
+```
+
+    ## Generating data for all 8 plots...
+    ##  Data generation complete.
+
+``` r
+# Finally, display the plot
+print(dashboard)
+```
+
+![](README_files/figure-gfm/sensitivity-dashboard-1.png)<!-- -->
+
+**Digitizing Kaplan-Meier Curves to Obtain IPD**
+
+To facilitate evidence synthesis, we have created a high-level function,
+km_to_dataset, to extract Individual Patient Data (IPD) directly from
+images of Kaplan-Meier plots. This tool is essentially a wrapper that
+implements the well-established Guyot et al. method by leveraging the
+functionalities of two powerful packages: SurvdigitizeR and survHE.
+
+Image Preparation Before using the function, the plot image requires a
+simple manual pre-processing step. First, copy the plot from the source
+publication. Then, using a basic image editor like Paint, erase all
+extraneous elements such as titles, legends, and any other annotations.
+The final image should contain only the survival curves, the X and Y
+axes, and the numbers on those axes.
+
+For our example, we use *Figure 1* from the CheckMate 649 trial
+publication (DOI: 10.1200/JCO.23.01601).
+
+*Example: Reconstructing Data from CheckMate 649* The following code
+demonstrates the complete workflow. First, we define the necessary
+parameters. The most important ones are:
+
+time_intervals: This is the vector of time points at which the number of
+patients at risk is reported in the publication’s plot.
+
+nrisk_data_list: This is a named list where each element contains the
+number-at-risk data corresponding to a treatment arm, as transcribed
+from the plot.
+
+``` r
+# --- 1. Define all parameters for the main function ---
+
+# NOTE: Provide the full path to your cleaned image file.
+image_file_path  <- "C:/path/to/your/cleaned_plot_image.png"
+
+# Time points for the number-at-risk table (from the plot's x-axis)
+time_intervals   <- seq(0, 63, 3)
+
+# The output file where the final IPD data frame will be saved
+output_file_name <- "final_ipd_data.Rda"
+
+# Number-at-risk data, transcribed from the publication's plot
+nrisk_data_list <- list(
+  control = c(482, 424, 353, 275, 215, 154, 125, 97, 83, 69, 60, 51, 44, 35, 28, 18, 14, 10, 5, 0, 0),
+  experimental = c(473, 440, 380, 315, 263, 223, 187, 161, 141, 118, 105, 100, 94, 81, 66, 53, 37, 24, 17, 6, 2)
+)
+
+# --- 2. Run the entire workflow ---
+final_dataset <- km_to_dataset(
+  img_path = image_file_path,
+  time_breaks = time_intervals,
+  n_risk_list = nrisk_data_list,
+  output_filename = output_file_name,
+  # Axis calibration parameters (from the plot)
+  x_start = 0, x_end = 63, x_increment = 3,
+  y_start = 0, y_end = 1, y_increment = 0.1
+)
+
+# --- 3. Verify the result by re-plotting the reconstructed data ---
+fit <- survival::survfit(survival::Surv(time, event) ~ arm, data = final_dataset)
+
+print(
+  survminer::ggsurvplot(
+    fit, data = final_dataset, conf.int = FALSE, risk.table = TRUE,
+    break.time.by = 3, risk.table.height = 0.25, risk.table.y.text.col = TRUE,
+    risk.table.y.text = FALSE, legend.title = "Arm",
+    legend.labs = names(nrisk_data_list)
+  )
+)
+```
+
+And voilà! Ready to estimate the clinical benefit of new drugs!
 
 ## Why bayescores? a more meaningful approach
 

@@ -1,15 +1,12 @@
 
 ---
-output: github_document
+  output: github_document
 ---
+  
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>",
-  fig.path = "man/figures/README-",
-  out.width = "100%"
-)
+
+```{r setup, include=FALSE}
+devtools::load_all()
 ```
 
 # bayescores: Comprehensive quantification of clinical benefit in randomized controlled trials using Bayesian AFT cure models
@@ -17,8 +14,8 @@ knitr::opts_chunk$set(
 **`bayescores`** provides a comprehensive toolkit for analyzing randomized controlled trials (RCTs). This package introduces the **Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to quantify clinical benefit by accounting for both survival prolongation and cure rates.
 
 The package includes functions to:
-
-- Simulate realistic survival data from a mixture cure model.
+  
+  - Simulate realistic survival data from a mixture cure model.
 - Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan.
 - Visualize model results and diagnostics.
 - Calculate and visualize BayeScores to provide a holistic measure of clinical benefit.
@@ -26,8 +23,8 @@ The package includes functions to:
 ## Installation
 
 Install the development version of `bayescores` from GitHub:
-
-```r
+  
+  ```r
 # install.packages("devtools")
 devtools::install_github("albertocarm/bayescores")
 ```
@@ -44,23 +41,20 @@ library(bayescores)
 
 ### Step 2: Simulate survival data
 
-Simulate a 300-patient trial with long-term survival fractions of 40% (experimental) and 20% (control), with median survival of 12 months in the control arm. The experimental treatment extends survival by 50% among non-cured patients.
+Simulate a 600-patient trial with long-term survival fractions of 40% (experimental) and 20% (control), with median survival of 12 months in the control arm. The experimental treatment extends survival by 50% among non-cured patients.
 
 ```{r simulate-data}
-# to work with real data, you must digitize the curves from the original paper using tools such as WebPlotDigitizer (https://automeris.io/)
-# and apply the “reconstructing individual-level data” method to invert the Kaplan–Meier equations; see a tutorial at https://pharmasug.org/proceedings/2024/RW/PharmaSUG-2024-RW-125.pdf
-
 
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
-  n_patients = 300,
+  n_patients = 600,
   cure_fraction_ctrl = 0.20,
-  cure_fraction_exp = 0.40,
+  cure_fraction_exp = 0.30,
   max_follow_up = 60,
   weibull_shape = 1.2,
   median_survival_ctrl = 12,
-  time_ratio_exp = 1.5
+  time_ratio_exp = 1.25
 )
 
 plot_km_curves(sim_data)
@@ -73,22 +67,22 @@ data(package = "bayescores")
 Generate toxicity data for a trial with 1:1 randomization (300 control patients), baseline toxicity of 50% (any-grade), 20% severe events (G3–4), and 1.5× higher toxicity in the experimental arm. QoL outcomes assume "Significant Improvement" with "Very High" evidence.
 
 **Quality of Life Parameters:**
-
-- `qol_scenario` (expected QoL outcome):
+  
+  - `qol_scenario` (expected QoL outcome):
   - `1`: **Significant Improvement**
   - `2`: **Stabilization / Probable Benefit**
   - `3`: **No Difference / Marginal Benefit**
   - `4`: **Deterioration**
   - `5`: **Insufficient Data / Unknown**
-
-- `qol_strength` (confidence in QoL evidence):
+  
+  - `qol_strength` (confidence in QoL evidence):
   - `1`: **Very Low**
   - `2`: **Low**
   - `3`: **Moderate**
   - `4`: **High**
   - `5`: **Very High**
-
-```{r simulate-toxicity}
+  
+  ```{r simulate-toxicity}
 toxicity_trial <- simulate_trial_data(
   n_control = 300,
   ratio_str = "1:1",
@@ -101,10 +95,10 @@ toxicity_trial <- simulate_trial_data(
 ```
 
 Visualize toxicity with AMIT plots:
-
-**Any-grade toxicity (Grades 1–4)**
-
-```{r plot-any-grade-toxicity}
+  
+  **Any-grade toxicity (Grades 1–4)**
+  
+  ```{r plot-any-grade-toxicity}
 create_amit_plot(
   trial_object = toxicity_trial,
   grade_type = "any_grade",
@@ -115,8 +109,8 @@ create_amit_plot(
 ```
 
 **Severe toxicity (Grades 3+)**
-
-```{r plot-severe-toxicity}
+  
+  ```{r plot-severe-toxicity}
 create_amit_plot(
   trial_object = toxicity_trial,
   grade_type = "severe_grade",
@@ -129,8 +123,8 @@ create_amit_plot(
 ### Step 4: Fit the Bayesian cure model
 
 Fit the Bayesian AFT cure model (use higher `iter` in practice):
-
-```{r fit-model}
+  
+  ```{r fit-model}
 bayesian_fit <- fit_bayesian_cure_model(
   sim_data,
   time_col = "time",
@@ -144,48 +138,102 @@ bayesian_fit <- fit_bayesian_cure_model(
 ### Step 5: Analyze and visualize model results
 
 The mixture cure model separates individuals into:
-
-- **Cured (long-term survivors)**: negligible event risk long-term.
+  
+  - **Cured (long-term survivors)**: negligible event risk long-term.
 - **Susceptible (uncured)**: ongoing event risk; survival prolonged but not cured.
 
 Inspect numerical summaries and visualize posterior distributions. You can verify that the model satisfactorily recovers the time ratio and the fractions of long‑term survivors:
-
-```{r numerical-summary}
+  
+  ```{r numerical-summary}
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
 outcomes(bayesian_fit)
 ```
 
 **Posterior distributions**
-
-```{r plot-parameters, fig.cap="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference."}
+  
+  ```{r plot-parameters, fig.cap="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference."}
 plot_densities(bayesian_fit)
 ```
 
 **Posterior predictive check**
-You can observe how the model’s predictions align satisfactorily with the Kaplan–Meier estimator:
-
-```{r plot-model-fit, fig.cap="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)."}
+  You can observe how the model’s predictions align satisfactorily with the Kaplan–Meier estimator:
+  
+  ```{r plot-model-fit, fig.cap="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)."}
 plot(bayesian_fit)
 ```
 
 ### Step 6: Integrate toxicity data
 
-Toxicity is summarized by a burden‑of‑toxicity score, which weights both the severity and the category of toxicity (see technical documentation). Estimates below zero, as observed here, indicate greater toxicity in the experimental arm, consistent with the simulation:
+Toxicity is summarized by a burden‑of‑toxicity score, which weights both the severity and the category of toxicity (see technical documentation). 
 
-```{r toxicity-integration, fig.cap="Figure 3: Distribution of burden-of-toxicity score."}
-toxicity_output <- calculate_toxicity_adjustment(
+
+Estimates below zero, as observed here, indicate greater toxicity in the experimental arm, consistent with the simulation:
+  
+  ```{r toxicity-integration, fig.cap="Figure 3: Distribution of burden-of-toxicity score."}
+set.seed(123)
+toxicity_output <- calculate_toxicity_analysis(
   trial_data = toxicity_trial,
-  n_simulations = bayesian_fit$n_draws
+  n_simulations = bayesian_fit$n_draws,
+   unacceptable_rel_increase = 0.5,
+  k_uncertainty = 5
 )
-
-plot_toxicity_adjustment(toxicity_output)
 ```
+
+# Understanding the Toxicity Analysis in Practice
+
+The toxicity analysis provides a nuanced view of a drug's safety profile. Let's break down the key parameters using a practical example where the function returns these scores:
+
+```r
+toxicity_output$wts_scores
+```
+
+**1. What are the WTS (Weighted Toxicity Scores)?**
+
+Think of the WTS as a *total harm score* for each arm of the trial. It's not just a simple count of side effects. Instead, it's a composite score where:
+
+- *Severity matters*: High-grade toxicities (Grade 3-4) add much more to the score than low-grade ones.
+- *Type matters*: Clinically relevant toxicities (e.g., blood disorders) are weighted more heavily than less critical ones (e.g., skin disorders).
+
+In our example, the experimental drug accumulated a total *harm score* of **2.7495**, while the standard control drug had a score of **1.877**.  
+This gives us a clear, initial indication that the new drug is more toxic than the control.  
+But is it *too* toxic? That's where the next parameter comes in.
+
+---
+
+**2. Defining "Unacceptable" (`unacceptable_rel_increase = 0.5`)**
+
+This parameter is your *toxicity budget*. It doesn't set a fixed limit, but a relative one based on the control arm.  
+A value of `0.5` means:
+
+> "I am willing to accept a new drug that is up to 50% more toxic than the control. Anything beyond that, I consider unacceptable."
+
+Let's apply this to our scores:
+
+- **Your Budget** (in WTS points): `1.877 * 0.5 = 0.9385`
+- **The Observed Cost**: `2.7495 - 0.9385 = 1.811`
+
+**Conclusion**: The observed increase in harm (**1.811**) is greater than your budget (**0.9385**).  
+Therefore, according to your own definition, the toxicity of the new drug is *unacceptable*.
+
+This comparison is used to center the final probability distribution.
+
+---
+
+**3. Calibrating Uncertainty (`k_uncertainty`)**
+
+The real world has uncertainty. The `k_uncertainty` parameter lets you define how skeptical you are of the results, which influences the *confidence* of the final output. It directly controls the width of the final probability distribution.
+
+- A low `k` (e.g., 5) means you have high confidence in the data. You believe the observed difference is close to the true difference. This results in a narrow, sharp probability distribution, leading to a more decisive conclusion.
+- A high `k` (e.g., 30) means you are more skeptical. You believe the observed difference could be due to random chance, especially with a small number of patients. This results in a wide, flat probability distribution, indicating less certainty in the outcome.
+
+In short, `k_uncertainty` allows you to calibrate the model based on the quality and size of the trial data, ensuring the final result reflects an appropriate level of statistical confidence.
+
 
 ### Step 7: Quality-of-life weighting
 
 QoL adjustments modeled using multinomial distribution:
-
-```{r qol-weighting, fig.cap="Figure 4: Multinomial distribution of QoL levels."}
+  
+  ```{r qol-weighting, fig.cap="Figure 4: Multinomial distribution of QoL levels."}
 qol_scores <- sample_qol_scores(
   prob_vector = toxicity_trial$qol,
   n_samples = bayesian_fit$n_draws
@@ -214,40 +262,138 @@ efficacy_inputs <- list(
   cure_posterior_samples = extract_mcmc_cure_diffs(bayesian_fit)
 )
 
-final_utilities <- summarize_final_utility(
-  efficacy_scores = efficacy_inputs,
-  toxicity_scores = toxicity_output$adjustment_vector,
-  qol_scores = qol_scores,
-  weights_if_no_cure = c(tr=0.7, cure=0.1, tox=0.1, qol=0.1),
-  weights_if_cure = c(tr=0.15, cure=0.6, tox=0.15, qol=0.1),
-  tr_min_if_no_cure = 1.15,
-  tr_hopeful = 1.35,
-  cure_min_relevant = 0.04,
-  cure_hopeful = 0.12
+
+# 1. Define the Final Calibration Settings ---
+my_final_calibration <- list(
+  efficacy = list(
+    # Aggressive curve for Cure
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    
+    # Slower curve for TR
+    tr_utility_target = list(effect_value = 1.25, utility_value = 50)
+  )
 )
 
+
+# 2. Run the Bayescores Function on Your Data ---
+# The function takes your data objects directly as inputs.
+final_utilities <- get_bayescores(
+  efficacy_inputs = efficacy_inputs,
+  qol_scores = qol_scores,
+  toxicity_scores = toxicity_output$toxicity_effect_vector,
+  calibration_args = my_final_calibration
+)
+cat("--- Final Bayescores Summary ---\n")
 print(final_utilities$component_summary)
 ```
 
 ### Step 9: Visualize final clinical benefit
 
 **BayeScore donut plot**
-
-After these analyses, the tool delivers a final *clinical utility score* derived from all the weightings, representing the drug’s ultimate evaluation. This score is based on a simulation that assumed benefit but also factored in some toxicity, yet still resulted in an improvement in quality of life.
+  
+  After these analyses, the tool delivers a final *clinical utility score* derived from all the weightings, representing the drug’s ultimate evaluation. This score is based on a simulation that assumed benefit but also factored in some toxicity, yet still resulted in an improvement in quality of life.
 
 ```{r plot-donut, fig.cap="Figure 5: BayeScore donut plot."}
 plot_utility_donut(final_utilities)
 ```
 
 **Final score posterior distribution**
-
-It’s clear that estimating clinical benefit carries substantial uncertainty—studies are noisy, and sample sizes are limited. We’ve rigorously propagated every source of uncertainty throughout the analysis, so that you alone judge the credibility of the results.  
+  
+  It’s clear that estimating clinical benefit carries substantial uncertainty—studies are noisy, and sample sizes are limited. We’ve rigorously propagated every source of uncertainty throughout the analysis, so that you alone judge the credibility of the results.  
 
 That is the power of the BayeScore: it isn’t a single point estimate but a full Bayesian distribution!  
-
-```{r plot-score-density, fig.cap="Figure 6: Final BayeScore posterior distribution."}
+  
+  ```{r plot-score-density, fig.cap="Figure 6: Final BayeScore posterior distribution."}
 plot_final_utility_density(final_utilities)
 ```
+
+**Sensitivity Analysis Dashboard**
+To help understand the overall effect of parameter selection on the final Bayescore and to assist in model calibration, we have developed a comprehensive sensitivity analysis dashboard.
+
+This function generates an 8-panel plot that visualizes how the final utility score responds to changes in the core model parameters, such as Time Ratio (TR), Cure Rate, Quality of Life (QoL), and Toxicity. It provides a global view of the model's behavior under different conditions.
+
+
+```{r sensitivity-dashboard, fig.width=10, fig.height=12, message=FALSE, warning=FALSE}
+# First, we define any custom calibration arguments.
+# We can use an empty list to accept the model's defaults.
+calibration_settings <- list(
+  efficacy = list(
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    tr_utility_target = list(effect_value = 1.25, utility_value = 50)
+  )
+)
+
+
+# Now, we generate the complete 8-panel dashboard
+# The function will print its progress as it generates the data.
+dashboard <- generate_sensitivity_dashboard(
+  calibration_args = calibration_settings
+)
+
+# Finally, display the plot
+print(dashboard)
+```
+
+**Digitizing Kaplan-Meier Curves to Obtain IPD**
+
+To facilitate evidence synthesis, we have created a high-level function, km_to_dataset, to extract Individual Patient Data (IPD) directly from images of Kaplan-Meier plots. This tool is essentially a wrapper that implements the well-established Guyot et al. method by leveraging the functionalities of two powerful packages: SurvdigitizeR and survHE.
+
+Image Preparation
+Before using the function, the plot image requires a simple manual pre-processing step. First, copy the plot from the source publication. Then, using a basic image editor like Paint, erase all extraneous elements such as titles, legends, and any other annotations. The final image should contain only the survival curves, the X and Y axes, and the numbers on those axes.
+
+For our example, we use *Figure 1* from the CheckMate 649 trial publication (DOI: 10.1200/JCO.23.01601).
+
+*Example: Reconstructing Data from CheckMate 649*
+The following code demonstrates the complete workflow. First, we define the necessary parameters. The most important ones are:
+
+time_intervals: This is the vector of time points at which the number of patients at risk is reported in the publication's plot.
+
+nrisk_data_list: This is a named list where each element contains the number-at-risk data corresponding to a treatment arm, as transcribed from the plot.
+
+
+```{r km-digitization-example, eval=FALSE}
+# --- 1. Define all parameters for the main function ---
+
+# NOTE: Provide the full path to your cleaned image file.
+image_file_path  <- "C:/path/to/your/cleaned_plot_image.png"
+
+# Time points for the number-at-risk table (from the plot's x-axis)
+time_intervals   <- seq(0, 63, 3)
+
+# The output file where the final IPD data frame will be saved
+output_file_name <- "final_ipd_data.Rda"
+
+# Number-at-risk data, transcribed from the publication's plot
+nrisk_data_list <- list(
+  control = c(482, 424, 353, 275, 215, 154, 125, 97, 83, 69, 60, 51, 44, 35, 28, 18, 14, 10, 5, 0, 0),
+  experimental = c(473, 440, 380, 315, 263, 223, 187, 161, 141, 118, 105, 100, 94, 81, 66, 53, 37, 24, 17, 6, 2)
+)
+
+# --- 2. Run the entire workflow ---
+final_dataset <- km_to_dataset(
+  img_path = image_file_path,
+  time_breaks = time_intervals,
+  n_risk_list = nrisk_data_list,
+  output_filename = output_file_name,
+  # Axis calibration parameters (from the plot)
+  x_start = 0, x_end = 63, x_increment = 3,
+  y_start = 0, y_end = 1, y_increment = 0.1
+)
+
+# --- 3. Verify the result by re-plotting the reconstructed data ---
+fit <- survival::survfit(survival::Surv(time, event) ~ arm, data = final_dataset)
+
+print(
+  survminer::ggsurvplot(
+    fit, data = final_dataset, conf.int = FALSE, risk.table = TRUE,
+    break.time.by = 3, risk.table.height = 0.25, risk.table.y.text.col = TRUE,
+    risk.table.y.text = FALSE, legend.title = "Arm",
+    legend.labs = names(nrisk_data_list)
+  )
+)
+```
+
+And voilà! Ready to estimate the clinical benefit of new drugs!
 
 ## Why bayescores? a more meaningful approach
 

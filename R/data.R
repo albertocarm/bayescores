@@ -364,6 +364,20 @@
 #' @source \url{http://link.to.the.publication/glow}
 "glow"
 
+#' Data from the CheckMate-649 Trial
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{A numeric vector representing the survival time.}
+#'   \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
+#'   \item{arm}{A factor or character vector for the treatment arm.}
+#'   \item{id}{Patient id}
+#' }
+#' @source \url{http://link.to.the.publication/glow}
+"cm649"
+
 
 #' Data from the toga Trial
 #'
@@ -400,7 +414,30 @@
 
 
 
-
+#' Toxicity and quality of life data from the CheckMate-649 trial
+#'
+#' @description
+#' This dataset contains simulated toxicity data from the GETUG 12 randomized
+#' clinical trial (RCT), including both any‑grade (G1–4) and severe (G3–4)
+#' adverse events. It also includes patient‑reported quality of life (QoL) scores
+#' stored in the \code{qol} column. The dataset provides the number of patients
+#' per trial arm. Please refer to the accompanying documentation or vignette for
+#' details on how QoL scores are defined and interpreted.
+#'
+#' @format A data frame with X rows and Y variables:
+#' \describe{
+#'   \item{EventName}{Name of the adverse event.}
+#'   \item{SystemOrganClass}{System organ class for the adverse event.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) of any‑grade (G1–4) toxicity in the control arm.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) of any‑grade (G1–4) toxicity in the experimental arm.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) of severe (G3–4) toxicity in the control arm.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) of severe (G3–4) toxicity in the experimental arm.}
+#'   \item{qol}{Numeric QoL score associated with each adverse event.}
+#'   \item{N_patients}{Named numeric vector with the number of patients per trial arm.}
+#' }
+#'
+#' @source \url{https://clinicaltrials.gov/ct2/show/NCT00104715}
+"checkmate649_toxicity"
 
 
 #' Toxicity and quality of life data from the GETUG12 trial
