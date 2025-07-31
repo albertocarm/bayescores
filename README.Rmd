@@ -84,7 +84,7 @@ Generate toxicity data for a trial with 1:1 randomization (300 control patients)
   
   ```{r simulate-toxicity}
 toxicity_trial <- simulate_trial_data(
-  n_control = 300,
+  n_control = 600,
   ratio_str = "1:1",
   control_g1_4_pct = 50,
   control_g3_4_pct = 20,
@@ -93,6 +93,9 @@ toxicity_trial <- simulate_trial_data(
   qol_strength = 5
 )
 ```
+
+To analyze toxicity in *non-simulated data*, you obviously need to go to the actual toxicity table, look up the quality-of-life articles associated with that trial, and manually fill in an object similar to the one produced by the simulate_trial_data function.
+
 
 Visualize toxicity with AMIT plots:
   
@@ -148,6 +151,26 @@ Inspect numerical summaries and visualize posterior distributions. You can verif
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
 outcomes(bayesian_fit)
 ```
+## ⚠️ A Note on Model Identifiability
+
+Users should be aware of an inherent characteristic of **mixture cure models**, especially when working with clinical trials that have smaller sample sizes (*low n*).
+
+These models explain a survival benefit by attributing it to two main components:
+
+- An increase in the **cure fraction** (long-term survivors), and  
+- An improvement in the **Time Ratio** (survival among non-cured patients).
+
+With limited data, it can be difficult for the model to fully distinguish between these two effects.  
+This can lead to a kind of *trade-off*, where the model might compensate a weakly identified cure effect by **overestimating the Time Ratio**, or vice versa.
+
+As a result, you may sometimes see “weird” or unintuitive combinations — for example, a very strong TR and almost no difference in cure, or the opposite.
+
+**Therefore, it is crucial to inspect both parameters and their credible intervals** to properly interpret the overall treatment effect.
+
+Don't rely on a single number. Read the model like a clinician:  
+look at the whole picture.
+
+
 
 **Posterior distributions**
   
@@ -183,9 +206,10 @@ toxicity_output <- calculate_toxicity_analysis(
 
 The toxicity analysis provides a nuanced view of a drug's safety profile. Let's break down the key parameters using a practical example where the function returns these scores:
 
-```r
+```{r}
 toxicity_output$wts_scores
 ```
+
 
 **1. What are the WTS (Weighted Toxicity Scores)?**
 
@@ -194,9 +218,10 @@ Think of the WTS as a *total harm score* for each arm of the trial. It's not jus
 - *Severity matters*: High-grade toxicities (Grade 3-4) add much more to the score than low-grade ones.
 - *Type matters*: Clinically relevant toxicities (e.g., blood disorders) are weighted more heavily than less critical ones (e.g., skin disorders).
 
-In our example, the experimental drug accumulated a total *harm score* of **2.7495**, while the standard control drug had a score of **1.877**.  
-This gives us a clear, initial indication that the new drug is more toxic than the control.  
-But is it *too* toxic? That's where the next parameter comes in.
+In our example, let’s say the experimental arm ended up with a harm score of 2.7495, versus 1.877 for control.
+(Truth be told, these numbers dance around a little — it’s a simulation — but you get the idea.)
+What matters is the pattern: the experimental drug is clearly more toxic.
+The real question is: how much more is too much?
 
 ---
 
@@ -247,13 +272,35 @@ We have chosen this methodology because quality‑of‑life data are published v
 
 ### Step 8: Extract posterior samples and compute BayeScores
 
-Okay, we have everything: efficacy, toxicity, QoL. It’s time to extract posterior samples and compute BayeScores.
+# From Clinical Data to a Final Score
 
-To obtain utility, a cumulative logistic function is used, anchored by the minimum clinically relevant benefit values, which we—two oncologists—have agreed upon as the time ratio of 1.15 (e.g., extending OS from 10 to 11.5 months) or a long‑term survival increase of 4 %.
+Okay, we have the results from our Bayesian model:  
+estimates for efficacy, toxicity, and QoL.  
+But how do we turn these numbers into a single, intuitive **BayeScore**?
 
-Inspired by multi‑attribute utility theory (MAUT), we have also chosen the thresholds at which drugs become not only active but promising: a time ratio of 1.35 and a survival‑rate difference of 12 %.
+This is where the *calibration* comes in.
 
-Now, look at the output. To derive final utilities, an adaptive policy is applied: the function has detected that this clinical trial increases the long‑term survivor rate and has adjusted the weighting scores relative to the predefined ones (see technical specification).
+---
+
+Instead of using fixed rules, our model translates each clinical outcome into a  
+**utility score** (from 0 to 100) using a flexible exponential utility function.
+
+Think of it this way:  
+the *first* improvements are the most exciting.  
+Going from no benefit to *some* benefit is a huge leap.  
+Further gains are still good, but the “wow factor” diminishes slightly.  
+
+Our function captures this key principle of **diminishing marginal utility**.
+
+---
+
+The best part is: *you define the value judgment*.  
+The shape of these utility curves is determined by setting simple **anchor points**.  
+You answer the question:
+
+> “How much is a certain clinical benefit worth on a 0–100 scale?”
+
+For example, in our analysis, we used the following calibration:
 
 
 ```{r calculate-scores}

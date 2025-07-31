@@ -101,7 +101,7 @@ assume “Significant Improvement” with “Very High” evidence.
 
 ``` r
 toxicity_trial <- simulate_trial_data(
-n_control = 300,
+n_control = 600,
 ratio_str = "1:1",
 control_g1_4_pct = 50,
 control_g3_4_pct = 20,
@@ -110,6 +110,11 @@ qol_scenario = 1,
 qol_strength = 5
 )
 ```
+
+To analyze toxicity in *non-simulated data*, you obviously need to go to
+the actual toxicity table, look up the quality-of-life articles
+associated with that trial, and manually fill in an object similar to
+the one produced by the simulate_trial_data function.
 
 Visualize toxicity with AMIT plots:
 
@@ -159,8 +164,8 @@ chains = 4
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000281 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.81 seconds.
+    ## Chain 1: Gradient evaluation took 0.000376 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.76 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -177,15 +182,15 @@ chains = 4
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 6.673 seconds (Warm-up)
-    ## Chain 1:                10.262 seconds (Sampling)
-    ## Chain 1:                16.935 seconds (Total)
+    ## Chain 1:  Elapsed Time: 7.779 seconds (Warm-up)
+    ## Chain 1:                11.936 seconds (Sampling)
+    ## Chain 1:                19.715 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000237 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 2.37 seconds.
+    ## Chain 2: Gradient evaluation took 0.000445 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 4.45 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -202,15 +207,15 @@ chains = 4
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 6.276 seconds (Warm-up)
-    ## Chain 2:                8.299 seconds (Sampling)
-    ## Chain 2:                14.575 seconds (Total)
+    ## Chain 2:  Elapsed Time: 23.593 seconds (Warm-up)
+    ## Chain 2:                24.911 seconds (Sampling)
+    ## Chain 2:                48.504 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000357 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.57 seconds.
+    ## Chain 3: Gradient evaluation took 0.000356 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.56 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -227,15 +232,15 @@ chains = 4
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 7.018 seconds (Warm-up)
-    ## Chain 3:                12.331 seconds (Sampling)
-    ## Chain 3:                19.349 seconds (Total)
+    ## Chain 3:  Elapsed Time: 8.197 seconds (Warm-up)
+    ## Chain 3:                13.795 seconds (Sampling)
+    ## Chain 3:                21.992 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000265 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 2.65 seconds.
+    ## Chain 4: Gradient evaluation took 0.000348 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 3.48 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -252,9 +257,9 @@ chains = 4
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 6.527 seconds (Warm-up)
-    ## Chain 4:                9.491 seconds (Sampling)
-    ## Chain 4:                16.018 seconds (Total)
+    ## Chain 4:  Elapsed Time: 8.029 seconds (Warm-up)
+    ## Chain 4:                39.511 seconds (Sampling)
+    ## Chain 4:                47.54 seconds (Total)
     ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
@@ -282,7 +287,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ## beta_surv_arm 0.11       0 0.09 -0.06 0.05 0.11 0.17  0.28  2637    1
     ## alpha         1.26       0 0.06  1.16 1.22 1.26 1.30  1.37  3785    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Thu Jul 31 22:14:39 2025.
+    ## Samples were drawn using NUTS(diag_e) at Fri Aug  1 00:32:18 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -299,6 +304,35 @@ outcomes(bayesian_fit)
     ## 3 Long-Term Survival Rate (%) - Control      24.07 (19.43 - 29.45)
     ## 4 Long-Term Survival Rate (%) - Experimental 28.67 (23.65 - 34.08)
     ## 5 Absolute Difference in Survival Rate (%)   4.61 (-2.78 - 11.51)
+
+## ⚠️ A Note on Model Identifiability
+
+Users should be aware of an inherent characteristic of **mixture cure
+models**, especially when working with clinical trials that have smaller
+sample sizes (*low n*).
+
+These models explain a survival benefit by attributing it to two main
+components:
+
+- An increase in the **cure fraction** (long-term survivors), and  
+- An improvement in the **Time Ratio** (survival among non-cured
+  patients).
+
+With limited data, it can be difficult for the model to fully
+distinguish between these two effects.  
+This can lead to a kind of *trade-off*, where the model might compensate
+a weakly identified cure effect by **overestimating the Time Ratio**, or
+vice versa.
+
+As a result, you may sometimes see “weird” or unintuitive combinations —
+for example, a very strong TR and almost no difference in cure, or the
+opposite.
+
+**Therefore, it is crucial to inspect both parameters and their credible
+intervals** to properly interpret the overall treatment effect.
+
+Don’t rely on a single number. Read the model like a clinician:  
+look at the whole picture.
 
 **Posterior distributions**
 
@@ -356,6 +390,9 @@ where the function returns these scores:
 toxicity_output$wts_scores
 ```
 
+    ##   Experimental Control
+    ## 1        3.009  1.9695
+
 **1. What are the WTS (Weighted Toxicity Scores)?**
 
 Think of the WTS as a *total harm score* for each arm of the trial. It’s
@@ -368,12 +405,11 @@ where:
   are weighted more heavily than less critical ones (e.g., skin
   disorders).
 
-In our example, the experimental drug accumulated a total *harm score*
-of **2.7495**, while the standard control drug had a score of
-**1.877**.  
-This gives us a clear, initial indication that the new drug is more
-toxic than the control.  
-But is it *too* toxic? That’s where the next parameter comes in.
+In our example, let’s say the experimental arm ended up with a harm
+score of 2.7495, versus 1.877 for control. (Truth be told, these numbers
+dance around a little — it’s a simulation — but you get the idea.) What
+matters is the pattern: the experimental drug is clearly more toxic. The
+real question is: how much more is too much?
 
 ------------------------------------------------------------------------
 
@@ -452,22 +488,39 @@ generate_qol_vector(), which interactively generates a quality‑of‑life
 
 ### Step 8: Extract posterior samples and compute BayeScores
 
-Okay, we have everything: efficacy, toxicity, QoL. It’s time to extract
-posterior samples and compute BayeScores.
+# From Clinical Data to a Final Score
 
-To obtain utility, a cumulative logistic function is used, anchored by
-the minimum clinically relevant benefit values, which we—two
-oncologists—have agreed upon as the time ratio of 1.15 (e.g., extending
-OS from 10 to 11.5 months) or a long‑term survival increase of 4 %.
+Okay, we have the results from our Bayesian model:  
+estimates for efficacy, toxicity, and QoL.  
+But how do we turn these numbers into a single, intuitive **BayeScore**?
 
-Inspired by multi‑attribute utility theory (MAUT), we have also chosen
-the thresholds at which drugs become not only active but promising: a
-time ratio of 1.35 and a survival‑rate difference of 12 %.
+This is where the *calibration* comes in.
 
-Now, look at the output. To derive final utilities, an adaptive policy
-is applied: the function has detected that this clinical trial increases
-the long‑term survivor rate and has adjusted the weighting scores
-relative to the predefined ones (see technical specification).
+------------------------------------------------------------------------
+
+Instead of using fixed rules, our model translates each clinical outcome
+into a  
+**utility score** (from 0 to 100) using a flexible exponential utility
+function.
+
+Think of it this way:  
+the *first* improvements are the most exciting.  
+Going from no benefit to *some* benefit is a huge leap.  
+Further gains are still good, but the “wow factor” diminishes slightly.
+
+Our function captures this key principle of **diminishing marginal
+utility**.
+
+------------------------------------------------------------------------
+
+The best part is: *you define the value judgment*.  
+The shape of these utility curves is determined by setting simple
+**anchor points**.  
+You answer the question:
+
+> “How much is a certain clinical benefit worth on a 0–100 scale?”
+
+For example, in our analysis, we used the following calibration:
 
 ``` r
 efficacy_inputs <- list(
@@ -510,15 +563,15 @@ print(final_utilities$component_summary)
     ## Utility Cure (0-100)                     Utility Cure (0-100)  27.37536
     ## Efficacy Score (Combined)           Efficacy Score (Combined)  47.99946
     ## QoL Contribution (points)           QoL Contribution (points)  12.12045
-    ## Toxicity Contribution (points) Toxicity Contribution (points) -19.72996
-    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE  36.85705
+    ## Toxicity Contribution (points) Toxicity Contribution (points) -20.62685
+    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE  35.95623
     ##                                Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-    ## Utility TR (0-100)                      0.000000          59.568890
-    ## Utility Cure (0-100)                    0.000000          54.958276
-    ## Efficacy Score (Combined)               9.341862          74.593677
-    ## QoL Contribution (points)             -23.946715          24.981138
-    ## Toxicity Contribution (points)        -24.974410          -4.891113
-    ## FINAL UTILITY SCORE                     1.107186          82.657790
+    ## Utility TR (0-100)                     0.0000000          59.568890
+    ## Utility Cure (0-100)                   0.0000000          54.958276
+    ## Efficacy Score (Combined)              9.3418622          74.593677
+    ## QoL Contribution (points)            -23.9467155          24.981138
+    ## Toxicity Contribution (points)       -24.9763717          -5.158959
+    ## FINAL UTILITY SCORE                    0.9792256          82.235288
 
 ### Step 9: Visualize final clinical benefit
 
