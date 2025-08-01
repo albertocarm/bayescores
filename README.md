@@ -48,7 +48,7 @@ among non-cured patients.
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
-  n_patients = 600,
+  n_patients = 300,
   cure_fraction_ctrl = 0.20,
   cure_fraction_exp = 0.30,
   max_follow_up = 60,
@@ -101,7 +101,7 @@ assume “Significant Improvement” with “Very High” evidence.
 
 ``` r
 toxicity_trial <- simulate_trial_data(
-n_control = 600,
+n_control = 150,
 ratio_str = "1:1",
 control_g1_4_pct = 50,
 control_g3_4_pct = 20,
@@ -164,8 +164,8 @@ chains = 4
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000376 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.76 seconds.
+    ## Chain 1: Gradient evaluation took 0.000141 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.41 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -182,15 +182,15 @@ chains = 4
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 7.779 seconds (Warm-up)
-    ## Chain 1:                11.936 seconds (Sampling)
-    ## Chain 1:                19.715 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.656 seconds (Warm-up)
+    ## Chain 1:                2.783 seconds (Sampling)
+    ## Chain 1:                5.439 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000445 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 4.45 seconds.
+    ## Chain 2: Gradient evaluation took 0.000121 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.21 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -207,15 +207,15 @@ chains = 4
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 23.593 seconds (Warm-up)
-    ## Chain 2:                24.911 seconds (Sampling)
-    ## Chain 2:                48.504 seconds (Total)
+    ## Chain 2:  Elapsed Time: 3.253 seconds (Warm-up)
+    ## Chain 2:                3.068 seconds (Sampling)
+    ## Chain 2:                6.321 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000356 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.56 seconds.
+    ## Chain 3: Gradient evaluation took 0.000115 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.15 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -232,15 +232,15 @@ chains = 4
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 8.197 seconds (Warm-up)
-    ## Chain 3:                13.795 seconds (Sampling)
-    ## Chain 3:                21.992 seconds (Total)
+    ## Chain 3:  Elapsed Time: 2.903 seconds (Warm-up)
+    ## Chain 3:                4.209 seconds (Sampling)
+    ## Chain 3:                7.112 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000348 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 3.48 seconds.
+    ## Chain 4: Gradient evaluation took 0.000132 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.32 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -257,9 +257,9 @@ chains = 4
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 8.029 seconds (Warm-up)
-    ## Chain 4:                39.511 seconds (Sampling)
-    ## Chain 4:                47.54 seconds (Total)
+    ## Chain 4:  Elapsed Time: 3.344 seconds (Warm-up)
+    ## Chain 4:                4.531 seconds (Sampling)
+    ## Chain 4:                7.875 seconds (Total)
     ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
@@ -282,12 +282,12 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ## 4 chains, each with iter=2500; warmup=1000; thin=1; 
     ## post-warmup draws per chain=1500, total post-warmup draws=6000.
     ## 
-    ##               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
-    ## beta_cure_arm 0.24       0 0.19 -0.14 0.11 0.24 0.36  0.60  3129    1
-    ## beta_surv_arm 0.11       0 0.09 -0.06 0.05 0.11 0.17  0.28  2637    1
-    ## alpha         1.26       0 0.06  1.16 1.22 1.26 1.30  1.37  3785    1
+    ##               mean se_mean   sd  2.5%   25%  50%  75% 97.5% n_eff Rhat
+    ## beta_cure_arm 0.15       0 0.28 -0.41 -0.03 0.16 0.35  0.68  3379    1
+    ## beta_surv_arm 0.40       0 0.12  0.17  0.32 0.40 0.48  0.64  3082    1
+    ## alpha         1.31       0 0.08  1.16  1.26 1.31 1.37  1.47  4316    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Fri Aug  1 00:32:18 2025.
+    ## Samples were drawn using NUTS(diag_e) at Fri Aug  1 19:56:12 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -299,40 +299,11 @@ outcomes(bayesian_fit)
     ## # A tibble: 5 × 2
     ##   Metric                                     `Result (95% CI)`    
     ##   <chr>                                      <chr>                
-    ## 1 Time Ratio (TR)                            1.12 (0.94 - 1.33)   
-    ## 2 Odds Ratio (OR) for Cure                   1.27 (0.87 - 1.82)   
-    ## 3 Long-Term Survival Rate (%) - Control      24.07 (19.43 - 29.45)
-    ## 4 Long-Term Survival Rate (%) - Experimental 28.67 (23.65 - 34.08)
-    ## 5 Absolute Difference in Survival Rate (%)   4.61 (-2.78 - 11.51)
-
-## ⚠️ A Note on Model Identifiability
-
-Users should be aware of an inherent characteristic of **mixture cure
-models**, especially when working with clinical trials that have smaller
-sample sizes (*low n*).
-
-These models explain a survival benefit by attributing it to two main
-components:
-
-- An increase in the **cure fraction** (long-term survivors), and  
-- An improvement in the **Time Ratio** (survival among non-cured
-  patients).
-
-With limited data, it can be difficult for the model to fully
-distinguish between these two effects.  
-This can lead to a kind of *trade-off*, where the model might compensate
-a weakly identified cure effect by **overestimating the Time Ratio**, or
-vice versa.
-
-As a result, you may sometimes see “weird” or unintuitive combinations —
-for example, a very strong TR and almost no difference in cure, or the
-opposite.
-
-**Therefore, it is crucial to inspect both parameters and their credible
-intervals** to properly interpret the overall treatment effect.
-
-Don’t rely on a single number. Read the model like a clinician:  
-look at the whole picture.
+    ## 1 Time Ratio (TR)                            1.49 (1.19 - 1.90)   
+    ## 2 Odds Ratio (OR) for Cure                   1.17 (0.67 - 1.98)   
+    ## 3 Long-Term Survival Rate (%) - Control      22.77 (16.81 - 30.11)
+    ## 4 Long-Term Survival Rate (%) - Experimental 25.72 (18.22 - 33.42)
+    ## 5 Absolute Difference in Survival Rate (%)   2.87 (-7.35 - 12.68)
 
 **Posterior distributions**
 
@@ -391,7 +362,7 @@ toxicity_output$wts_scores
 ```
 
     ##   Experimental Control
-    ## 1        3.009  1.9695
+    ## 1        3.147   2.007
 
 **1. What are the WTS (Weighted Toxicity Scores)?**
 
@@ -559,19 +530,19 @@ print(final_utilities$component_summary)
 ```
 
     ##                                                     Component    Median
-    ## Utility TR (0-100)                         Utility TR (0-100)  27.67119
-    ## Utility Cure (0-100)                     Utility Cure (0-100)  27.37536
-    ## Efficacy Score (Combined)           Efficacy Score (Combined)  47.99946
-    ## QoL Contribution (points)           QoL Contribution (points)  12.12045
-    ## Toxicity Contribution (points) Toxicity Contribution (points) -20.62685
-    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE  35.95623
+    ## Utility TR (0-100)                         Utility TR (0-100) 74.009786
+    ## Utility Cure (0-100)                     Utility Cure (0-100) 18.052927
+    ## Efficacy Score (Combined)           Efficacy Score (Combined) 80.227571
+    ## QoL Contribution (points)           QoL Contribution (points)  8.361254
+    ## Toxicity Contribution (points) Toxicity Contribution (points) -8.953007
+    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE 80.151415
     ##                                Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-    ## Utility TR (0-100)                     0.0000000          59.568890
-    ## Utility Cure (0-100)                   0.0000000          54.958276
-    ## Efficacy Score (Combined)              9.3418622          74.593677
-    ## QoL Contribution (points)            -23.9467155          24.981138
-    ## Toxicity Contribution (points)       -24.9763717          -5.158959
-    ## FINAL UTILITY SCORE                    0.9792256          82.235288
+    ## Utility TR (0-100)                      40.20575         91.7481573
+    ## Utility Cure (0-100)                     0.00000         58.4735171
+    ## Efficacy Score (Combined)               50.91072         93.8804264
+    ## QoL Contribution (points)              -15.46059         24.0169353
+    ## Toxicity Contribution (points)         -24.42344         -0.6471429
+    ## FINAL UTILITY SCORE                     24.96662         98.6161621
 
 ### Step 9: Visualize final clinical benefit
 
@@ -655,6 +626,146 @@ print(dashboard)
 ```
 
 ![](README_files/figure-gfm/sensitivity-dashboard-1.png)<!-- -->
+
+***Note on model overestimation and a proposed solution***
+
+Users should be aware of an inherent challenge in many statistical
+models—including mixture cure models—when applied to clinical trials
+with small sample sizes (low n). In this example, n = 300 patients,
+which is reasonable, but the short follow-up makes it difficult to
+accurately model the plateau of the survival curve, as shown in the
+Kaplan–Meier plot; such limitations have a significant impact on the
+estimation of *Bayescores*.
+
+When data are limited, it can be difficult for the model to distinguish
+between a true treatment effect and statistical noise. This often leads
+to a phenomenon known as the *“winner’s curse”*: if a trial happens to
+show a statistically significant result, the magnitude of the observed
+effect is likely an overestimation of the true effect. In our model,
+this can manifest as an unrealistically large time ratio (TR) or odds
+ratio (OR) for cure.
+
+Therefore, it is crucial to interpret the model’s outputs with caution,
+recognizing that the initial estimates may be optimistic.
+
+# A solution: empirical bayesian shrinkage
+
+To address this overestimation, this package includes an implementation
+of the empirical shrinkage method proposed by Van Zwet et al. (2021) in
+their paper *“The statistical properties of RCTs and a proposal for
+shrinkage”*.
+
+The authors analyzed over 23 000 randomized controlled trials from the
+Cochrane database to build an empirical prior that reflects the
+distribution of true treatment effects across medical research. By
+applying this prior, we can correct our model’s estimates, *shrinking*
+them towards a more realistic value. This method provides a data-driven
+way to mitigate the winner’s curse.
+
+We have integrated this correction into a new function,
+`outcomes_shrinkage()`.
+
+# Comparison of original and corrected results
+
+The easiest way to see the impact of this correction is to use
+`outcomes_shrinkage()` to generate a summary table. The function will
+return the standard results alongside the new, corrected estimates for
+the time ratio and odds ratio.
+
+``` r
+# assuming 'bayesian_fit' is the result from fit_bayesian_cure_model()
+shrunk_results <- outcomes_shrinkage(bayesian_fit)
+
+# this will print a table comparing the original and corrected estimates
+print(shrunk_results)
+```
+
+    ## # A tibble: 7 × 2
+    ##   Metric                                     Result..95..CI.      
+    ##   <chr>                                      <chr>                
+    ## 1 Time Ratio (TR)                            1.49 (1.19 - 1.90)   
+    ## 2 Odds Ratio (OR) for Cure                   1.17 (0.67 - 1.98)   
+    ## 3 Time Ratio (TR) - Corrected                1.35 (1.07 - 1.71)   
+    ## 4 Odds Ratio (OR) - Corrected                1.08 (0.73 - 1.69)   
+    ## 5 Long-Term Survival Rate (%) - Control      22.77 (16.81 - 30.11)
+    ## 6 Long-Term Survival Rate (%) - Experimental 25.72 (18.22 - 33.42)
+    ## 7 Absolute Difference in Survival Rate (%)   2.87 (-7.35 - 12.68)
+
+# Using corrected estimates in subsequent analyses
+
+For more advanced analyses, such as calculating bayescores, you need the
+full corrected posterior distributions. The `outcomes_shrinkage()`
+function can provide these by setting `return_draws = TRUE`.
+
+``` r
+# --- 1. obtain the list of MCMC draws (original and corrected) ---
+draws_list <- outcomes_shrinkage(
+  fit                  = bayesian_fit,
+  empirical_shrinkage  = TRUE,
+  return_draws         = TRUE
+)
+
+# --- 2. prepare inputs for get_bayescores using the corrected draws ---
+# note: exponentiate the log(time ratio) to get the time ratio
+efficacy_inputs_corrected <- list(
+  tr_posterior_samples   = exp(draws_list$log_tr_draws_corrected),
+  cure_posterior_samples = draws_list$cure_diff_draws_corrected
+)
+
+# --- 3. define the calibration settings (this does not change) ---
+my_final_calibration <- list(
+  efficacy = list(
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    tr_utility_target   = list(effect_value = 1.25, utility_value = 50)
+  )
+)
+
+# --- 4. run get_bayescores with the corrected efficacy data ---
+# (assuming qol_scores and toxicity_output are already defined)
+final_utilities_corrected <- get_bayescores(
+  efficacy_inputs  = efficacy_inputs_corrected,
+  qol_scores       = qol_scores,
+  toxicity_scores  = toxicity_output$toxicity_effect_vector,
+  calibration_args = my_final_calibration
+)
+
+# --- 5. review and plot the final, corrected utility scores ---
+cat("--- final bayescores summary (with shrinkage) ---\n")
+```
+
+    ## --- final bayescores summary (with shrinkage) ---
+
+``` r
+print(final_utilities_corrected$component_summary)
+```
+
+    ##                                                     Component     Median
+    ## Utility TR (0-100)                         Utility TR (0-100)  62.239053
+    ## Utility Cure (0-100)                     Utility Cure (0-100)   8.834814
+    ## Efficacy Score (Combined)           Efficacy Score (Combined)  68.041479
+    ## QoL Contribution (points)           QoL Contribution (points)  11.090618
+    ## Toxicity Contribution (points) Toxicity Contribution (points) -14.886665
+    ## FINAL UTILITY SCORE                       FINAL UTILITY SCORE  63.192647
+    ##                                Lower_95_CrI.2.5% Upper_95_CrI.97.5%
+    ## Utility TR (0-100)                     16.763409          85.889490
+    ## Utility Cure (0-100)                    0.000000          52.609899
+    ## Efficacy Score (Combined)              24.514464          89.736650
+    ## QoL Contribution (points)             -21.217459          24.931846
+    ## Toxicity Contribution (points)        -24.947247          -1.615885
+    ## FINAL UTILITY SCORE                     6.686825          96.257032
+
+``` r
+plot_utility_donut(final_utilities_corrected)
+```
+
+    ## Enter the trial name for the plot title:
+
+![](README_files/figure-gfm/workflow2-1.png)<!-- -->
+
+By incorporating this shrinkage step, you can perform a valuable
+sensitivity analysis to understand how potential overestimation might
+affect the overall utility of a treatment, leading to more robust and
+reliable conclusions.
 
 **Digitizing Kaplan-Meier Curves to Obtain IPD**
 

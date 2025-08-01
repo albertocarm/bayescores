@@ -48,7 +48,7 @@ Simulate a 600-patient trial with long-term survival fractions of 40% (experimen
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
-  n_patients = 600,
+  n_patients = 300,
   cure_fraction_ctrl = 0.20,
   cure_fraction_exp = 0.30,
   max_follow_up = 60,
@@ -84,7 +84,7 @@ Generate toxicity data for a trial with 1:1 randomization (300 control patients)
   
   ```{r simulate-toxicity}
 toxicity_trial <- simulate_trial_data(
-  n_control = 600,
+  n_control = 150,
   ratio_str = "1:1",
   control_g1_4_pct = 50,
   control_g3_4_pct = 20,
@@ -151,25 +151,6 @@ Inspect numerical summaries and visualize posterior distributions. You can verif
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
 outcomes(bayesian_fit)
 ```
-## ⚠️ A Note on Model Identifiability
-
-Users should be aware of an inherent characteristic of **mixture cure models**, especially when working with clinical trials that have smaller sample sizes (*low n*).
-
-These models explain a survival benefit by attributing it to two main components:
-
-- An increase in the **cure fraction** (long-term survivors), and  
-- An improvement in the **Time Ratio** (survival among non-cured patients).
-
-With limited data, it can be difficult for the model to fully distinguish between these two effects.  
-This can lead to a kind of *trade-off*, where the model might compensate a weakly identified cure effect by **overestimating the Time Ratio**, or vice versa.
-
-As a result, you may sometimes see “weird” or unintuitive combinations — for example, a very strong TR and almost no difference in cure, or the opposite.
-
-**Therefore, it is crucial to inspect both parameters and their credible intervals** to properly interpret the overall treatment effect.
-
-Don't rely on a single number. Read the model like a clinician:  
-look at the whole picture.
-
 
 
 **Posterior distributions**
@@ -380,6 +361,87 @@ dashboard <- generate_sensitivity_dashboard(
 # Finally, display the plot
 print(dashboard)
 ```
+
+
+
+
+***Note on model overestimation and a proposed solution***
+
+Users should be aware of an inherent challenge in many statistical models—including mixture cure models—when applied to clinical trials with small sample sizes (low n). In this example, n = 300 patients, which is reasonable, but the short follow-up makes it difficult to accurately model the plateau of the survival curve, as shown in the Kaplan–Meier plot; such limitations have a significant impact on the estimation of *Bayescores*.
+
+When data are limited, it can be difficult for the model to distinguish between a true treatment effect and statistical noise. This often leads to a phenomenon known as the *“winner’s curse”*: if a trial happens to show a statistically significant result, the magnitude of the observed effect is likely an overestimation of the true effect. In our model, this can manifest as an unrealistically large time ratio (TR) or odds ratio (OR) for cure.
+
+Therefore, it is crucial to interpret the model’s outputs with caution, recognizing that the initial estimates may be optimistic.
+
+# A solution: empirical bayesian shrinkage
+
+To address this overestimation, this package includes an implementation of the empirical shrinkage method proposed by Van Zwet et al. (2021) in their paper *“The statistical properties of RCTs and a proposal for shrinkage”*.
+
+The authors analyzed over 23 000 randomized controlled trials from the Cochrane database to build an empirical prior that reflects the distribution of true treatment effects across medical research. By applying this prior, we can correct our model’s estimates, *shrinking* them towards a more realistic value. This method provides a data-driven way to mitigate the winner’s curse.
+
+We have integrated this correction into a new function, `outcomes_shrinkage()`.
+
+# Comparison of original and corrected results
+
+The easiest way to see the impact of this correction is to use `outcomes_shrinkage()` to generate a summary table. The function will return the standard results alongside the new, corrected estimates for the time ratio and odds ratio.
+
+```{r workflow1}
+# assuming 'bayesian_fit' is the result from fit_bayesian_cure_model()
+shrunk_results <- outcomes_shrinkage(bayesian_fit)
+
+# this will print a table comparing the original and corrected estimates
+print(shrunk_results)
+```
+
+# Using corrected estimates in subsequent analyses
+
+For more advanced analyses, such as calculating bayescores, you need the full corrected posterior distributions. The `outcomes_shrinkage()` function can provide these by setting `return_draws = TRUE`.
+
+```{r workflow2}
+# --- 1. obtain the list of MCMC draws (original and corrected) ---
+draws_list <- outcomes_shrinkage(
+  fit                  = bayesian_fit,
+  empirical_shrinkage  = TRUE,
+  return_draws         = TRUE
+)
+
+# --- 2. prepare inputs for get_bayescores using the corrected draws ---
+# note: exponentiate the log(time ratio) to get the time ratio
+efficacy_inputs_corrected <- list(
+  tr_posterior_samples   = exp(draws_list$log_tr_draws_corrected),
+  cure_posterior_samples = draws_list$cure_diff_draws_corrected
+)
+
+# --- 3. define the calibration settings (this does not change) ---
+my_final_calibration <- list(
+  efficacy = list(
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    tr_utility_target   = list(effect_value = 1.25, utility_value = 50)
+  )
+)
+
+# --- 4. run get_bayescores with the corrected efficacy data ---
+# (assuming qol_scores and toxicity_output are already defined)
+final_utilities_corrected <- get_bayescores(
+  efficacy_inputs  = efficacy_inputs_corrected,
+  qol_scores       = qol_scores,
+  toxicity_scores  = toxicity_output$toxicity_effect_vector,
+  calibration_args = my_final_calibration
+)
+
+# --- 5. review and plot the final, corrected utility scores ---
+cat("--- final bayescores summary (with shrinkage) ---\n")
+print(final_utilities_corrected$component_summary)
+plot_utility_donut(final_utilities_corrected)
+```
+
+By incorporating this shrinkage step, you can perform a valuable sensitivity analysis to understand how potential overestimation might affect the overall utility of a treatment, leading to more robust and reliable conclusions.
+
+
+
+
+
+
 
 **Digitizing Kaplan-Meier Curves to Obtain IPD**
 
