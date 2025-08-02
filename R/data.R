@@ -378,6 +378,19 @@
 #' @source \url{http://link.to.the.publication/glow}
 "cm649"
 
+#' Data from the CheckMate-649 Trial -2024 update
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{A numeric vector representing the survival time.}
+#'   \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
+#'   \item{arm}{A factor or character vector for the treatment arm.}
+#' }
+#' @source \url{http://link.to.the.publication/glow}
+"cm649_2024_update"
+
 
 #' Data from the toga Trial
 #'
