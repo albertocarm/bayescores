@@ -1,304 +1,231 @@
-#' Generate a Summary Table with Optional Empirical Shrinkage
+# -------------------------------------------------------------------
+# Internal Helper Functions (not exported to the user)
+# These functions are used by both main functions to avoid code duplication.
+# -------------------------------------------------------------------
+
+#' @noRd
+#' @title Conditional Distribution Calculator
+#' @description Computes the parameters of the corrected posterior distribution for the SNR.
+#' This code is an implementation of the method from Van Zwet et al. (2021).
+#' @param z The observed z-score.
+#' @param p A vector of mixture proportions for the prior.
+#' @param tau A vector of standard deviations for the SNR prior components.
+#' @return A data frame with the parameters (q, m, sigma) of the conditional mixture distribution.
+conditional <- function(z, p, tau) {
+  tau2 <- tau^2
+  q_unscaled <- p * dnorm(z, 0, sqrt(tau2 + 1))
+  if (all(q_unscaled == 0)) {
+    q <- rep(1/length(p), length(p))
+  } else {
+    q <- q_unscaled / sum(q_unscaled)
+  }
+  m <- z * tau2 / (tau2 + 1)
+  v <- tau2 / (tau2 + 1)
+  sigma <- sqrt(v)
+  data.frame(q, m, sigma)
+}
+
+#' @noRd
+#' @title Shrinkage Sampler
+#' @description Generates a new vector of "corrected" MCMC draws based on an empirical prior.
+#' @param original_draws A numeric vector of the original MCMC draws (on the log scale).
+#' @param method A character string, either "zwet" or "sherry", specifying the prior.
+#' @return A numeric vector of the new, corrected MCMC draws.
+sample_shrinkage_draws <- function(original_draws, method) {
+  b <- mean(original_draws)
+  s <- sd(original_draws)
+  if (s == 0) return(original_draws) # No variation, no shrinkage
+  z_obs <- b / s
+  n_samples <- length(original_draws)
+
+  if (method == "zwet") {
+    p_prior <- c(0.32, 0.31, 0.30, 0.07)
+    tau_prior <- c(0.61, 1.42, 2.16, 5.64)
+  } else if (method == "sherry") {
+    p_prior <- c(0.0137, 0.2015, 0.7848)
+    tau_prior <- c(1.357, 1.368, 3.603)
+  } else {
+    stop("Internal error: Invalid shrinkage method passed to sampler.")
+  }
+
+  corrected_dist_params <- conditional(z = z_obs, p = p_prior, tau = tau_prior)
+  q_corr <- corrected_dist_params$q
+  m_corr <- corrected_dist_params$m
+  sigma_corr <- corrected_dist_params$sigma
+  n_components <- length(p_prior)
+
+  corrected_snr_samples <- numeric(n_samples)
+  for (i in 1:n_samples) {
+    component <- sample(1:n_components, size = 1, prob = q_corr)
+    corrected_snr_samples[i] <- rnorm(1, mean = m_corr[component], sd = sigma_corr[component])
+  }
+  s * corrected_snr_samples
+}
+
+
+# -------------------------------------------------------------------
+# Main User-Facing Functions
+# -------------------------------------------------------------------
+
+#' Generate a Summary Table of Model Outcomes
 #'
 #' @description
-#' This function calculates key outcomes from a Bayesian model fit and provides
-#' an option to include empirically shrunk estimates for the Time Ratio and
-#' Odds Ratio based on the method by Van Zwet et al. (2021).
+#' Calculates key outcomes from a Bayesian model fit and can display
+#' side-by-side comparisons with empirically shrunk estimates.
 #'
 #' @param fit The fitted model object from `fit_bayesian_cure_model`.
 #' @param digits The number of decimal places for rounding.
-#' @param empirical_shrinkage Logical. If TRUE, adds corrected estimates for
-#'   TR and OR to the output table. Defaults to TRUE.
+#' @param shrinkage_method A character string specifying the shrinkage method for
+#'   the corrected estimates. Options are "zwet", "sherry", or "none" (default).
 #'
-#' @return A tibble with key model outcomes. If `empirical_shrinkage` is TRUE,
-#'   includes additional rows with corrected estimates.
+#' @return A tibble with a summary of key model outcomes.
 #'
 #' @importFrom rstan extract
-#' @importFrom tibble tibble
-#' @importFrom stats quantile median sd rnorm
+#' @importFrom tibble tibble as_tibble
+#' @importFrom stats quantile median sd rnorm dnorm
+#' @importFrom tools toTitleCase
 #' @export
-outcomes_shrinkage <- function(fit, digits = 2, empirical_shrinkage = TRUE) {
+outcomes <- function(fit,
+                     digits = 2,
+                     shrinkage_method = "none") {
 
-  # ===================================================================
-  # Helper Function 1: Van Zwet's `conditional` function
-  # Computes the parameters of the corrected posterior distribution for the SNR.
-  # This code is directly from the appendix of Van Zwet et al. (2021).
-  # ===================================================================
-  conditional <- function(z, p, tau) {
-    tau2 <- tau^2
-    q_unscaled <- p * dnorm(z, 0, sqrt(tau2 + 1))
-    q <- q_unscaled / sum(q_unscaled) # conditional mixing probs
-    m <- z * tau2 / (tau2 + 1)         # conditional means
-    v <- tau2 / (tau2 + 1)             # conditional variances
-    sigma <- sqrt(v)                   # conditional std devs
-    data.frame(q, m, sigma)
+  # --- Input Validation ---
+  valid_methods <- c("zwet", "sherry", "none")
+  if (!shrinkage_method %in% valid_methods) {
+    stop(paste("Invalid shrinkage_method specified. Please use one of:",
+               paste(valid_methods, collapse = ", ")))
   }
 
-  # ===================================================================
-  # Helper Function 2: The New Sampler
-  # Takes original MCMC draws, applies the shrinkage, and returns a new
-  # "corrected" vector of MCMC draws.
-  # ===================================================================
-  sample_shrinkage_draws <- function(original_draws) {
-    # 1. Summarize the original posterior to get a single estimate (b) and error (s)
-    b <- mean(original_draws)
-    s <- sd(original_draws)
-    z_obs <- b / s
-    n_samples <- length(original_draws)
-
-    # 2. Define the empirical prior parameters from Van Zwet et al. (Table 1)
-    p_zwet <- c(0.32, 0.31, 0.30, 0.07)
-    tau_zwet <- c(0.61, 1.42, 2.16, 5.64)
-
-    # 3. Get the parameters of the corrected posterior distribution for the SNR
-    corrected_dist_params <- conditional(z = z_obs, p = p_zwet, tau = tau_zwet)
-    q_corr <- corrected_dist_params$q
-    m_corr <- corrected_dist_params$m
-    sigma_corr <- corrected_dist_params$sigma
-
-    # 4. Generate new samples from this corrected mixture distribution
-    corrected_snr_samples <- numeric(n_samples)
-    for (i in 1:n_samples) {
-      # 4a. Choose one of the 4 components based on the new probabilities (q_corr)
-      component <- sample(1:4, size = 1, prob = q_corr)
-      # 4b. Draw a sample from the normal distribution of that chosen component
-      corrected_snr_samples[i] <- rnorm(1, mean = m_corr[component], sd = sigma_corr[component])
-    }
-
-    # 5. Scale the corrected SNR samples by 's' to get the final corrected draws for the parameter
-    corrected_draws <- s * corrected_snr_samples
-    return(corrected_draws)
-  }
-
-  # --- Main Function Logic ---
-
-  # 1. Extract posterior samples from the fit object
   posterior <- rstan::extract(fit$stan_fit)
   if (!"beta_cure_intercept" %in% names(posterior)) {
     stop("Required parameters not found in the model fit.")
   }
 
-  # 2. Calculate original (uncorrected) derived quantities
-  # Note: these are on the log scale for TR and OR
-  log_tr_draws <- posterior$beta_surv_arm
-  log_or_draws <- posterior$beta_cure_arm
+  # --- Prepare Draws for Summary ---
+  original_log_tr <- posterior$beta_surv_arm
+  original_log_or <- posterior$beta_cure_arm
 
-  # Other quantities that don't get corrected
-  p_cure_ctrl_draws <- 1 / (1 + exp(-posterior$beta_cure_intercept))
-  p_cure_exp_draws <- 1 / (1 + exp(-(posterior$beta_cure_intercept + posterior$beta_cure_arm)))
-  cure_diff_draws <- p_cure_exp_draws - p_cure_ctrl_draws
+  original_p_cure_ctrl <- 1 / (1 + exp(-posterior$beta_cure_intercept))
+  original_p_cure_exp <- 1 / (1 + exp(-(posterior$beta_cure_intercept + original_log_or)))
+  original_cure_diff <- original_p_cure_exp - original_p_cure_ctrl
 
-  # 3. Generate corrected draws if requested
-  if (empirical_shrinkage) {
-    log_tr_draws_corrected <- sample_shrinkage_draws(log_tr_draws)
-    log_or_draws_corrected <- sample_shrinkage_draws(log_or_draws)
-  }
-
-  # 4. Helper function to summarize any vector of draws into a formatted string
+  # --- Helper to format the output string ---
   summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
-    # If draws are on log scale (like log-TR), exponentiate them first
-    if (is_log_scale) {
-      summary_draws <- exp(draws)
-    } else {
-      summary_draws <- draws
-    }
-
+    summary_draws <- if (is_log_scale) exp(draws) else draws
     point_estimate <- median(summary_draws) * multiplier
     ci <- quantile(summary_draws, probs = c(0.025, 0.975)) * multiplier
-
     paste0(
       format(round(point_estimate, digits), nsmall = digits),
       " (", format(round(ci[1], digits), nsmall = digits), " - ", format(round(ci[2], digits), nsmall = digits), ")"
     )
   }
 
-  # 5. Build the results table
-  # Start with a base table of metrics
+  # --- Build the Summary Table ---
   summary_df <- data.frame(
-    Metric = c("Time Ratio (TR)",
-               "Odds Ratio (OR) for Cure",
-               "Long-Term Survival Rate (%) - Control",
-               "Long-Term Survival Rate (%) - Experimental",
-               "Absolute Difference in Survival Rate (%)"),
+    Metric = c("Time Ratio (TR)", "Odds Ratio (OR) for Cure", "Long-Term Survival Rate (%) - Control",
+               "Long-Term Survival Rate (%) - Experimental", "Absolute Difference in Survival Rate (%)"),
     `Result (95% CI)` = c(
-      summarize_draws(log_tr_draws, is_log_scale = TRUE),
-      summarize_draws(log_or_draws, is_log_scale = TRUE),
-      summarize_draws(p_cure_ctrl_draws, multiplier = 100),
-      summarize_draws(p_cure_exp_draws, multiplier = 100),
-      summarize_draws(cure_diff_draws, multiplier = 100)
+      summarize_draws(original_log_tr, is_log_scale = TRUE),
+      summarize_draws(original_log_or, is_log_scale = TRUE),
+      summarize_draws(original_p_cure_ctrl, multiplier = 100),
+      summarize_draws(original_p_cure_exp, multiplier = 100),
+      summarize_draws(original_cure_diff, multiplier = 100)
     ),
-    stringsAsFactors = FALSE
+    stringsAsFactors = FALSE,
+    check.names = FALSE
   )
 
-  # If shrinkage was applied, add the corrected rows
-  if (empirical_shrinkage) {
+  if (shrinkage_method != "none") {
+    # Generate corrected draws only for the summary table
+    corrected_log_tr <- sample_shrinkage_draws(original_log_tr, method = shrinkage_method)
+    corrected_log_or <- sample_shrinkage_draws(original_log_or, method = shrinkage_method)
+
+    # Recalculate derived quantities using the corrected OR draws
+    corrected_p_cure_exp <- 1 / (1 + exp(-(posterior$beta_cure_intercept + corrected_log_or)))
+    corrected_cure_diff <- corrected_p_cure_exp - original_p_cure_ctrl
+
+    # Update the rows for Experimental Survival and Difference with corrected values
+    summary_df[4, "Result (95% CI)"] <- summarize_draws(corrected_p_cure_exp, multiplier = 100)
+    summary_df[5, "Result (95% CI)"] <- summarize_draws(corrected_cure_diff, multiplier = 100)
+
+    # Update the metric names to indicate they are corrected
+    method_label <- tools::toTitleCase(shrinkage_method)
+    summary_df$Metric[4] <- paste0(summary_df$Metric[4], " - Corrected (", method_label, ")")
+    summary_df$Metric[5] <- paste0(summary_df$Metric[5], " - Corrected (", method_label, ")")
+
+    # Create and insert the new rows for corrected TR and OR
     corrected_rows <- data.frame(
-      Metric = c("Time Ratio (TR) - Corrected",
-                 "Odds Ratio (OR) - Corrected"),
+      Metric = c(paste0("Time Ratio (TR) - Corrected (", method_label, ")"),
+                 paste0("Odds Ratio (OR) - Corrected (", method_label, ")")),
       `Result (95% CI)` = c(
-        summarize_draws(log_tr_draws_corrected, is_log_scale = TRUE),
-        summarize_draws(log_or_draws_corrected, is_log_scale = TRUE)
-      )
+        summarize_draws(corrected_log_tr, is_log_scale = TRUE),
+        summarize_draws(corrected_log_or, is_log_scale = TRUE)
+      ),
+      stringsAsFactors = FALSE,
+      check.names = FALSE
     )
-    # Combine the original table with the new corrected rows
     summary_df <- rbind(summary_df[1:2,], corrected_rows, summary_df[3:5,])
   }
 
-  # Convert to a tibble for nice printing
-  summary_table <- tibble::as_tibble(summary_df)
-
-  return(summary_table)
+  return(tibble::as_tibble(summary_df))
 }
 
 
-
-
-
-#' Generate a Summary Table or Return MCMC Draws with Optional Shrinkage
+#' Get Original or Shrunk MCMC Draws for Subsequent Analyses
 #'
 #' @description
-#' This function calculates key outcomes from a Bayesian model fit. It can either
-#' return a summary table or a list of MCMC draws. It also provides an option
-#' to include empirically shrunk estimates based on Van Zwet et al. (2021).
+#' Extracts or generates posterior draws for efficacy inputs, which can be used
+#' in other functions like `get_bayescores`. It can return the original MCMC draws
+#' or generate new draws corrected with an empirical shrinkage method.
 #'
 #' @param fit The fitted model object from `fit_bayesian_cure_model`.
-#' @param digits The number of decimal places for rounding in the summary table.
-#' @param empirical_shrinkage Logical. If TRUE, corrected estimates/draws are generated.
-#' @param return_draws Logical. If TRUE, the function returns a list of MCMC
-#'   draws instead of a summary table. Defaults to FALSE.
+#' @param shrinkage_method A character string specifying the shrinkage method.
+#'   Options are "zwet", "sherry", or "none" (default).
 #'
-#' @return If `return_draws` is FALSE (default), a tibble with a summary of outcomes.
-#'   If `return_draws` is TRUE, a list containing vectors of MCMC draws for
-#'   various parameters, including corrected versions if requested.
+#' @return A list containing two named vectors of posterior samples:
+#'   \itemize{
+#'     \item{\code{tr_posterior_samples}: Draws for the Time Ratio (already exponentiated).}
+#'     \item{\code{cure_posterior_samples}: Draws for the absolute difference
+#'       in cure rates.}
+#'   }
 #'
 #' @importFrom rstan extract
-#' @importFrom tibble tibble as_tibble
-#' @importFrom stats quantile median sd rnorm
-#' @importFrom stats dnorm
 #' @export
-outcomes_shrinkage <- function(fit, digits = 2, empirical_shrinkage = TRUE, return_draws = FALSE) {
+get_bayescores_draws <- function(fit, shrinkage_method = "none") {
 
-  # ===================================================================
-  # Helper Function 1: Van Zwet's `conditional` function
-  # ===================================================================
-  conditional <- function(z, p, tau) {
-    tau2 <- tau^2
-    q_unscaled <- p * dnorm(z, 0, sqrt(tau2 + 1))
-    q <- q_unscaled / sum(q_unscaled)
-    m <- z * tau2 / (tau2 + 1)
-    v <- tau2 / (tau2 + 1)
-    sigma <- sqrt(v)
-    data.frame(q, m, sigma)
+  # --- Input Validation ---
+  valid_methods <- c("zwet", "sherry", "none")
+  if (!shrinkage_method %in% valid_methods) {
+    stop(paste("Invalid shrinkage_method specified. Please use one of:",
+               paste(valid_methods, collapse = ", ")))
   }
 
-  # ===================================================================
-  # Helper Function 2: The New Sampler
-  # ===================================================================
-  sample_shrinkage_draws <- function(original_draws) {
-    b <- mean(original_draws)
-    s <- sd(original_draws)
-    if (s == 0) return(original_draws) # No variation, no shrinkage
-    z_obs <- b / s
-    n_samples <- length(original_draws)
-    p_zwet <- c(0.32, 0.31, 0.30, 0.07)
-    tau_zwet <- c(0.61, 1.42, 2.16, 5.64)
-    corrected_dist_params <- conditional(z = z_obs, p = p_zwet, tau = tau_zwet)
-    q_corr <- corrected_dist_params$q
-    m_corr <- corrected_dist_params$m
-    sigma_corr <- corrected_dist_params$sigma
-    corrected_snr_samples <- numeric(n_samples)
-    for (i in 1:n_samples) {
-      component <- sample(1:4, size = 1, prob = q_corr)
-      corrected_snr_samples[i] <- rnorm(1, mean = m_corr[component], sd = sigma_corr[component])
-    }
-    corrected_draws <- s * corrected_snr_samples
-    return(corrected_draws)
-  }
-
-  # --- Main Function Logic ---
-
-  # 1. Extract posterior samples
   posterior <- rstan::extract(fit$stan_fit)
   if (!"beta_cure_intercept" %in% names(posterior)) {
     stop("Required parameters not found in the model fit.")
   }
 
-  # 2. Calculate original (uncorrected) derived quantities
-  log_tr_draws <- posterior$beta_surv_arm
-  log_or_draws <- posterior$beta_cure_arm
+  # --- Determine final draws based on method ---
+  if (shrinkage_method == "none") {
+    # For "none", use the original draws directly from the fit object
+    final_log_tr_draws <- posterior$beta_surv_arm
+    final_log_or_draws <- posterior$beta_cure_arm
+  } else {
+    # For "zwet" or "sherry", generate new corrected draws
+    final_log_tr_draws <- sample_shrinkage_draws(posterior$beta_surv_arm, method = shrinkage_method)
+    final_log_or_draws <- sample_shrinkage_draws(posterior$beta_cure_arm, method = shrinkage_method)
+  }
+
+  # --- Calculate derived quantities from the final set of draws ---
   p_cure_ctrl_draws <- 1 / (1 + exp(-posterior$beta_cure_intercept))
-  p_cure_exp_draws <- 1 / (1 + exp(-(posterior$beta_cure_intercept + log_or_draws)))
+  p_cure_exp_draws <- 1 / (1 + exp(-(posterior$beta_cure_intercept + final_log_or_draws)))
   cure_diff_draws <- p_cure_exp_draws - p_cure_ctrl_draws
 
-  # Initialize list for returning draws
-  draws_list <- list(
-    log_tr_draws = log_tr_draws,
-    log_or_draws = log_or_draws,
-    cure_diff_draws = cure_diff_draws,
-    p_cure_ctrl_draws = p_cure_ctrl_draws,
-    p_cure_exp_draws = p_cure_exp_draws
-  )
-
-  # 3. Generate corrected draws if requested
-  if (empirical_shrinkage) {
-    log_tr_draws_corrected <- sample_shrinkage_draws(log_tr_draws)
-    log_or_draws_corrected <- sample_shrinkage_draws(log_or_draws)
-
-    # IMPORTANT: Recalculate derived quantities using the corrected draws
-    p_cure_exp_draws_corrected <- 1 / (1 + exp(-(posterior$beta_cure_intercept + log_or_draws_corrected)))
-    cure_diff_draws_corrected <- p_cure_exp_draws_corrected - p_cure_ctrl_draws
-
-    # Add corrected draws to the list
-    draws_list$log_tr_draws_corrected <- log_tr_draws_corrected
-    draws_list$log_or_draws_corrected <- log_or_draws_corrected
-    draws_list$cure_diff_draws_corrected <- cure_diff_draws_corrected
-  }
-
-  # --- Return either the draws or a summary table ---
-
-  if (return_draws) {
-    return(draws_list)
-  } else {
-    # Helper function to summarize draws into a formatted string
-    summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
-      summary_draws <- if (is_log_scale) exp(draws) else draws
-      point_estimate <- median(summary_draws) * multiplier
-      ci <- quantile(summary_draws, probs = c(0.025, 0.975)) * multiplier
-      paste0(
-        format(round(point_estimate, digits), nsmall = digits),
-        " (", format(round(ci[1], digits), nsmall = digits), " - ", format(round(ci[2], digits), nsmall = digits), ")"
-      )
-    }
-
-    # Build the results table
-    summary_df <- data.frame(
-      Metric = c("Time Ratio (TR)", "Odds Ratio (OR) for Cure", "Long-Term Survival Rate (%) - Control",
-                 "Long-Term Survival Rate (%) - Experimental", "Absolute Difference in Survival Rate (%)"),
-      `Result (95% CI)` = c(
-        summarize_draws(draws_list$log_tr_draws, is_log_scale = TRUE),
-        summarize_draws(draws_list$log_or_draws, is_log_scale = TRUE),
-        summarize_draws(draws_list$p_cure_ctrl_draws, multiplier = 100),
-        summarize_draws(draws_list$p_cure_exp_draws, multiplier = 100),
-        summarize_draws(draws_list$cure_diff_draws, multiplier = 100)
-      ),
-      stringsAsFactors = FALSE
+  # --- Return the final list of draws ---
+  return(
+    list(
+      tr_posterior_samples = exp(final_log_tr_draws),
+      cure_posterior_samples = cure_diff_draws
     )
-
-    if (empirical_shrinkage) {
-      corrected_rows <- data.frame(
-        Metric = c("Time Ratio (TR) - Corrected", "Odds Ratio (OR) - Corrected"),
-        `Result (95% CI)` = c(
-          summarize_draws(draws_list$log_tr_draws_corrected, is_log_scale = TRUE),
-          summarize_draws(draws_list$log_or_draws_corrected, is_log_scale = TRUE)
-        )
-      )
-      summary_df <- rbind(summary_df[1:2,], corrected_rows, summary_df[3:5,])
-    }
-
-    return(tibble::as_tibble(summary_df))
-  }
+  )
 }
-
-
-
-

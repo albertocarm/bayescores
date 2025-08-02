@@ -89,36 +89,49 @@ create_amit_plot <- function(trial_object,
     ...
   )
 }
+
+
+
 #' @title Calculate a complete toxicity analysis
 #' @description Calculates weighted toxicity scores (WTS).
 #' @param trial_data A list containing the toxicity data.
 #' @param n_simulations An integer for the number of simulations.
+#' @param soc_weights The default weights for toxicity categories
 #' @param unacceptable_rel_increase A number for the unacceptable increase limit.
 #' @param k_uncertainty A number for the uncertainty constant.
 #' @return A list containing the results.
 #' @export
 #' @importFrom stats rnorm
+
 calculate_toxicity_analysis <- function(
     trial_data,
     n_simulations,
     unacceptable_rel_increase = 0.5,
-    k_uncertainty = 5
+    k_uncertainty = 5,
+    soc_weights = c(
+      "Gastrointestinal disorders" = 1.2,
+      "Blood and lymphatic system disorders" = 1.6,
+      "General, metabolic, and other disorders" = 1.3,
+      "Dermatologic disorders" = 1.1,
+      "Infections and infestations" = 1.6,
+      "Respiratory, thoracic and mediastinal disorders" = 2.5
+    )
 ) {
 
   # --- 1. Calculate Weighted Toxicity Scores (WTS) ---
-  soc_weights <- c(
-    "Gastrointestinal disorders" = 1.2, "Blood and lymphatic system disorders" = 1.6,
-    "General, metabolic, and other disorders" = 1.3, "Dermatologic disorders" = 1.1,
-    "Infections and infestations" = 1.6, "Respiratory, thoracic and mediastinal disorders" = 2.5
-  )
+  # The soc_weights are now taken directly from the function's arguments.
   W_prom_1_2 <- 1.5; W_prom_3_4 <- 6.0
   toxicity_data <- trial_data$toxicity
   inc_g1_2_exp <- pmax(0, toxicity_data$Incidence_G1_4_Experimental - toxicity_data$Incidence_G3_4_Experimental)
   inc_g1_2_con <- pmax(0, toxicity_data$Incidence_G1_4_Control - toxicity_data$Incidence_G3_4_Control)
   score_base_exp <- (inc_g1_2_exp / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Experimental / 100 * W_prom_3_4)
   score_base_con <- (inc_g1_2_con / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Control / 100 * W_prom_3_4)
+
+  # Match the weights from the argument to the data's SystemOrganClass
   w_soc_applied <- soc_weights[toxicity_data$SystemOrganClass]
+  # Any SystemOrganClass not in the soc_weights list gets a default weight of 1.0
   w_soc_applied[is.na(w_soc_applied)] <- 1.0
+
   wts_scores <- data.frame(
     Experimental = sum(score_base_exp * w_soc_applied),
     Control = sum(score_base_con * w_soc_applied)

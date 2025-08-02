@@ -8,7 +8,12 @@ calculate_toxicity_analysis(
   trial_data,
   n_simulations,
   unacceptable_rel_increase = 0.5,
-  k_uncertainty = 5
+  k_uncertainty = 5,
+  soc_weights = c(`Gastrointestinal disorders` = 1.2,
+    `Blood and lymphatic system disorders` = 1.6,
+    `General, metabolic, and other disorders` = 1.3, `Dermatologic disorders` = 1.1,
+    `Infections and infestations` = 1.6,
+    `Respiratory, thoracic and mediastinal disorders` = 2.5)
 )
 }
 \arguments{
@@ -19,6 +24,8 @@ calculate_toxicity_analysis(
 \item{unacceptable_rel_increase}{A number for the unacceptable increase limit.}
 
 \item{k_uncertainty}{A number for the uncertainty constant.}
+
+\item{soc_weights}{The default weights for toxicity categories}
 }
 \value{
 A list containing the results.
