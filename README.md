@@ -1,8 +1,4 @@
 ---
-output:
-  word_document: default
-  html_document: default
----
 
 # bayescores: Comprehensive quantification of clinical benefit in randomized controlled trials using Bayesian AFT cure models
 
