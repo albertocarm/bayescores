@@ -467,7 +467,95 @@ plot_utility_donut(utilities_sherry, trial_name ="sherry's shrinkage")
 
 ```
 
-By comparing these results, you can see how each empirical prior pulls the original estimates toward more conservative, data-driven values. This shrinkage step provides a robust sensitivity analysis, helping to understand how potential overestimation might impact the overall utility of a treatment and leading to more reliable conclusions for decision-making.
+You can see how each empirical prior pulls the original estimates toward more conservative, data-driven values. This shrinkage step provides a robust sensitivity analysis, helping to understand how potential overestimation might impact the overall utility of a treatment and leading to more reliable conclusions for decision-making.
+
+
+***Complex mixture case (immunotherapy-like)***
+
+- Mixed population typical of immunotherapy RCTs.  
+- Experimental arm increases the long-term survivor fraction (cure fraction).  
+- Among non-cured (refractory) patients, there is modest harm (TR < 1).  
+- QoL and Toxicity are **not** simulated here; we assume prior/previous settings.  
+ 
+
+```{r complex-mixture-case}
+
+set.seed(123)
+
+# 1) Simulate an archetypal mixed cohort
+sim_data <- simulate_weibull_cure_data(
+  n_patients          = 300,
+  cure_fraction_ctrl  = 0.20,
+  cure_fraction_exp   = 0.35,
+  max_follow_up       = 60,
+  weibull_shape       = 1.2,
+  median_survival_ctrl= 12,
+  time_ratio_exp      = 0.75
+)
+
+# 2) Fit Bayesian mixture cure model
+bayesian_fit <- fit_bayesian_cure_model(
+  sim_data,
+  time_col  = "time",
+  event_col = "event",
+  arm_col   = "arm",
+  iter      = 2500,
+  chains    = 4
+)
+
+# 3) Inspect model outcomes
+mod_out <- outcomes(bayesian_fit)
+print(mod_out)
+
+# Plot model fit
+plot(bayesian_fit)
+
+# 4) Obtain MCMC draws for efficacy components
+outcomes_obj <- outcomes(
+  fit              = bayesian_fit,
+  shrinkage_method = "none"
+)
+efficacy_draws <- get_bayescores_draws(
+  fit              = bayesian_fit,
+  shrinkage_method = "none"
+)
+
+efficacy_inputs <- list(
+  tr_posterior_samples   = efficacy_draws$tr_posterior_samples,
+  cure_posterior_samples = efficacy_draws$cure_posterior_samples
+)
+
+
+```
+
+*Disutility penalty*
+
+Here we introduce a disutility penalty for scenarios where the majority experiences modest harm (TR < 1), even when a minority achieves substantial long-term benefit. This penalty reduces the overall utility in proportion to the magnitude of short-term harm, ensuring that large gains for a few do not overshadow consistent detriment for many.
+
+  
+```{r disutilities}
+# 5) Final calibration for utilities & disutilities
+my_final_calibration <- list(
+  efficacy = list(
+    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
+    tr_utility_target   = list(effect_value = 1.25, utility_value = 50),
+    tr_disutility_target= list(effect_value = 0.85, utility_value = 20)
+  )
+)
+
+# 6) Compute final BayeScores
+final_utilities <- get_bayescores(
+  efficacy_inputs = efficacy_inputs,
+  qol_scores = qol_scores,
+  toxicity_scores = toxicity_output$toxicity_effect_vector,
+  calibration_args = my_final_calibration
+)
+
+cat("--- Final BayeScores Summary ---\n")
+plot_utility_donut(final_utilities, trial_name ="Simulated dataset (unshrinkaged)")
+
+```
+
 
 
 ***Sensitivity Analysis Dashboard***
@@ -499,76 +587,15 @@ print(dashboard)
 
 
 
-
-
-
-**Digitizing Kaplan-Meier Curves to Obtain IPD**
-
-To facilitate evidence synthesis, we have created a high-level function, km_to_dataset, to extract Individual Patient Data (IPD) directly from images of Kaplan-Meier plots. This tool is essentially a wrapper that implements the well-established Guyot et al. method by leveraging the functionalities of two powerful packages: SurvdigitizeR and survHE.
-
-Image Preparation
-Before using the function, the plot image requires a simple manual pre-processing step. First, copy the plot from the source publication. Then, using a basic image editor like Paint, erase all extraneous elements such as titles, legends, and any other annotations. The final image should contain only the survival curves, the X and Y axes, and the numbers on those axes.
-
-For our example, we use *Figure 1* from the CheckMate 649 trial publication (DOI: 10.1200/JCO.23.01601).
-
-*Example: Reconstructing Data from CheckMate 649*
-The following code demonstrates the complete workflow. First, we define the necessary parameters. The most important ones are:
-
-time_intervals: This is the vector of time points at which the number of patients at risk is reported in the publication's plot.
-
-nrisk_data_list: This is a named list where each element contains the number-at-risk data corresponding to a treatment arm, as transcribed from the plot.
-
-
-```{r km-digitization-example, eval=FALSE}
-# --- 1. Define all parameters for the main function ---
-
-# NOTE: Provide the full path to your cleaned image file.
-image_file_path  <- "C:/path/to/your/cleaned_plot_image.png"
-
-# Time points for the number-at-risk table (from the plot's x-axis)
-time_intervals   <- seq(0, 63, 3)
-
-# The output file where the final IPD data frame will be saved
-output_file_name <- "final_ipd_data.Rda"
-
-# Number-at-risk data, transcribed from the publication's plot
-nrisk_data_list <- list(
-  control = c(482, 424, 353, 275, 215, 154, 125, 97, 83, 69, 60, 51, 44, 35, 28, 18, 14, 10, 5, 0, 0),
-  experimental = c(473, 440, 380, 315, 263, 223, 187, 161, 141, 118, 105, 100, 94, 81, 66, 53, 37, 24, 17, 6, 2)
-)
-
-# --- 2. Run the entire workflow ---
-final_dataset <- km_to_dataset(
-  img_path = image_file_path,
-  time_breaks = time_intervals,
-  n_risk_list = nrisk_data_list,
-  output_filename = output_file_name,
-  # Axis calibration parameters (from the plot)
-  x_start = 0, x_end = 63, x_increment = 3,
-  y_start = 0, y_end = 1, y_increment = 0.1
-)
-
-# --- 3. Verify the result by re-plotting the reconstructed data ---
-fit <- survival::survfit(survival::Surv(time, event) ~ arm, data = final_dataset)
-
-print(
-  survminer::ggsurvplot(
-    fit, data = final_dataset, conf.int = FALSE, risk.table = TRUE,
-    break.time.by = 3, risk.table.height = 0.25, risk.table.y.text.col = TRUE,
-    risk.table.y.text = FALSE, legend.title = "Arm",
-    legend.labs = names(nrisk_data_list)
-  )
-)
-```
-
-And voilà! Ready to estimate the clinical benefit of new drugs!
-
 ## Why bayescores? a more meaningful approach
 
-- **Clinically interpretable**: time ratios are more intuitive than hazard ratios; cure models resolve the issue of double counting benefit—first in HR terms and again as the long‑term bonus. this ensures both metrics remain independent.  
-- **Accounts for cure scenarios**: explicit modeling of cure rates and long‑term survivor fractions in immunotherapy studies.  
-- **Embraces uncertainty**: the Bayesian framework transparently conveys uncertainty.  
-- **No thresholds**: there are parameters and weights, but the approach is gradual; it avoids all‑or‑nothing decisions and is transparent and customizable.  
+- **Clinically interpretable**: time ratios are easier to explain to clinicians and patients than hazard ratios, and mixture cure models separate short-term survival effects from the long-term survivor fraction. This resolves the problem of “double counting” benefit—first via the HR and again through a separate long-term bonus—ensuring both metrics remain independent.
+- **Accounts for cure scenarios**: explicitly models cure rates and long-term survivor fractions, making it particularly relevant for immunotherapy and other treatments with a survival plateau.  
+- **Embraces uncertainty**: the Bayesian framework propagates uncertainty from all model stages, displaying full posterior distributions rather than collapsing results into single point estimates.  
+- **No thresholds**: uses continuous parameters and proportional weights rather than fixed cut-offs, producing smooth, gradual changes in the score. This avoids all-or-nothing jumps and makes the valuation process transparent, reproducible, and customizable to stakeholder priorities.  
+- **Integrates multiple dimensions**: combines efficacy, toxicity, and quality of life within a unified decision-analytic framework (MAUT), with hierarchical aggregation that mirrors clinical reasoning: efficacy first, then QoL, then toxicity.  
+- **Customizable toxicity weighting**: Weighted Toxicity Scores can incorporate grade-specific and type-specific penalties, reflecting the clinical relevance of different adverse events and aligning with disease-specific “toxicity budgets.”  
+- **Accessible implementation**: provided as an open-source R package (`bayescores`) with full workflow examples on GitHub, including KM curve digitization and IPD reconstruction tools, plus a web interface for no-code calculation and visualization.  
 
 ## Citation
 

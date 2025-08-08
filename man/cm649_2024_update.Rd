@@ -10,7 +10,6 @@ A data frame with three variables
   \item{time}{A numeric vector representing the survival time.}
   \item{event}{A numeric vector indicating the event status (1 = event, 0 = censored).}
   \item{arm}{A factor or character vector for the treatment arm.}
-  \item{id}{Patient id}
 }
 }
 \source{

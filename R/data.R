@@ -278,6 +278,7 @@
 "NSABPB40_3B"
 
 
+
 #' Data from the PALOMA2_1A Trial
 #'
 #' A dataset containing digitized survival data from a clinical trial.
@@ -1048,5 +1049,37 @@
 
 
 
+#' Digitized survival data from KEYNOTE-119
+#'
+#' @format A data frame with five variables:
+#' \describe{
+#'   \item{time}{Numeric; survival time (months).}
+#'   \item{event}{Numeric; 1=event, 0=censored.}
+#'   \item{arm}{Factor/character; treatment arm.}
+#'   \item{id}{Factor/character; patient id.}
+#'   \item{study}{Character; study label.}
+#' }
+#' @source \url{http://link.to.the.publication/NSABPB40_3B}
+#' @name kn119
+#' @docType data
+#' @usage data(kn119)
+NULL
 
-
+#' Toxicity and QoL data from KEYNOTE-119
+#'
+#' @format A data frame with 8 variables
+#' \describe{
+#'   \item{EventName}{Adverse event name.}
+#'   \item{SystemOrganClass}{System organ class.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) any-grade in control.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) any-grade in experimental.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) grade 3–4 in control.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) grade 3–4 in experimental.}
+#'   \item{qol}{Numeric QoL score.}
+#'   \item{N_patients}{Named numeric vector with n per arm.}
+#' }
+#' @source \url{<pon-la-correcta>}
+#' @name keynote_119_toxicity
+#' @docType data
+#' @usage data(keynote_119_toxicity)
+NULL

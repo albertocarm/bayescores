@@ -1,7 +1,7 @@
 Package: bayescores
 Title: Comprehensive Quantification of Clinical Benefit in Randomized 
     Controlled Trials using Bayesian AFT Cure Models and BayeScores
-Version: 0.2.0
+Version: 0.2.1
 Author: Alberto Carmona Bayonas <alberto.carmonabayonas@gmail.com>
 Maintainer: Alberto Carmona Bayonas <alberto.carmonabayonas@gmail.com>
 Description: Provides a comprehensive decision-making framework for the holistic analysis of randomized controlled trials (RCTs). This package introduces the Bayesian Clinical Benefit Scores (BayeScores), a novel metric to quantify the magnitude of clinical benefit by accounting for both survival prolongation and cure rates. It overcomes limitations of existing frameworks (like ESMO-MCBS or ASCO-VF) by providing more accurate and transparent information. A key advantage is its ability to avoid arbitrary "cliff effects"; instead of using rigid dichotomizations of continuous endpoints, the package employs gradual utility functions, ensuring that small changes in input metrics result in proportionally small changes in the final benefit score. Beyond a single score, the package is designed to deconstruct the clinical value into its fundamental utilities. It includes specialized functions to extract and quantify distinct components of benefit: Efficacy, carefully separated into its two key dimensions: survival prolongation (Time Ratio) and the long-term survival or cure fraction. Toxicity, derived from adverse event profiles. Quality of Life (QoL), based on patient-reported outcomes. A core feature of the toolkit is its flexible software architecture that allows for a customized weighting of these utilities. This empowers stakeholders (such as clinicians, patients, or regulatory bodies) to define benefit according to their specific priorities, aligning quantitative evidence with real-world clinical values. The package's Bayesian foundation allows it to robustly model and propagate uncertainty through every stage of the calculation. All derived utilities and final scores are presented as full posterior distributions, providing a complete picture of the potential range of outcomes, not just a single point estimate. Key functionalities include simulating trial data, fitting Bayesian Accelerated Failure Time (AFT) mixture cure models, and generating advanced visualizations like utility contribution donuts and posterior density plots to communicate results effectively.
@@ -22,8 +22,6 @@ Imports:
     tibble,
     ggridges,
     HH,
-    SurvdigitizeR,
-    survHE,
     ggsci
 RoxygenNote: 7.2.3
 URL: https://github.com/albertocarm/bayescores

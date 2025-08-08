@@ -17,5 +17,6 @@ A ggplot2 object representing the gauge plot.
 }
 \description{
 Generates a gauge visualization from the output of `summarize_final_utility`.
-This version correctly parses component names and displays a clear summary.
+This version correctly parses component names, dynamically includes a penalty
+component if present, and displays a clear summary.
 }

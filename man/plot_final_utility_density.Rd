@@ -9,16 +9,15 @@ plot_final_utility_density(final_utility_results)
 plot_final_utility_density(final_utility_results)
 }
 \arguments{
-\item{final_utility_results}{A list object, typically the output of another function
-like `summarize_final_utility()`. This list **must** contain a numeric vector named
-`final_utility_vector` which holds the posterior samples of the utility scores.}
+\item{final_utility_results}{A list containing the model's output. This list
+must contain an element named \code{final_utility_vector}, which is a
+numeric vector of the posterior utility scores.}
 }
 \value{
 A `ggplot` object representing the density plot. This object can be further
   customized using standard `ggplot2` functions (e.g., adding more layers or modifying the theme).
 
-A `ggplot` object representing the density plot. This object can be further
-  customized using standard `ggplot2` functions (e.g., adding more layers or modifying the theme).
+A \code{ggplot} object representing the density plot.
 }
 \description{
 Creates a smooth, filled density plot visualizing the posterior distribution of final utility scores.
@@ -28,12 +27,10 @@ that are constrained to a specific range (e.g., 0 to 100). The resulting plot is
 vertical color gradient fill. It also includes a crucial fix to prevent the density line
 from dropping below y=0, a common artifact in kernel density estimation near boundaries.
 
-Creates a smooth, filled density plot visualizing the posterior distribution of final utility scores.
-
-This function uses the `bde` package for bounded density estimation, which is appropriate for scores
-that are constrained to a specific range (e.g., 0 to 100). The resulting plot is styled with a
-vertical color gradient fill. It also includes a crucial fix to prevent the density line
-from dropping below y=0, a common artifact in kernel density estimation near boundaries.
+Creates a gradient-filled density plot to visualize the posterior
+distribution of final utility scores. This function uses a two-step process:
+first, it calculates the density from the data, and then it uses ggplot2
+to create the visualization.
 }
 \examples{
 # \dontrun{
@@ -50,18 +47,13 @@ density_plot <- plot_final_utility_density(results)
 # --- Display the plot ---
 print(density_plot)
 # }
-# \dontrun{
-# --- Create a sample data structure ---
-# This simulates the expected input for the function.
-# In a real case, this would come from another part of your analysis.
-set.seed(42) # for reproducibility
-sample_scores <- rbeta(2000, shape1 = 30, shape2 = 15) * 100
-results <- list(final_utility_vector = sample_scores)
+\dontrun{
+# 1. Create a sample data structure
+# (simulating 1000 scores from a Beta distribution scaled to 0-100)
+sample_scores <- rbeta(1000, shape1 = 30, shape2 = 10) * 100
+sample_results <- list(final_utility_vector = sample_scores)
 
-# --- Generate the plot ---
-density_plot <- plot_final_utility_density(results)
-
-# --- Display the plot ---
-print(density_plot)
-# }
+# 2. Generate the plot
+plot_final_utility_density(sample_results)
+}
 }

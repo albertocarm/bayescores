@@ -2,7 +2,7 @@
 % Please edit documentation in R/get_bayescores.R
 \name{get_bayescores}
 \alias{get_bayescores}
-\title{Calculate BayeScores Final Utility Score}
+\title{Calculate BayeScores Final Utility Score (Version 4, Corrected Toxicity Model)}
 \usage{
 get_bayescores(
   efficacy_inputs,
@@ -12,46 +12,18 @@ get_bayescores(
 )
 }
 \arguments{
-\item{efficacy_inputs}{A list containing the posterior samples for efficacy.
-Must include `cure_posterior_samples` and `tr_posterior_samples` as
-numeric vectors.}
+\item{efficacy_inputs}{A list with `cure_posterior_samples`, `tr_posterior_samples`.}
 
-\item{qol_scores}{A numeric vector of posterior samples for the Quality of
-Life effect.}
+\item{qol_scores}{A numeric vector of posterior samples for QoL effect.}
 
-\item{toxicity_scores}{A numeric vector of posterior samples for the
-Toxicity effect.}
+\item{toxicity_scores}{A numeric vector of posterior samples for Toxicity effect.}
 
-\item{calibration_args}{An optional list with calibration parameters to
-override the model's default values.}
+\item{calibration_args}{Optional list to override default calibration.}
 }
 \value{
-A list containing:
-  \itemize{
-    \item `final_utility_vector`: The posterior distribution vector of the final utility.
-    \item `component_summary`: A data frame with the summary (median and 95% CrI)
-      of each utility component.
-  }
+A list with the final utility vector and a summary data frame.
 }
 \description{
-Combines the posterior distributions of efficacy (cure fraction and
-tail-risk), quality of life (QoL), and toxicity into a single final
-utility score (0-100) using exponential utility functions.
-}
-\examples{
-\dontrun{
-  efficacy_data <- list(
-    cure_posterior_samples = rbeta(1000, 20, 80),
-    tr_posterior_samples = rnorm(1000, 1.1, 0.2)
-  )
-  qol_data <- rnorm(1000, 5, 2)
-  toxicity_data <- rnorm(1000, -3, 1.5)
-
-  results <- get_bayescores(
-    efficacy_inputs = efficacy_data,
-    qol_scores = qol_data,
-    toxicity_scores = toxicity_data
-  )
-  print(results$component_summary)
-}
+This version corrects the toxicity calculation model as per user feedback.
+Toxicity's impact is now proportional to the base efficacy score.
 }
