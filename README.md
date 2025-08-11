@@ -1,6 +1,5 @@
----
 
-# bayescores: Comprehensive quantification of clinical benefit in randomized controlled trials using Bayesian AFT cure models
+# bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials Using Bayesian Inference and Multi-Attribute Utility Theory
 
 **`bayescores`** provides a comprehensive toolkit for analyzing
 randomized controlled trials (RCTs). This package introduces the
@@ -169,8 +168,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.00085 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 8.5 seconds.
+    ## Chain 1: Gradient evaluation took 0.000743 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 7.43 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -187,15 +186,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 10.811 seconds (Warm-up)
-    ## Chain 1:                11.734 seconds (Sampling)
-    ## Chain 1:                22.545 seconds (Total)
+    ## Chain 1:  Elapsed Time: 10.197 seconds (Warm-up)
+    ## Chain 1:                4.222 seconds (Sampling)
+    ## Chain 1:                14.419 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000622 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 6.22 seconds.
+    ## Chain 2: Gradient evaluation took 0.000113 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.13 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -212,15 +211,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 9.612 seconds (Warm-up)
-    ## Chain 2:                13.027 seconds (Sampling)
-    ## Chain 2:                22.639 seconds (Total)
+    ## Chain 2:  Elapsed Time: 2.437 seconds (Warm-up)
+    ## Chain 2:                3.02 seconds (Sampling)
+    ## Chain 2:                5.457 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.00036 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.6 seconds.
+    ## Chain 3: Gradient evaluation took 0.000184 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.84 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -237,15 +236,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 12.12 seconds (Warm-up)
-    ## Chain 3:                13.518 seconds (Sampling)
-    ## Chain 3:                25.638 seconds (Total)
+    ## Chain 3:  Elapsed Time: 2.81 seconds (Warm-up)
+    ## Chain 3:                3.291 seconds (Sampling)
+    ## Chain 3:                6.101 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000279 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 2.79 seconds.
+    ## Chain 4: Gradient evaluation took 0.000114 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.14 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -262,9 +261,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 14.152 seconds (Warm-up)
-    ## Chain 4:                17.757 seconds (Sampling)
-    ## Chain 4:                31.909 seconds (Total)
+    ## Chain 4:  Elapsed Time: 3.012 seconds (Warm-up)
+    ## Chain 4:                4.267 seconds (Sampling)
+    ## Chain 4:                7.279 seconds (Total)
     ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
@@ -292,7 +291,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ## beta_surv_arm 0.40       0 0.12  0.17  0.32 0.40 0.48  0.64  3082    1
     ## alpha         1.31       0 0.08  1.16  1.26 1.31 1.37  1.47  4316    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Sat Aug  9 00:22:58 2025.
+    ## Samples were drawn using NUTS(diag_e) at Mon Aug 11 16:58:11 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -787,8 +786,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000749 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 7.49 seconds.
+    ## Chain 1: Gradient evaluation took 0.000157 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.57 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -805,15 +804,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 12.713 seconds (Warm-up)
-    ## Chain 1:                18.029 seconds (Sampling)
-    ## Chain 1:                30.742 seconds (Total)
+    ## Chain 1:  Elapsed Time: 2.886 seconds (Warm-up)
+    ## Chain 1:                4.059 seconds (Sampling)
+    ## Chain 1:                6.945 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000675 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 6.75 seconds.
+    ## Chain 2: Gradient evaluation took 0.000112 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.12 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -830,15 +829,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 12.102 seconds (Warm-up)
-    ## Chain 2:                17.027 seconds (Sampling)
-    ## Chain 2:                29.129 seconds (Total)
+    ## Chain 2:  Elapsed Time: 2.726 seconds (Warm-up)
+    ## Chain 2:                3.881 seconds (Sampling)
+    ## Chain 2:                6.607 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000173 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.73 seconds.
+    ## Chain 3: Gradient evaluation took 0.000147 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.47 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -855,15 +854,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 14.106 seconds (Warm-up)
-    ## Chain 3:                17.99 seconds (Sampling)
-    ## Chain 3:                32.096 seconds (Total)
+    ## Chain 3:  Elapsed Time: 3.307 seconds (Warm-up)
+    ## Chain 3:                4.432 seconds (Sampling)
+    ## Chain 3:                7.739 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000646 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 6.46 seconds.
+    ## Chain 4: Gradient evaluation took 0.000115 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.15 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -880,9 +879,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 14.855 seconds (Warm-up)
-    ## Chain 4:                19.06 seconds (Sampling)
-    ## Chain 4:                33.915 seconds (Total)
+    ## Chain 4:  Elapsed Time: 3.425 seconds (Warm-up)
+    ## Chain 4:                4.727 seconds (Sampling)
+    ## Chain 4:                8.152 seconds (Total)
     ## Chain 4:
 
 ``` r
@@ -997,6 +996,170 @@ print(dashboard)
 ```
 
 ![](README_files/figure-gfm/sensitivity-dashboard-1.png)<!-- -->
+
+***Reconstructing Survival Data from Published Plots***
+
+A perceived limitation of bayescores is its requirement for Individual
+Patient Data (IPD), in contrast to other value frameworks that can use
+aggregated data reported in the literature. To mitigate this limitation,
+this section demonstrates a workflow to reconstruct IPD from a published
+Kaplan-Meier curve image. The goal is to transform a static plot into a
+usable dataset, enabling full re-analysis and custom visualization.
+
+For this demonstration, we used Figure 2 from Hortobagyi, G. N., et
+al. “Updated results from MONALEESA-2…” Annals of Oncology 29.7 (2018).
+This is an Open Access article under the CC-BY-NC license.
+
+``` r
+image_path <- system.file("extdata", "mona2.png", package = "bayescores")
+# install.packages("magick")
+
+library(magick)
+trial_plot <- image_read(image_path)
+print(trial_plot)
+```
+
+    ## # A tibble: 1 × 7
+    ##   format width height colorspace matte filesize density
+    ##   <chr>  <int>  <int> <chr>      <lgl>    <int> <chr>  
+    ## 1 PNG      913    478 sRGB       TRUE     34793 57x57
+
+<img src="README_files/figure-gfm/monaleesa-2-1.png" width="913" />
+
+The workflow consists of three main steps:
+
+*Digitization* We first extract the curve coordinates from the published
+image. This can be done with R packages like SurvdigitizeR. If you
+encounter issues, web-based tools like WebPlotDigitizer (available at
+<https://automeris.io/>) are excellent alternatives. The number-at-risk
+table that accompanies the plot is transcribed manually.
+
+``` r
+library(ggplot2)
+library(dplyr)
+library(survival)
+library(survminer)
+library(SurvdigitizeR)
+
+plot_km_monaleesa <- survival_digitize(img_path = "C:/Users/Usuario/Documents/aft cure model/digitalizar/mona2.png",
+                                       num_curves = 2,
+                                       x_start = 0,
+                                       x_end = 34,
+                                       x_increment = 2,
+                                       y_start = 0,
+                                       y_end = 100,
+                                       y_increment = 20,
+                                       y_text_vertical =  T)
+```
+
+*Reconstruction* This is the core of the process. We use a programmed
+version of the algorithm described by Guyot et al. (2012) to
+reverse-engineer the individual event and censoring times from the
+aggregated digitized data. This step effectively creates a full
+patient-level dataset.
+
+``` r
+# The IPD reconstruction algorithm requires two inputs: the digitized curve
+# coordinates and the number of patients at risk at specific time points.
+# This data frame is a manual transcription of the "No. at risk" table
+# from the published plot for both treatment arms.
+
+nrisk_tbl_all <- rbind(
+  # Data for the first curve (treatment arm)
+  data.frame(
+    time_tick = c(0,  2,  4,  6,  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34),
+    nrisk     = c(334, 294, 277, 257, 240, 227, 207, 196, 188, 176, 164, 132, 97, 46, 17, 11, 1, 0),
+    curve     = 1L  # Curve 1: Ribociclib + Letrozole arm
+  ),
+  # Data for the second curve (control arm)
+  data.frame(
+    time_tick = c(0,  2,  4,  6,  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34),
+    nrisk     = c(334, 279, 265, 239, 219, 196, 179, 156, 138, 124, 110, 93, 63, 34, 10, 7, 2, 0),
+    curve     = 2L  # Curve 2: Placebo + Letrozole arm
+  )
+)
+
+# Now we run the core reconstruction algorithm. This is done separately for each
+# treatment arm because the survival and censoring patterns are unique to each one.
+
+# Reconstruct IPD for the first curve (Ribociclib arm)
+res1 <- reconstruct_ipd(
+  plot_km   = subset(plot_km_monaleesa, curve == 1), # Use digitized data for curve 1
+  nrisk_tbl = subset(nrisk_tbl_all,   curve == 1)  # Use risk numbers for curve 1
+)
+```
+
+    ## # A tibble: 1 × 2
+    ##   curve ok   
+    ##   <int> <lgl>
+    ## 1     1 TRUE
+
+``` r
+# Reconstruct IPD for the second curve (Placebo arm)
+res2 <- reconstruct_ipd(
+  plot_km   = subset(plot_km_monaleesa, curve == 2), # Use digitized data for curve 2
+  nrisk_tbl = subset(nrisk_tbl_all,   curve == 2)  # Use risk numbers for curve 2
+)
+```
+
+    ## # A tibble: 1 × 2
+    ##   curve ok   
+    ##   <int> <lgl>
+    ## 1     2 TRUE
+
+``` r
+# The final step is to merge the results from both reconstructions into a single,
+# tidy dataset that is ready for analysis and plotting.
+
+res <- list(
+  # Combine the individual patient data from both arms
+  ipd   = bind_rows(
+    res1$ipd %>% mutate(curve = 1L), # IPD from curve 1
+    res2$ipd %>% mutate(curve = 2L)  # IPD from curve 2
+  ) %>%
+    # Convert the numeric 'curve' column into a factor with meaningful labels.
+    # This is essential for correct labeling in plots and models.
+    mutate(curve = factor(curve,
+                          labels = c("Ribociclib + letrozol",
+                                     "Placebo + letrozol"))),
+
+  # 'drops' is likely a secondary output from the reconstruction function,
+  # containing details about the survival probability drops. We combine it here as well.
+  drops = bind_rows(
+    res1$drops %>% mutate(curve = 1L),
+    res2$drops %>% mutate(curve = 2L)
+  )
+)
+```
+
+*Re-analysis and Visualization* Once the IPD is generated, it can be
+used directly within bayescores or for any other analysis. This allows
+users to verify the original study’s results with survfit and coxph or
+create fully customized, publication-quality plots with ggsurvplot,
+providing complete analytical and visual control.
+
+``` r
+fit <- survfit(Surv(time, status) ~ curve, data = res$ipd)
+
+ggsurvplot(
+  fit,
+  data = res$ipd,
+  palette = c("#E69F00", "#0072B2"), # Swapped colors to match new factor levels
+  conf.int = FALSE,
+  censor = FALSE,
+  xlab = "Time (months)",
+  ylab = "Probability of PFS (%)",
+  fun = "pct",
+  break.time.by = 2,
+  xlim = c(0, 34),
+  legend.title = "",
+  legend.labs = c("Placebo\n+ Letrozole", "Ribociclib\n+ Letrozole"), 
+  legend = c(0.75, 0.85),
+  risk.table = FALSE
+)
+```
+
+![](README_files/figure-gfm/ipd%20plot-1.png)<!-- -->
 
 ## Why bayescores? a more meaningful approach
 
