@@ -303,3 +303,108 @@ time_ratio <- function(model) {
 }
 
 
+#' @title Plot Correlated Posterior Densities
+#' @description
+#' Creates a 2D density plot for two correlated parameters from a Stan model fit.
+#' Axis limits are computed independently for X and Y using quantiles for a tight
+#' data-driven window, with optional padding. Ellipses mark specified probability
+#' levels under a bivariate normal approximation.
+#'
+#' @details
+#' This helper expects a list-like object \code{x} that contains a fitted Stan
+#' object under \code{x$stan_fit}. The Stan fit must expose posterior draws for
+#' two parameters named \code{beta_cure_arm} and \code{beta_surv_arm}. These are
+#' interpreted as:
+#' \itemize{
+#'   \item \code{beta_cure_arm}: log(OR) for the cure component.
+#'   \item \code{beta_surv_arm}: log(HR) for the survival component among the uncured.
+#' }
+#' The function:
+#' \enumerate{
+#'   \item extracts posterior samples with \code{rstan::extract()},
+#'   \item computes Pearson correlation,
+#'   \item sets independent axis limits via \code{stats::quantile()},
+#'   \item estimates a 2D KDE via \code{MASS::kde2d()},
+#'   \item builds a \code{ggplot2} heatmap with contours and confidence ellipses.
+#' }
+#'
+#' @param x A list-like object that contains a \code{stanfit} at \code{x$stan_fit}.
+#'   The fit must have parameters \code{beta_cure_arm} and \code{beta_surv_arm}.
+#' @param n_grid Integer. Number of grid points per axis for the 2D kernel density
+#'   estimation passed to \code{MASS::kde2d}. Default is \code{100}.
+#' @param level_ellipses Numeric vector of probability levels for confidence
+#'   ellipses (bivariate normal contours). Default \code{c(0.5, 0.8, 0.95)}.
+#' @param quantile_range Numeric vector of length 2 with lower and upper tail
+#'   probabilities used to set axis limits independently. Defaults to the central
+#'   99.8\%: \code{c(0.001, 0.999)}.
+#' @param padding Numeric scalar (>= 0). Fractional padding to expand each axis
+#'   range beyond the selected quantiles. Default \code{0.05} (5\%).
+#'
+#' @return A \code{ggplot} object representing the joint posterior density.
+#'
+#' @importFrom rstan extract
+#' @importFrom MASS kde2d
+#' @importFrom dplyr mutate
+#' @importFrom tidyr expand_grid
+#' @importFrom stats quantile cor
+#' @importFrom rlang .data
+#' @import ggplot2
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Suppose 'fit' is a stanfit with parameters beta_cure_arm and beta_surv_arm:
+#' obj <- list(stan_fit = fit)
+#' p <- plot_correlated_densities(obj,
+#'                                n_grid = 150,
+#'                                level_ellipses = c(0.5, 0.9),
+#'                                quantile_range = c(0.005, 0.995),
+#'                                padding = 0.1)
+#' print(p)
+#' }
+plot_correlated_densities <- function(x, n_grid = 100,
+                                      level_ellipses = c(0.5, 0.8, 0.95),
+                                      quantile_range = c(0.001, 0.999),
+                                      padding = 0.05) {
+
+  # --- 1) Extract posterior draws ---
+  post <- rstan::extract(x$stan_fit)
+  posterior_draws <- data.frame(
+    log_or = as.numeric(post$beta_cure_arm),
+    log_hr = as.numeric(post$beta_surv_arm)
+  )
+
+  # --- 2) Calculate correlation ---
+  rho <- cor(posterior_draws$log_or, posterior_draws$log_hr)
+
+  # --- 3) Define axis limits INDEPENDENTLY for X and Y ---
+  xlims <- stats::quantile(posterior_draws$log_or, probs = quantile_range, na.rm = TRUE)
+  ylims <- stats::quantile(posterior_draws$log_hr, probs = quantile_range, na.rm = TRUE)
+
+  # Add padding to each axis
+  xlims <- xlims + c(-1, 1) * diff(xlims) * padding
+  ylims <- ylims + c(-1, 1) * diff(ylims) * padding
+
+  # --- 4) 2D density estimation ---
+  kde_lims <- c(xlims, ylims)
+  kd <- MASS::kde2d(posterior_draws$log_or, posterior_draws$log_hr, n = n_grid, lims = kde_lims)
+  density_df <- tidyr::expand_grid(x = kd$x, y = kd$y) |>
+    dplyr::mutate(density = as.vector(t(kd$z)))
+
+  # --- 5) Build the plot ---
+  p <- ggplot(density_df, aes(x = x, y = y)) +
+    geom_tile(aes(fill = density)) +
+    geom_contour(aes(z = density), colour = "white", alpha = 0.6, bins = 10) +
+    scale_fill_viridis_c(option = "plasma") +
+    annotate("point", x = mean(posterior_draws$log_or), y = mean(posterior_draws$log_hr),
+             colour = "red", size = 3) +
+    coord_cartesian(xlim = xlims, ylim = ylims, expand = FALSE) +
+    labs(
+      title = "Joint Posterior Density",
+      subtitle = paste0("Pearson correlation: ", round(rho, 3)),
+      x = "log(OR) Cure", y = "log(HR) Survival", fill = "Density"
+    ) +
+    theme_minimal(base_size = 14)
+
+  return(p)
+}

@@ -122,8 +122,8 @@ calculate_toxicity_analysis <- function(
   # The soc_weights are now taken directly from the function's arguments.
   W_prom_1_2 <- 1.5; W_prom_3_4 <- 6.0
   toxicity_data <- trial_data$toxicity
-  inc_g1_2_exp <- pmax(0, toxicity_data$Incidence_G1_4_Experimental - toxicity_data$Incidence_G3_4_Experimental)
-  inc_g1_2_con <- pmax(0, toxicity_data$Incidence_G1_4_Control - toxicity_data$Incidence_G3_4_Control)
+  inc_g1_2_exp <- base::pmax(0, toxicity_data$Incidence_G1_4_Experimental - toxicity_data$Incidence_G3_4_Experimental)
+  inc_g1_2_con <- base::pmax(0, toxicity_data$Incidence_G1_4_Control - toxicity_data$Incidence_G3_4_Control)
   score_base_exp <- (inc_g1_2_exp / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Experimental / 100 * W_prom_3_4)
   score_base_con <- (inc_g1_2_con / 100 * W_prom_1_2) + (toxicity_data$Incidence_G3_4_Control / 100 * W_prom_3_4)
 
@@ -139,7 +139,7 @@ calculate_toxicity_analysis <- function(
 
   # --- 2. Calculate Parameters for the Normal Distribution ---
   wts_diff_estimate <- wts_scores$Experimental - wts_scores$Control
-  dynamic_unacceptable_diff <- pmax(wts_scores$Control, 1) * unacceptable_rel_increase
+  dynamic_unacceptable_diff <- base::pmax(wts_scores$Control, 1) * unacceptable_rel_increase
   mu <- (wts_diff_estimate / dynamic_unacceptable_diff) * -1
   total_n <- sum(trial_data$N_patients)
   sigma <- k_uncertainty / sqrt(total_n)
@@ -150,7 +150,7 @@ calculate_toxicity_analysis <- function(
   # --- 4. Return Final Results Object ---
   results <- list(
     wts_scores = wts_scores,
-    toxicity_effect_vector = pmax(-1, pmin(1, toxicity_effect_dist))
+    toxicity_effect_vector = base::pmax(-1, pmin(1, toxicity_effect_dist))
   )
   return(results)
 }

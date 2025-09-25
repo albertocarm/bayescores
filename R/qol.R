@@ -427,7 +427,7 @@ summarize_final_utility <- function(
   cure_contribution <- weights_to_use["cure"] * final_cure_scores
 
   final_utility_vector <- tr_contribution + cure_contribution + toxicity_contribution + qol_contribution
-  final_utility_vector <- pmax(0, final_utility_vector)
+  final_utility_vector <- base::pmax(0, final_utility_vector)
 
   # ... (The summary_df and return code does not change) ...
   summary_df <- data.frame(

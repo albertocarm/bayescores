@@ -47,6 +47,14 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
     penalty_text <- paste0("\n", penalty_name, ": ", round(median_penalty, 1))
   }
 
+  # --- AÑADIDO: Extraer el nivel de identificabilidad ---
+  identifiability_text <- "" # Inicializar como texto vacío
+  if (!is.null(final_utility_results$identifiability_level)) {
+    level <- final_utility_results$identifiability_level
+    identifiability_text <- paste0("\nNon-identifiability check: ", level)
+  }
+  # --- FIN DE LA ADICIÓN ---
+
   # Safety checks in case a component is missing
   if (length(median_eff_score) == 0) median_eff_score <- 0
   if (length(median_tox_adj) == 0) median_tox_adj <- 0
@@ -62,15 +70,15 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
   donut_plot <- ggplot2::ggplot() +
     ggplot2::geom_rect(ggplot2::aes(ymax = plot_max_value, ymin = 0, xmax = 4, xmin = 3), fill = "#F0F0F0") +
     ggplot2::geom_rect(ggplot2::aes(ymax = median_final_clamped, ymin = 0, xmax = 4, xmin = 3), fill = final_score_color) +
-    # The central text now includes the 'penalty_text' variable
     ggplot2::annotate("text", x = 0, y = 0,
                       label = paste0(
                         "Efficacy Score: ", round(median_eff_score, 1),
-                        penalty_text, # This variable will contain the penalty text or be empty
+                        penalty_text,
                         "\nToxicity Adj: ", round(median_tox_adj, 1),
                         "\nQoL Adj: ", round(median_qol_adj, 1),
                         "\n-----------------",
-                        "\nFinal Score: ", round(median_final, 1)
+                        "\nFinal Score: ", round(median_final, 1),
+                        identifiability_text # <-- AÑADIDO: Mostrar el nivel de identificabilidad
                       ),
                       size = 5.0, lineheight = 1.1, hjust = 0.5, vjust = 0.5) +
     ggplot2::coord_polar(theta = "y", start = 0) +

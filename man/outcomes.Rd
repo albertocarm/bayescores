@@ -2,22 +2,35 @@
 % Please edit documentation in R/outcomes_shrinkage.R
 \name{outcomes}
 \alias{outcomes}
-\title{Generate a Summary Table of Model Outcomes}
+\title{Generate a Summary Table of Model Outcomes (Final Version 2)}
 \usage{
-outcomes(fit, digits = 2, shrinkage_method = "none")
+outcomes(
+  fit,
+  calibration_args = list(),
+  digits = 2,
+  shrinkage_method = "none",
+  shrinkage_target = "primary"
+)
 }
 \arguments{
 \item{fit}{The fitted model object from `fit_bayesian_cure_model`.}
 
+\item{calibration_args}{An optional list to override default utility calibration.}
+
 \item{digits}{The number of decimal places for rounding.}
 
-\item{shrinkage_method}{A character string specifying the shrinkage method for
-the corrected estimates. Options are "zwet", "sherry", or "none" (default).}
+\item{shrinkage_method}{A character string specifying the shrinkage method.
+Options are "none" (default), "zwet", "sherry", or "skeptical".}
+
+\item{shrinkage_target}{A character string controlling the application of
+shrinkage. Options are "primary" or "both_if_uncorrelated".}
 }
 \value{
 A tibble with a summary of key model outcomes.
 }
 \description{
-Calculates key outcomes from a Bayesian model fit and can display
-side-by-side comparisons with empirically shrunk estimates.
+Extracts data directly from the fit object to calculate and display key model
+outcomes. All shrinkage methods ("zwet", "sherry", "skeptical") now respect
+the `shrinkage_target` argument, applying shrinkage strategically based on
+endpoint utility and parameter correlation.
 }

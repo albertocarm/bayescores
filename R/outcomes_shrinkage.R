@@ -63,169 +63,216 @@ sample_shrinkage_draws <- function(original_draws, method) {
 }
 
 
-# -------------------------------------------------------------------
-# Main User-Facing Functions
-# -------------------------------------------------------------------
 
-#' Generate a Summary Table of Model Outcomes
+
+#' Generate a Summary Table of Model Outcomes (Final Version 2)
 #'
 #' @description
-#' Calculates key outcomes from a Bayesian model fit and can display
-#' side-by-side comparisons with empirically shrunk estimates.
+#' Extracts data directly from the fit object to calculate and display key model
+#' outcomes. All shrinkage methods ("zwet", "sherry", "skeptical") now respect
+#' the `shrinkage_target` argument, applying shrinkage strategically based on
+#' endpoint utility and parameter correlation.
 #'
 #' @param fit The fitted model object from `fit_bayesian_cure_model`.
+#' @param calibration_args An optional list to override default utility calibration.
 #' @param digits The number of decimal places for rounding.
-#' @param shrinkage_method A character string specifying the shrinkage method for
-#'   the corrected estimates. Options are "zwet", "sherry", or "none" (default).
+#' @param shrinkage_method A character string specifying the shrinkage method.
+#'   Options are "none" (default), "zwet", "sherry", or "skeptical".
+#' @param shrinkage_target A character string controlling the application of
+#'   shrinkage. Options are "primary" or "both_if_uncorrelated".
 #'
 #' @return A tibble with a summary of key model outcomes.
 #'
 #' @importFrom rstan extract
 #' @importFrom tibble tibble as_tibble
-#' @importFrom stats quantile median sd rnorm dnorm
+#' @importFrom stats quantile median sd rnorm dnorm cov cor
 #' @importFrom tools toTitleCase
+#' @importFrom dplyr case_when
 #' @export
+#'
 outcomes <- function(fit,
-                     digits = 2,
-                     shrinkage_method = "none") {
+                      calibration_args = list(),
+                      digits = 2,
+                      shrinkage_method = "none",
+                      shrinkage_target = "primary") {
 
-  # --- Input Validation ---
-  valid_methods <- c("zwet", "sherry", "none")
+  # --- 1) Input Validation and Data Extraction ---
+  valid_methods <- c("zwet", "sherry", "skeptical", "none")
   if (!shrinkage_method %in% valid_methods) {
-    stop(paste("Invalid shrinkage_method specified. Please use one of:",
-               paste(valid_methods, collapse = ", ")))
+    stop(paste("Invalid shrinkage_method. Use one of:", paste(valid_methods, collapse = ", ")))
+  }
+  valid_targets <- c("primary", "both_if_uncorrelated")
+  if (!shrinkage_target %in% valid_targets) {
+    stop(paste("Invalid shrinkage_target. Use one of:", paste(valid_targets, collapse = ", ")))
   }
 
   posterior <- rstan::extract(fit$stan_fit)
-  if (!"beta_cure_intercept" %in% names(posterior)) {
-    stop("Required parameters not found in the model fit.")
+  log_or <- as.numeric(posterior$beta_cure_arm)
+  log_tr <- as.numeric(posterior$beta_surv_arm)
+
+  if (is.null(log_tr) || is.null(log_or)) {
+    stop("`fit` object must contain `beta_cure_arm` and `beta_surv_arm` draws.")
+  }
+  rho <- cor(log_or, log_tr)
+
+  # --- 2) Helper functions ---
+  summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
+    vals <- if (is_log_scale) exp(draws) else draws
+    med <- stats::median(vals)
+    ci  <- stats::quantile(vals, probs = c(0.025, 0.975))
+    paste0(sprintf("%.*f", digits, med * multiplier), " (",
+           sprintf("%.*f", digits, ci[1] * multiplier), " - ",
+           sprintf("%.*f", digits, ci[2] * multiplier), ")")
   }
 
-  # --- Prepare Draws for Summary ---
-  original_log_tr <- posterior$beta_surv_arm
-  original_log_or <- posterior$beta_cure_arm
-
-  original_p_cure_ctrl <- 1 / (1 + exp(-posterior$beta_cure_intercept))
-  original_p_cure_exp <- 1 / (1 + exp(-(posterior$beta_cure_intercept + original_log_or)))
-  original_cure_diff <- original_p_cure_exp - original_p_cure_ctrl
-
-  # --- Helper to format the output string ---
-  summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
-    summary_draws <- if (is_log_scale) exp(draws) else draws
-    point_estimate <- median(summary_draws) * multiplier
-    ci <- quantile(summary_draws, probs = c(0.025, 0.975)) * multiplier
-    paste0(
-      format(round(point_estimate, digits), nsmall = digits),
-      " (", format(round(ci[1], digits), nsmall = digits), " - ", format(round(ci[2], digits), nsmall = digits), ")"
+  # Helper for skeptical shrinkage on whitened draws
+  apply_skeptical_shrinkage <- function(log_or_draws, log_tr_draws) {
+    theta <- cbind(log_or_draws, log_tr_draws)
+    mu <- colMeans(theta)
+    S  <- stats::cov(theta)
+    eg <- eigen(S, symmetric = TRUE)
+    lam <- base::pmax(eg$values, 1e-12)
+    Q   <- eg$vectors
+    Winv <- Q %*% diag(sqrt(lam)) %*% t(Q)
+    W    <- Q %*% diag(1/sqrt(lam)) %*% t(Q)
+    mz <- as.numeric(W %*% mu)
+    mz_sh <- mz / 2 # Shrinkage step
+    mu_sh <- as.numeric(Winv %*% mz_sh)
+    shift <- mu_sh - mu
+    list(
+      cor_log_or = log_or_draws + shift[1],
+      cor_log_tr = log_tr_draws + shift[2]
     )
   }
 
-  # --- Build the Summary Table ---
+  # --- 3) Base Table (Original Results) ---
+  p_ctrl <- 1 / (1 + exp(-posterior$beta_cure_intercept))
+  p_exp_orig <- 1 / (1 + exp(-(posterior$beta_cure_intercept + log_or)))
+  diff_orig  <- p_exp_orig - p_ctrl
+
   summary_df <- data.frame(
     Metric = c("Time Ratio (TR)", "Odds Ratio (OR) for Cure", "Long-Term Survival Rate (%) - Control",
                "Long-Term Survival Rate (%) - Experimental", "Absolute Difference in Survival Rate (%)"),
     `Result (95% CI)` = c(
-      summarize_draws(original_log_tr, is_log_scale = TRUE),
-      summarize_draws(original_log_or, is_log_scale = TRUE),
-      summarize_draws(original_p_cure_ctrl, multiplier = 100),
-      summarize_draws(original_p_cure_exp, multiplier = 100),
-      summarize_draws(original_cure_diff, multiplier = 100)
+      summarize_draws(log_tr, is_log_scale = TRUE), summarize_draws(log_or, is_log_scale = TRUE),
+      summarize_draws(p_ctrl, multiplier = 100), summarize_draws(p_exp_orig, multiplier = 100),
+      summarize_draws(diff_orig, multiplier = 100)
     ),
-    stringsAsFactors = FALSE,
-    check.names = FALSE
+    check.names = FALSE, stringsAsFactors = FALSE
   )
 
+  # --- 4) Shrinkage Application (if requested) ---
   if (shrinkage_method != "none") {
-    # Generate corrected draws only for the summary table
-    corrected_log_tr <- sample_shrinkage_draws(original_log_tr, method = shrinkage_method)
-    corrected_log_or <- sample_shrinkage_draws(original_log_or, method = shrinkage_method)
+    cor_log_or <- log_or
+    cor_log_tr <- log_tr
+    shrink_label <- ""
 
-    # Recalculate derived quantities using the corrected OR draws
-    corrected_p_cure_exp <- 1 / (1 + exp(-(posterior$beta_cure_intercept + corrected_log_or)))
-    corrected_cure_diff <- corrected_p_cure_exp - original_p_cure_ctrl
+    # --- Determine Primary Endpoint via Utility for all methods ---
+    defaults <- list(efficacy = list(cure_utility_target = list(effect_value = 0.15, utility_value = 40), tr_utility_target = list(effect_value = 1.25, utility_value = 35)))
+    recursive_merge <- function(default, user) { for (name in names(user)) { if (is.list(user[[name]]) && is.list(default[[name]])) { default[[name]] <- recursive_merge(default[[name]], user[[name]]) } else { default[[name]] <- user[[name]] } }; return(default) }
+    cal <- recursive_merge(defaults, calibration_args)
+    .create_exp_utility_fn <- function(target, baseline = 0) {
+      effect_gain <- target$effect_value - baseline
+      if (effect_gain <= 0) return(function(x) rep(0, length(x)))
+      lambda <- -log(1 - target$utility_value / 100) / effect_gain
+      return(function(x) 100 * (1 - exp(-lambda * base::pmax(0, x))))
+    }
+    fn_u_cure <- .create_exp_utility_fn(cal$efficacy$cure_utility_target, 0)
+    fn_u_tr <- .create_exp_utility_fn(cal$efficacy$tr_utility_target, 1.0)
+    median_u_cure <- median(fn_u_cure(diff_orig))
+    median_u_tr <- median(fn_u_tr(exp(log_tr) - 1.0))
+    primary_endpoint <- if (median_u_cure >= median_u_tr) "OR" else "TR"
 
-    # Update the rows for Experimental Survival and Difference with corrected values
-    summary_df[4, "Result (95% CI)"] <- summarize_draws(corrected_p_cure_exp, multiplier = 100)
-    summary_df[5, "Result (95% CI)"] <- summarize_draws(corrected_cure_diff, multiplier = 100)
+    # --- Determine which parameters to shrink ---
+    method_name <- tools::toTitleCase(shrinkage_method)
+    apply_to_or <- FALSE; apply_to_tr <- FALSE
+    is_low_corr <- abs(rho) < 0.30
 
-    # Update the metric names to indicate they are corrected
-    method_label <- tools::toTitleCase(shrinkage_method)
-    summary_df$Metric[4] <- paste0(summary_df$Metric[4], " - Corrected (", method_label, ")")
-    summary_df$Metric[5] <- paste0(summary_df$Metric[5], " - Corrected (", method_label, ")")
+    if (shrinkage_target == "primary") {
+      if (primary_endpoint == "OR") apply_to_or <- TRUE else apply_to_tr <- TRUE
+      shrink_label <- paste0(method_name, ", Primary Only (", primary_endpoint, ")")
+    } else if (shrinkage_target == "both_if_uncorrelated") {
+      if (is_low_corr) {
+        apply_to_or <- TRUE; apply_to_tr <- TRUE
+        shrink_label <- paste0(method_name, ", Both (Low Corr.)")
+      } else {
+        if (primary_endpoint == "OR") apply_to_or <- TRUE else apply_to_tr <- TRUE
+        shrink_label <- paste0(method_name, ", Primary Only (", primary_endpoint, ", High Corr.)")
+      }
+    }
 
-    # Create and insert the new rows for corrected TR and OR
+    # --- Apply the chosen shrinkage method ---
+    if (shrinkage_method == "skeptical") {
+      if (apply_to_or && apply_to_tr) {
+        shrunk_draws <- apply_skeptical_shrinkage(log_or, log_tr)
+        cor_log_or <- shrunk_draws$cor_log_or
+        cor_log_tr <- shrunk_draws$cor_log_tr
+      } else if (apply_to_or) {
+        # Applying 1D skeptical prior is equivalent to sample_shrinkage_draws with N(0,1)
+        # For simplicity, we create a temporary 1D skeptical sampler
+        temp_skeptical_sampler <- function(draws) {
+          b <- mean(draws); s <- sd(draws); if(s==0) return(draws)
+          shrunk_b <- b / 2 # Shrinking mean towards 0
+          return(draws - (b - shrunk_b))
+        }
+        cor_log_or <- temp_skeptical_sampler(log_or)
+      } else { # apply_to_tr
+        temp_skeptical_sampler <- function(draws) {
+          b <- mean(draws); s <- sd(draws); if(s==0) return(draws)
+          shrunk_b <- b / 2 # Shrinking mean towards 0
+          return(draws - (b - shrunk_b))
+        }
+        cor_log_tr <- temp_skeptical_sampler(log_tr)
+      }
+    } else { # Zwet or Sherry
+      if (apply_to_or) cor_log_or <- sample_shrinkage_draws(log_or, method = shrinkage_method)
+      if (apply_to_tr) cor_log_tr <- sample_shrinkage_draws(log_tr, method = shrinkage_method)
+    }
+
+    # --- Create corrected rows for the output table ---
+    p_exp_cor <- 1 / (1 + exp(-(posterior$beta_cure_intercept + cor_log_or)))
+    diff_cor  <- p_exp_cor - p_ctrl
     corrected_rows <- data.frame(
-      Metric = c(paste0("Time Ratio (TR) - Corrected (", method_label, ")"),
-                 paste0("Odds Ratio (OR) - Corrected (", method_label, ")")),
-      `Result (95% CI)` = c(
-        summarize_draws(corrected_log_tr, is_log_scale = TRUE),
-        summarize_draws(corrected_log_or, is_log_scale = TRUE)
+      Metric = c(
+        paste0("Time Ratio (TR) - Corrected (", shrink_label, ")"),
+        paste0("Odds Ratio (OR) - Corrected (", shrink_label, ")"),
+        paste0("Long-Term Survival Rate (%) - Exp - Corrected (", shrink_label, ")"),
+        paste0("Abs. Diff. in Survival (%) - Corrected (", shrink_label, ")")
       ),
-      stringsAsFactors = FALSE,
-      check.names = FALSE
+      `Result (95% CI)` = c(
+        summarize_draws(cor_log_tr, is_log_scale = TRUE), summarize_draws(cor_log_or, is_log_scale = TRUE),
+        summarize_draws(p_exp_cor, multiplier = 100), summarize_draws(diff_cor, multiplier = 100)
+      ),
+      check.names = FALSE, stringsAsFactors = FALSE
     )
-    summary_df <- rbind(summary_df[1:2,], corrected_rows, summary_df[3:5,])
-  }
-
-  return(tibble::as_tibble(summary_df))
-}
-
-
-#' Get Original or Shrunk MCMC Draws for Subsequent Analyses
-#'
-#' @description
-#' Extracts or generates posterior draws for efficacy inputs, which can be used
-#' in other functions like `get_bayescores`. It can return the original MCMC draws
-#' or generate new draws corrected with an empirical shrinkage method.
-#'
-#' @param fit The fitted model object from `fit_bayesian_cure_model`.
-#' @param shrinkage_method A character string specifying the shrinkage method.
-#'   Options are "zwet", "sherry", or "none" (default).
-#'
-#' @return A list containing two named vectors of posterior samples:
-#'   \itemize{
-#'     \item{\code{tr_posterior_samples}: Draws for the Time Ratio (already exponentiated).}
-#'     \item{\code{cure_posterior_samples}: Draws for the absolute difference
-#'       in cure rates.}
-#'   }
-#'
-#' @importFrom rstan extract
-#' @export
-get_bayescores_draws <- function(fit, shrinkage_method = "none") {
-
-  # --- Input Validation ---
-  valid_methods <- c("zwet", "sherry", "none")
-  if (!shrinkage_method %in% valid_methods) {
-    stop(paste("Invalid shrinkage_method specified. Please use one of:",
-               paste(valid_methods, collapse = ", ")))
-  }
-
-  posterior <- rstan::extract(fit$stan_fit)
-  if (!"beta_cure_intercept" %in% names(posterior)) {
-    stop("Required parameters not found in the model fit.")
-  }
-
-  # --- Determine final draws based on method ---
-  if (shrinkage_method == "none") {
-    # For "none", use the original draws directly from the fit object
-    final_log_tr_draws <- posterior$beta_surv_arm
-    final_log_or_draws <- posterior$beta_cure_arm
-  } else {
-    # For "zwet" or "sherry", generate new corrected draws
-    final_log_tr_draws <- sample_shrinkage_draws(posterior$beta_surv_arm, method = shrinkage_method)
-    final_log_or_draws <- sample_shrinkage_draws(posterior$beta_cure_arm, method = shrinkage_method)
-  }
-
-  # --- Calculate derived quantities from the final set of draws ---
-  p_cure_ctrl_draws <- 1 / (1 + exp(-posterior$beta_cure_intercept))
-  p_cure_exp_draws <- 1 / (1 + exp(-(posterior$beta_cure_intercept + final_log_or_draws)))
-  cure_diff_draws <- p_cure_exp_draws - p_cure_ctrl_draws
-
-  # --- Return the final list of draws ---
-  return(
-    list(
-      tr_posterior_samples = exp(final_log_tr_draws),
-      cure_posterior_samples = cure_diff_draws
+    summary_df <- rbind(
+      summary_df[1,], if(!identical(cor_log_tr, log_tr)) corrected_rows[1,],
+      summary_df[2,], if(!identical(cor_log_or, log_or)) corrected_rows[2,],
+      summary_df[3,],
+      summary_df[4,], corrected_rows[3,],
+      summary_df[5,], corrected_rows[4,]
     )
+  }
+
+  # --- 5) Print Identifiability Check and Return Tibble ---
+  identifiability_level <- dplyr::case_when(
+    rho > -0.15 ~ "Negligible (0 to -0.15): effects separable, estimation robust.",
+    rho > -0.30 ~ "Low (-0.15 to -0.30): minor coupling, interpretation still reliable.",
+    rho > -0.50 ~ "Moderate (-0.30 to -0.50): noticeable trade-off, joint summaries recommended.",
+    rho > -0.70 ~ "Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.",
+    TRUE        ~ "Extreme (< -0.70): practical non-identifiability, requires longer follow-up or informative priors."
   )
+  cat("\n---\n")
+  cat("Posterior correlation as an identifiability check:\n")
+  cat(paste0("   Correlation: ", round(rho, 3), "\n"))
+  cat(paste0("   Interpretation: ", identifiability_level, "\n"))
+  cat("---\n")
+  tibble::as_tibble(summary_df)
 }
+
+
+
+
+
+
+

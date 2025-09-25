@@ -75,7 +75,7 @@ recon_one_curve_guyot <- function(d_curve,
   # --- Normalize/clean digitized KM data ---
   Smax <- max(d_curve$St, na.rm = TRUE)
   if (Smax > 1 + 1e-3) d_curve$St <- d_curve$St / 100
-  d_curve$St <- pmin(pmax(d_curve$St, 0), 1)
+  d_curve$St <- pmin(base::pmax(d_curve$St, 0), 1)
   d_curve <- d_curve[order(d_curve$time, -d_curve$St), , drop = FALSE]
   d_curve <- stats::aggregate(St ~ time, data = d_curve, FUN = min)
   d_curve <- d_curve[order(d_curve$time), , drop = FALSE]
@@ -123,7 +123,7 @@ recon_one_curve_guyot <- function(d_curve,
     # S(t_i+), S(t_{i+1}-)
     S_lo <- step_S_right(t_lo, tvec, Svec)
     S_hi <- step_S_left(t_hi, tvec, Svec)
-    S_ratio <- if (S_lo <= eps) 0 else pmin(pmax(S_hi / S_lo, 0), 1)
+    S_ratio <- if (S_lo <= eps) 0 else pmin(base::pmax(S_hi / S_lo, 0), 1)
 
     # (1) censored observations in the interval from Guyot's formula
     c_i_real <- n_lo * S_ratio - n_hi
@@ -163,7 +163,7 @@ recon_one_curve_guyot <- function(d_curve,
     # distribute c_i into (m+1) sub-intervals
     seg_starts <- c(t_lo, timesJ)
     seg_ends <- c(timesJ, t_hi)
-    lens <- pmax(seg_ends - seg_starts, 0)
+    lens <- base::pmax(seg_ends - seg_starts, 0)
     if (sum(lens) <= eps) {
       cens_sched <- integer(m + 1)
       cens_sched[1] <- c_i
@@ -186,7 +186,7 @@ recon_one_curve_guyot <- function(d_curve,
     d_ints <- integer(m)
     for (j in seq_len(m)) {
       n_now <- max(0L, n_now - cens_sched[j]) # censored before drop j
-      ratio <- if (S_prev[j] <= eps) 0 else pmin(pmax(S_curr[j] / S_prev[j], 0), 1)
+      ratio <- if (S_prev[j] <= eps) 0 else pmin(base::pmax(S_curr[j] / S_prev[j], 0), 1)
       d_star[j] <- n_now * (1 - ratio) # point-wise KM inversion
       d_ints[j] <- max(0L, min(as.integer(round(d_star[j])), n_now))
       n_now <- n_now - d_ints[j]

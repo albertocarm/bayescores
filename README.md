@@ -39,27 +39,35 @@ library(bayescores)
 
 ### Step 2: Simulate survival data
 
-Simulate a 300-patient trial with long-term survival fractions of 30%
-(experimental) vs. 20% (control), and a median survival of 12 months in
-the control arm. The experimental arm gets a 25% survival boost among
-non-cured patients.
+Simulate a 300-patient trial with long-term survival fractions of 40% in
+the experimental arm and 15% in the control arm, and a median survival
+of 12 months in the control arm. The experimental arm achieves a 25%
+survival gain among non-cured patients. The maximum follow-up is 3
+years, meaning the dataset is still somewhat immature under this
+specification to provide strong evidence of long-term survival.
 
-These parameters are intentionally set for low evidence — a toy example
-to show off the package’s ability not just to measure clinical benefit,
-but to adjust it and keep bias under control.
+These parameters are therefore intentionally set to represent
+low-evidence conditions—a toy example designed to illustrate the
+package’s ability not only to quantify clinical benefit but also to
+assess the robustness of the analysis and the identifiability of key
+parameters (that is, the model’s capacity to distinguish hidden
+long-term survivors from non-cured patients with better short-term
+prognosis), thereby helping to adjust the model and keep bias under
+control.
 
 ``` r
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
   n_patients = 300,
-  cure_fraction_ctrl = 0.20,
-  cure_fraction_exp = 0.30,
-  max_follow_up = 60,
+  cure_fraction_ctrl = 0.15,
+  cure_fraction_exp = 0.40,
+  max_follow_up = 3*12,
   weibull_shape = 1.2,
   median_survival_ctrl = 12,
   time_ratio_exp = 1.25
 )
+
 
 plot_km_curves(sim_data)
 ```
@@ -168,8 +176,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000743 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 7.43 seconds.
+    ## Chain 1: Gradient evaluation took 0.000224 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 2.24 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -186,15 +194,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 10.197 seconds (Warm-up)
-    ## Chain 1:                4.222 seconds (Sampling)
-    ## Chain 1:                14.419 seconds (Total)
+    ## Chain 1:  Elapsed Time: 10.073 seconds (Warm-up)
+    ## Chain 1:                12.292 seconds (Sampling)
+    ## Chain 1:                22.365 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000113 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.13 seconds.
+    ## Chain 2: Gradient evaluation took 0.000194 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.94 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -211,15 +219,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 2.437 seconds (Warm-up)
-    ## Chain 2:                3.02 seconds (Sampling)
-    ## Chain 2:                5.457 seconds (Total)
+    ## Chain 2:  Elapsed Time: 9.123 seconds (Warm-up)
+    ## Chain 2:                26.175 seconds (Sampling)
+    ## Chain 2:                35.298 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000184 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.84 seconds.
+    ## Chain 3: Gradient evaluation took 0.000183 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.83 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -236,15 +244,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 2.81 seconds (Warm-up)
-    ## Chain 3:                3.291 seconds (Sampling)
-    ## Chain 3:                6.101 seconds (Total)
+    ## Chain 3:  Elapsed Time: 8.646 seconds (Warm-up)
+    ## Chain 3:                13.856 seconds (Sampling)
+    ## Chain 3:                22.502 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000114 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.14 seconds.
+    ## Chain 4: Gradient evaluation took 0.000175 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.75 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -261,9 +269,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 3.012 seconds (Warm-up)
-    ## Chain 4:                4.267 seconds (Sampling)
-    ## Chain 4:                7.279 seconds (Total)
+    ## Chain 4:  Elapsed Time: 9.182 seconds (Warm-up)
+    ## Chain 4:                13.281 seconds (Sampling)
+    ## Chain 4:                22.463 seconds (Total)
     ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
@@ -276,7 +284,8 @@ The mixture cure model separates individuals into:
 
 Inspect numerical summaries and visualize posterior distributions. You
 can verify that the model satisfactorily recovers the time ratio and the
-fractions of long‑term survivors:
+fractions of long‑term survivors. However, the model also signals an
+identifiability issue (see below).
 
 ``` r
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
@@ -286,12 +295,12 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ## 4 chains, each with iter=2500; warmup=1000; thin=1; 
     ## post-warmup draws per chain=1500, total post-warmup draws=6000.
     ## 
-    ##               mean se_mean   sd  2.5%   25%  50%  75% 97.5% n_eff Rhat
-    ## beta_cure_arm 0.15       0 0.28 -0.41 -0.03 0.16 0.35  0.68  3379    1
-    ## beta_surv_arm 0.40       0 0.12  0.17  0.32 0.40 0.48  0.64  3082    1
-    ## alpha         1.31       0 0.08  1.16  1.26 1.31 1.37  1.47  4316    1
+    ##               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
+    ## beta_cure_arm 1.51    0.05 1.39 -2.63 1.17 1.63 2.13  3.85   901    1
+    ## beta_surv_arm 0.27    0.01 0.29 -0.19 0.06 0.23 0.45  0.90   911    1
+    ## alpha         1.21    0.00 0.10  1.02 1.14 1.21 1.29  1.42  1196    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Mon Aug 11 16:58:11 2025.
+    ## Samples were drawn using NUTS(diag_e) at Thu Sep 25 20:41:33 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -300,14 +309,21 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
 outcomes(bayesian_fit)
 ```
 
+    ## 
+    ## ---
+    ## Posterior correlation as an identifiability check:
+    ##    Correlation: -0.615
+    ##    Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+    ## ---
+
     ## # A tibble: 5 × 2
     ##   Metric                                     `Result (95% CI)`    
     ##   <chr>                                      <chr>                
-    ## 1 Time Ratio (TR)                            1.49 (1.19 - 1.90)   
-    ## 2 Odds Ratio (OR) for Cure                   1.17 (0.67 - 1.98)   
-    ## 3 Long-Term Survival Rate (%) - Control      22.77 (16.81 - 30.11)
-    ## 4 Long-Term Survival Rate (%) - Experimental 25.72 (18.22 - 33.42)
-    ## 5 Absolute Difference in Survival Rate (%)   2.87 (-7.35 - 12.68)
+    ## 1 Time Ratio (TR)                            1.25 (0.83 - 2.46)   
+    ## 2 Odds Ratio (OR) for Cure                   5.12 (0.07 - 46.90)  
+    ## 3 Long-Term Survival Rate (%) - Control      8.43 (0.14 - 17.84)  
+    ## 4 Long-Term Survival Rate (%) - Experimental 34.60 (0.06 - 47.77) 
+    ## 5 Absolute Difference in Survival Rate (%)   24.86 (-4.37 - 40.12)
 
 **Posterior distributions**
 
@@ -323,6 +339,29 @@ for Time Ratio, Odds Ratio of Cure, and Cure Probability
 Difference.</figcaption>
 </figure>
 
+**Joint posterior densities** The mixture cure model jointly estimates
+the TR and OR parameters, yielding a joint posterior distribution of
+plausible values for both. This joint estimation is essential to avoid
+the bias that would arise if the parameters were fitted separately. In
+this example, however, we simulated a challenging scenario where the two
+parameters are difficult to disentangle due to limited follow-up. The
+model reflects this difficulty through a strong negative correlation
+between the estimates (Pearson correlation –0.615), which illustrates
+the lack of identifiability: the model struggles to assign effects
+correctly given the data limitations. This dependence is clearly visible
+in the figure.
+
+``` r
+plot_correlated_densities(bayesian_fit)
+```
+
+<figure>
+<img src="README_files/figure-gfm/plot-joint-1.png"
+alt="Figure 2: Joint posterior density distributions for Time Ratio &amp; Odds Ratio of Cure" />
+<figcaption aria-hidden="true">Figure 2: Joint posterior density
+distributions for Time Ratio &amp; Odds Ratio of Cure</figcaption>
+</figure>
+
 **Posterior predictive check** You can observe how the model’s
 predictions align satisfactorily with the Kaplan–Meier estimator:
 
@@ -332,8 +371,8 @@ plot(bayesian_fit)
 
 <figure>
 <img src="README_files/figure-gfm/plot-model-fit-1.png"
-alt="Figure 2: Posterior predictive check (model vs Kaplan-Meier data)." />
-<figcaption aria-hidden="true">Figure 2: Posterior predictive check
+alt="Figure 3: Posterior predictive check (model vs Kaplan-Meier data)." />
+<figcaption aria-hidden="true">Figure 3: Posterior predictive check
 (model vs Kaplan-Meier data).</figcaption>
 </figure>
 
@@ -466,8 +505,8 @@ plot_qol_histogram(qol_scores)
 
 <figure>
 <img src="README_files/figure-gfm/qol-weighting-1.png"
-alt="Figure 4: Multinomial distribution of QoL levels." />
-<figcaption aria-hidden="true">Figure 4: Multinomial distribution of QoL
+alt="Figure 5: Multinomial distribution of QoL levels." />
+<figcaption aria-hidden="true">Figure 5: Multinomial distribution of QoL
 levels.</figcaption>
 </figure>
 
@@ -521,18 +560,20 @@ outcomes_obj <- outcomes(
   fit = bayesian_fit,
   shrinkage_method = "none"
 )
+```
 
+    ## 
+    ## ---
+    ## Posterior correlation as an identifiability check:
+    ##    Correlation: -0.615
+    ##    Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+    ## ---
+
+``` r
 efficacy_draws <- get_bayescores_draws(
   fit = bayesian_fit,
   shrinkage_method = "none"
 )
-
-
-efficacy_inputs <- list(
-  tr_posterior_samples = efficacy_draws$tr_posterior_samples,
-  cure_posterior_samples = efficacy_draws$cure_posterior_samples
-)
-
 
 
 # 1. Define the Final Calibration Settings ---
@@ -549,8 +590,9 @@ my_final_calibration <- list(
 
 # 2. Run the Bayescores Function on Your Data ---
 # The function takes your data objects directly as inputs.
-final_utilities <- get_bayescores(
-  efficacy_inputs = efficacy_inputs,
+
+final_scores <- get_bayescores(
+  efficacy_inputs = efficacy_draws,
   qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
   calibration_args = my_final_calibration
@@ -561,36 +603,47 @@ cat("--- Final Bayescores Summary ---\n")
     ## --- Final Bayescores Summary ---
 
 ``` r
-print(final_utilities$component_summary)
+print(final_scores$component_summary)
 ```
 
     ##                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-    ## 1           Utility Cure (0-100) 18.052927           0.00000         58.4735171
-    ## 2          Utility TR (for TR>1) 74.009786          40.20575         91.7481573
-    ## 3          Penalty TR (for TR<1)  0.000000           0.00000          0.0000000
-    ## 4      Efficacy Score (Combined) 80.227571          50.91072         93.8804264
-    ## 5      QoL Contribution (points)  8.361254         -15.46059         24.0169353
-    ## 6 Toxicity Contribution (points) -7.932848         -30.29433         -0.5945764
-    ## 7            FINAL UTILITY SCORE 81.098045          20.52987         98.6691535
+    ## 1           Utility Cure (0-100) 82.146389          0.000000        93.80192711
+    ## 2          Utility TR (for TR>1) 50.519582          0.000000        98.26971672
+    ## 3          Penalty TR (for TR<1)  0.000000        -25.708016         0.00000000
+    ## 4      Efficacy Score (Combined) 91.551493         65.795008        98.52638731
+    ## 5      QoL Contribution (points)  3.799082         -9.522389        19.80423883
+    ## 6 Toxicity Contribution (points) -3.275254        -21.984151        -0.05684381
+    ## 7            FINAL UTILITY SCORE 92.827347         46.745681        99.87802598
+
+``` r
+print(final_scores$identifiability_level)
+```
+
+    ## [1] "Extreme"
 
 ### Step 9: Visualize final clinical benefit
 
 **BayeScore donut plot**
 
-After these analyses, the tool delivers a final *clinical utility score*
-derived from all the weightings, representing the drug’s ultimate
-evaluation. This score is based on a simulation that assumed benefit but
-also factored in some toxicity, yet still resulted in an improvement in
-quality of life.
+After these analyses, the tool delivers a final clinical utility score
+derived from all the weightings, representing the drug’s overall
+evaluation. This score is based on a simulation that assumed therapeutic
+benefit while also incorporating some toxicity, yet still resulted in an
+improvement in quality of life.
+
+Notably, the model captures a substantial benefit driven by the large
+long-term survival effect. However, it also indicates a clear
+identifiability problem: there is simply not enough evidence yet to
+disentangle these parameters.
 
 ``` r
-plot_utility_donut(final_utilities, trial_name ="Simulated dataset (unshrinkaged)")
+plot_utility_donut(final_scores, trial_name ="Simulated dataset (unshrinkaged)")
 ```
 
 <figure>
 <img src="README_files/figure-gfm/plot-donut-1.png"
-alt="Figure 5: BayeScore donut plot." />
-<figcaption aria-hidden="true">Figure 5: BayeScore donut
+alt="Figure 6: BayeScore donut plot." />
+<figcaption aria-hidden="true">Figure 6: BayeScore donut
 plot.</figcaption>
 </figure>
 
@@ -605,13 +658,13 @@ That is the power of the BayeScore: it isn’t a single point estimate but
 a full Bayesian distribution!
 
 ``` r
-plot_final_utility_density(final_utilities)
+plot_final_utility_density(final_scores)
 ```
 
 <figure>
 <img src="README_files/figure-gfm/plot-score-density-1.png"
-alt="Figure 6: Final BayeScore posterior distribution." />
-<figcaption aria-hidden="true">Figure 6: Final BayeScore posterior
+alt="Figure 7: Final BayeScore posterior distribution." />
+<figcaption aria-hidden="true">Figure 7: Final BayeScore posterior
 distribution.</figcaption>
 </figure>
 
@@ -663,81 +716,57 @@ score.
 
 ``` r
 # apply shrinkage with zwet prior
-shrunk_zwet <- outcomes(
-  fit                 = bayesian_fit,
-  shrinkage_method = "zwet"
-)
-
 efficacy_draws_zwet <- get_bayescores_draws(
-  fit = bayesian_fit, 
-  shrinkage_method = "zwet"
+  fit = bayesian_fit,
+  shrinkage_method = "zwet",
+  shrinkage_target = "primary"
 )
 
-efficacy_inputs_zwet <- list(
-  tr_posterior_samples = efficacy_draws_zwet$tr_posterior_samples,
-  cure_posterior_samples = efficacy_draws_zwet$cure_posterior_samples
-)
-
-# compute corrected utilities for zwet
-utilities_zwet <- get_bayescores(
-  efficacy_inputs = efficacy_inputs_zwet,
-  qol_scores      = qol_scores,
+final_scores_zwet <- get_bayescores(
+  efficacy_inputs = efficacy_draws_zwet, 
+  qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
   calibration_args = my_final_calibration
 )
 
-
-# apply shrinkage with sherry prior
-shrunk_sherry <- outcomes(
-  fit                 = bayesian_fit,
-  shrinkage_method = "sherry"
-)
-
+# apply shrinkage with zwet prior
 efficacy_draws_sherry <- get_bayescores_draws(
-  fit = bayesian_fit, 
-  shrinkage_method = "sherry"
+  fit = bayesian_fit,
+  shrinkage_method = "sherry",
+  shrinkage_target = "primary"
 )
 
-efficacy_inputs_sherry <- list(
-  tr_posterior_samples = efficacy_draws_sherry$tr_posterior_samples,
-  cure_posterior_samples = efficacy_draws_sherry$cure_posterior_samples
-)
-
-
-# compute corrected utilities for sherry
-utilities_sherry <- get_bayescores(
-  efficacy_inputs = efficacy_inputs_sherry,
-  qol_scores      = qol_scores,
+final_scores_sherry <- get_bayescores(
+  efficacy_inputs = efficacy_draws_sherry, 
+  qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
   calibration_args = my_final_calibration
 )
-
 
 # compare unshrunk vs. zwet vs. sherry
 comparison <- rbind(
-  cbind(prior = "unshrunk", final_utilities$component_summary[6,2 , drop = FALSE]),
-  cbind(prior = "zwet",     utilities_zwet$component_summary[6,2 , drop = FALSE]),
-  cbind(prior = "sherry",   utilities_sherry$component_summary[6,2 , drop = FALSE])
+  cbind(prior = "unshrunk", final_scores$component_summary[7,2 , drop = FALSE]),
+  cbind(prior = "zwet",     final_scores_zwet$component_summary[7,2 , drop = FALSE]),
+  cbind(prior = "sherry",   final_scores_sherry$component_summary[7,2 , drop = FALSE])
 )
-rownames(comparison) <- NULL
 
 print(comparison)
 ```
 
-    ##      prior     Median
-    ## 1 unshrunk  -7.932848
-    ## 2     zwet -12.322989
-    ## 3   sherry  -9.688905
+    ##       prior   Median
+    ## 7  unshrunk 92.82735
+    ## 71     zwet 77.90848
+    ## 72   sherry 88.20735
 
 ``` r
 # plot utility donuts for each prior
-plot_utility_donut(utilities_zwet, trial_name ="Zwet's shrinkage")
+plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
 ```
 
 ![](README_files/figure-gfm/apply_shrinkage-1.png)<!-- -->
 
 ``` r
-plot_utility_donut(utilities_sherry, trial_name ="sherry's shrinkage")
+plot_utility_donut(final_scores_sherry, trial_name ="sherry's shrinkage")
 ```
 
 ![](README_files/figure-gfm/apply_shrinkage-2.png)<!-- -->
@@ -747,6 +776,146 @@ more conservative, data-driven values. This shrinkage step provides a
 robust sensitivity analysis, helping to understand how potential
 overestimation might impact the overall utility of a treatment and
 leading to more reliable conclusions for decision-making.
+
+***Extended follow-up***
+
+You can clearly see how the identifiability problem disappears once
+follow-up is extended, and how the model is then able to capture this
+more complete statistical evidence and act accordingly.
+
+``` r
+set.seed(123)
+
+# 1) Simulate with extended follow-up
+set.seed(123)
+
+sim_data <- simulate_weibull_cure_data(
+  n_patients = 300,
+  cure_fraction_ctrl = 0.15,
+  cure_fraction_exp = 0.40,
+  max_follow_up = 5*12,
+  weibull_shape = 1.2,
+  median_survival_ctrl = 12,
+  time_ratio_exp = 1.25
+)
+
+# 2) Fit Bayesian mixture cure model
+bayesian_fit <- fit_bayesian_cure_model(
+  sim_data,
+  time_col  = "time",
+  event_col = "event",
+  arm_col   = "arm",
+  iter      = 2500,
+  chains    = 4
+)
+```
+
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
+    ## Chain 1: 
+    ## Chain 1: Gradient evaluation took 0.000193 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.93 seconds.
+    ## Chain 1: Adjust your expectations accordingly!
+    ## Chain 1: 
+    ## Chain 1: 
+    ## Chain 1: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 1: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 1: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 1: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 1: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 1: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 1: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 1: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 1: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 1: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 1: 
+    ## Chain 1:  Elapsed Time: 4.336 seconds (Warm-up)
+    ## Chain 1:                5.125 seconds (Sampling)
+    ## Chain 1:                9.461 seconds (Total)
+    ## Chain 1: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
+    ## Chain 2: 
+    ## Chain 2: Gradient evaluation took 0.000179 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.79 seconds.
+    ## Chain 2: Adjust your expectations accordingly!
+    ## Chain 2: 
+    ## Chain 2: 
+    ## Chain 2: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 2: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 2: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 2: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 2: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 2: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 2: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 2: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 2: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 2: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 2: 
+    ## Chain 2:  Elapsed Time: 4.564 seconds (Warm-up)
+    ## Chain 2:                6.44 seconds (Sampling)
+    ## Chain 2:                11.004 seconds (Total)
+    ## Chain 2: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
+    ## Chain 3: 
+    ## Chain 3: Gradient evaluation took 0.00018 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.8 seconds.
+    ## Chain 3: Adjust your expectations accordingly!
+    ## Chain 3: 
+    ## Chain 3: 
+    ## Chain 3: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 3: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 3: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 3: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 3: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 3: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 3: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 3: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 3: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 3: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 3: 
+    ## Chain 3:  Elapsed Time: 4.025 seconds (Warm-up)
+    ## Chain 3:                6.722 seconds (Sampling)
+    ## Chain 3:                10.747 seconds (Total)
+    ## Chain 3: 
+    ## 
+    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
+    ## Chain 4: 
+    ## Chain 4: Gradient evaluation took 0.000168 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.68 seconds.
+    ## Chain 4: Adjust your expectations accordingly!
+    ## Chain 4: 
+    ## Chain 4: 
+    ## Chain 4: Iteration:    1 / 2500 [  0%]  (Warmup)
+    ## Chain 4: Iteration:  250 / 2500 [ 10%]  (Warmup)
+    ## Chain 4: Iteration:  500 / 2500 [ 20%]  (Warmup)
+    ## Chain 4: Iteration:  750 / 2500 [ 30%]  (Warmup)
+    ## Chain 4: Iteration: 1000 / 2500 [ 40%]  (Warmup)
+    ## Chain 4: Iteration: 1001 / 2500 [ 40%]  (Sampling)
+    ## Chain 4: Iteration: 1250 / 2500 [ 50%]  (Sampling)
+    ## Chain 4: Iteration: 1500 / 2500 [ 60%]  (Sampling)
+    ## Chain 4: Iteration: 1750 / 2500 [ 70%]  (Sampling)
+    ## Chain 4: Iteration: 2000 / 2500 [ 80%]  (Sampling)
+    ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
+    ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
+    ## Chain 4: 
+    ## Chain 4:  Elapsed Time: 4.049 seconds (Warm-up)
+    ## Chain 4:                6.648 seconds (Sampling)
+    ## Chain 4:                10.697 seconds (Total)
+    ## Chain 4:
+
+``` r
+plot_correlated_densities(bayesian_fit)
+```
+
+![](README_files/figure-gfm/complete-follow-up-1.png)<!-- -->
 
 ***Complex mixture case (immunotherapy-like)***
 
@@ -786,8 +955,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000157 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.57 seconds.
+    ## Chain 1: Gradient evaluation took 0.000194 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.94 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -804,15 +973,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.886 seconds (Warm-up)
-    ## Chain 1:                4.059 seconds (Sampling)
-    ## Chain 1:                6.945 seconds (Total)
+    ## Chain 1:  Elapsed Time: 3.931 seconds (Warm-up)
+    ## Chain 1:                5.615 seconds (Sampling)
+    ## Chain 1:                9.546 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000112 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.12 seconds.
+    ## Chain 2: Gradient evaluation took 0.000187 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.87 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -829,15 +998,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 2.726 seconds (Warm-up)
-    ## Chain 2:                3.881 seconds (Sampling)
-    ## Chain 2:                6.607 seconds (Total)
+    ## Chain 2:  Elapsed Time: 3.773 seconds (Warm-up)
+    ## Chain 2:                9.501 seconds (Sampling)
+    ## Chain 2:                13.274 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000147 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.47 seconds.
+    ## Chain 3: Gradient evaluation took 0.001017 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 10.17 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -854,15 +1023,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 3.307 seconds (Warm-up)
-    ## Chain 3:                4.432 seconds (Sampling)
-    ## Chain 3:                7.739 seconds (Total)
+    ## Chain 3:  Elapsed Time: 28.04 seconds (Warm-up)
+    ## Chain 3:                25.172 seconds (Sampling)
+    ## Chain 3:                53.212 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000115 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.15 seconds.
+    ## Chain 4: Gradient evaluation took 0.000269 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 2.69 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -879,14 +1048,24 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 3.425 seconds (Warm-up)
-    ## Chain 4:                4.727 seconds (Sampling)
-    ## Chain 4:                8.152 seconds (Total)
+    ## Chain 4:  Elapsed Time: 4.463 seconds (Warm-up)
+    ## Chain 4:                6.203 seconds (Sampling)
+    ## Chain 4:                10.666 seconds (Total)
     ## Chain 4:
 
 ``` r
 # 3) Inspect model outcomes
 mod_out <- outcomes(bayesian_fit)
+```
+
+    ## 
+    ## ---
+    ## Posterior correlation as an identifiability check:
+    ##    Correlation: -0.016
+    ##    Interpretation: Negligible (0 to -0.15): effects separable, estimation robust.
+    ## ---
+
+``` r
 print(mod_out)
 ```
 
@@ -912,14 +1091,19 @@ outcomes_obj <- outcomes(
   fit              = bayesian_fit,
   shrinkage_method = "none"
 )
+```
+
+    ## 
+    ## ---
+    ## Posterior correlation as an identifiability check:
+    ##    Correlation: -0.016
+    ##    Interpretation: Negligible (0 to -0.15): effects separable, estimation robust.
+    ## ---
+
+``` r
 efficacy_draws <- get_bayescores_draws(
   fit              = bayesian_fit,
   shrinkage_method = "none"
-)
-
-efficacy_inputs <- list(
-  tr_posterior_samples   = efficacy_draws$tr_posterior_samples,
-  cure_posterior_samples = efficacy_draws$cure_posterior_samples
 )
 ```
 
@@ -943,7 +1127,7 @@ my_final_calibration <- list(
 
 # 6) Compute final BayeScores
 final_utilities <- get_bayescores(
-  efficacy_inputs = efficacy_inputs,
+  efficacy_inputs = efficacy_draws,
   qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
   calibration_args = my_final_calibration
@@ -1158,6 +1342,33 @@ ggsurvplot(
   risk.table = FALSE
 )
 ```
+
+    ## Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
+    ## ℹ Please use tidy evaluation idioms with `aes()`.
+    ## ℹ See also `vignette("ggplot2-in-packages")` for more information.
+    ## ℹ The deprecated feature was likely used in the survminer package.
+    ##   Please report the issue at <https://github.com/kassambara/survminer/issues>.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+    ## ℹ Please use `linewidth` instead.
+    ## ℹ The deprecated feature was likely used in the ggpubr package.
+    ##   Please report the issue at <https://github.com/kassambara/ggpubr/issues>.
+    ## This warning is displayed once every 8 hours.
+    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+    ## generated.
+
+    ## Warning: ggtheme is not a valid theme.
+    ## Please use `theme()` to construct themes.
+
+    ## Ignoring unknown labels:
+    ## • fill : ""
+    ## • linetype : "1"
+    ## Ignoring unknown labels:
+    ## • fill : ""
+    ## • linetype : "1"
 
 ![](README_files/figure-gfm/ipd%20plot-1.png)<!-- -->
 
