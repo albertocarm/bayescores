@@ -65,7 +65,6 @@ plot_km_curves(sim_data)
 
 data(package = "bayescores")
 ```
-
 ### Step 3: Simulate study toxicity
 
 Generate toxicity data for a trial with 1:1 randomization (150 control patients), baseline toxicity of 50% (any-grade), 20% severe events (G3–4), and 1.5× higher toxicity in the experimental arm. QoL outcomes assume "Significant Improvement" with "Very High" evidence.
