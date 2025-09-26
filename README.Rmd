@@ -379,16 +379,14 @@ plot_final_utility_density(final_scores)
 
 Okay, so looking at the unadjusted scores, you might be thinking:
 
-> “Hold on... a high score for a study with 300 subjects where there's barely any increase in long-term survival seems a bit exaggerated, even assuming better QoL... what's going on here?”
+> “Hold on… a high score for a study with 300 subjects, based on long-term survival but with such short follow-up, seems a bit exaggerated—even assuming better QoL. What’s going on here?”
 
 And that's a great question. You should be aware of an inherent challenge in many statistical models—including mixture cure models—when applied to clinical trials with smaller sample sizes (low n). In this example, n = 300 is reasonable, but the short follow-up makes it difficult to accurately model the plateau of the survival curve, as shown in the Kaplan–Meier plot. Such limitations can have a significant impact on the estimation of bayescores.
 
-This often leads to a phenomenon known as the *“winner’s curse”*: if a trial happens to show a positive result, the magnitude of the observed effect is likely an overestimation of the true effect.
 
 # A solution: empirical bayesian shrinkage
 
-To address this, we can apply an empirical shrinkage correction. This method uses data from thousands of previous clinical trials to create a more realistic “prior” expectation of treatment effects, pulling our potentially exaggerated results towards a more plausible value.
-
+To address this, we can apply an empirical shrinkage correction. This method leverages data from thousands of previous clinical trials to create a more realistic prior expectation of treatment effects, pulling our potentially exaggerated results toward a more plausible value. The prior is applied to the dominant endpoint—in this case, long-term survival. Applying the Zwet prior is appropriate as a Bayesian regularization mechanism to contain bias under conditions of limited information. This approach controls model instability; it does not magically resolve the underlying identifiability problem, which can only be overcome with longer follow-up.
 This package implements two such data-driven priors:
 
 - **"zwet"**: a general prior based on 23 551 trials from all fields of medicine.
