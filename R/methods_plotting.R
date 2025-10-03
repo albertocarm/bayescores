@@ -200,7 +200,7 @@ plot_densities.bcm_fit <- function(x, ...) {
     ggplot2::theme_minimal() +
     ggplot2::theme(legend.position = "none")
 
-  # --- Plot 3: Odds Ratio (CORREGIDO) ---
+  # --- Plot 3: Odds Ratio ---
   odds_ratio_draws <- exp(posterior_samples$beta_cure_arm)
   upper_limit <- quantile(odds_ratio_draws, probs = 0.95)
 
@@ -317,7 +317,7 @@ time_ratio <- function(model) {
 #' interpreted as:
 #' \itemize{
 #'   \item \code{beta_cure_arm}: log(OR) for the cure component.
-#'   \item \code{beta_surv_arm}: log(HR) for the survival component among the uncured.
+#'   \item \code{beta_surv_arm}: log(TR) for the survival component among the uncured.
 #' }
 #' The function:
 #' \enumerate{
@@ -402,7 +402,7 @@ plot_correlated_densities <- function(x, n_grid = 100,
     labs(
       title = "Joint Posterior Density",
       subtitle = paste0("Pearson correlation: ", round(rho, 3)),
-      x = "log(OR) Cure", y = "log(HR) Survival", fill = "Density"
+      x = "log(OR) Cure", y = "log(TR) Survival", fill = "Density"
     ) +
     theme_minimal(base_size = 14)
 

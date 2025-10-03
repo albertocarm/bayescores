@@ -45,7 +45,7 @@ two parameters named \code{beta_cure_arm} and \code{beta_surv_arm}. These are
 interpreted as:
 \itemize{
   \item \code{beta_cure_arm}: log(OR) for the cure component.
-  \item \code{beta_surv_arm}: log(HR) for the survival component among the uncured.
+  \item \code{beta_surv_arm}: log(TR) for the survival component among the uncured.
 }
 The function:
 \enumerate{

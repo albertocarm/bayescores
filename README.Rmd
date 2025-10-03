@@ -691,8 +691,9 @@ res <- list(
     # Convert the numeric 'curve' column into a factor with meaningful labels.
     # This is essential for correct labeling in plots and models.
     mutate(curve = factor(curve,
-                          labels = c("Ribociclib + letrozol",
-                                     "Placebo + letrozol"))),
+                          labels = c("Placebo + letrozol",
+                                     "Ribociclib + letrozol"
+                                     ))),
 
   # 'drops' is likely a secondary output from the reconstruction function,
   # containing details about the survival probability drops. We combine it here as well.
@@ -722,7 +723,7 @@ ggsurvplot(
   break.time.by = 2,
   xlim = c(0, 34),
   legend.title = "",
-  legend.labs = c("Placebo\n+ Letrozole", "Ribociclib\n+ Letrozole"), 
+  legend.labs = c("Ribociclib\n+ Letrozole","Placebo\n+ Letrozole"), 
   legend = c(0.75, 0.85),
   risk.table = FALSE
 )
