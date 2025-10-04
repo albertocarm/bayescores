@@ -136,7 +136,7 @@ bayesian_fit <- fit_bayesian_cure_model(
   time_col = "time",
   event_col = "event",
   arm_col = "arm",
-  iter = 2500,
+  iter = 4000,
   chains = 4
 )
 ```
@@ -153,6 +153,15 @@ Inspect numerical summaries and visualize posterior distributions. You can verif
 ```{r numerical_summary}
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
 outcomes(bayesian_fit)
+```
+
+**MCMC diagnostic plots**
+
+Check the MCMC diagnostic plots to ensure convergence, i.e., to verify that the Markov chains have mixed well, reached stationarity, and that parameter estimates are stable and reliable
+
+```{r mcmc_plots}
+model_diagnostics(bayesian_fit)
+
 ```
 
 
