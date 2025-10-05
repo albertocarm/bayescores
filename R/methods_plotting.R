@@ -235,18 +235,6 @@ plot_densities.bcm_fit <- function(x, ...) {
 
 
 
-#' @method model_diagnostics bcm_fit
-#' @importFrom rstan stan_trace
-#' @export
-model_diagnostics.bcm_fit <- function(x, ...) {
-  stan_fit <- x$stan_fit
-  params_to_check <- c("beta_cure_intercept", "beta_cure_arm",
-                       "beta_surv_intercept", "beta_surv_arm", "alpha")
-  trace_plot <- rstan::stan_trace(stan_fit, pars = params_to_check)
-  print(trace_plot)
-}
-
-
 
 
 #' @title Calculate the Time Ratio

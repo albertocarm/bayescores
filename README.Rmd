@@ -157,9 +157,11 @@ outcomes(bayesian_fit)
 
 **MCMC diagnostic plots**
 
-Check the MCMC diagnostic plots to ensure convergence, i.e., to verify that the Markov chains have mixed well, reached stationarity, and that parameter estimates are stable and reliable
+Check the MCMC diagnostic plots to ensure convergence, i.e., to verify that the Markov chains have mixed well, reached stationarity, and that parameter estimates are stable and reliable. In addition, examine Rhat values (should be close to 1) and effective sample sizes (should be sufficiently large) to confirm robust inference.
 
 ```{r mcmc_plots}
+diagnose_fit(bayesian_fit$stan_fit)
+
 model_diagnostics(bayesian_fit)
 
 ```
