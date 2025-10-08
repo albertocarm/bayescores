@@ -13,12 +13,24 @@ devtools::load_all()
 
 **`bayescores`** provides a comprehensive toolkit for analyzing randomized controlled trials (RCTs). This package introduces the **Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to quantify clinical benefit by accounting for both survival prolongation and cure rates.
 
-The package includes functions to:
-  
-- Simulate realistic survival data from a mixture cure model.
-- Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan.
-- Visualize model results and diagnostics.
-- Calculate and visualize BayeScores to provide a holistic measure of clinical benefit.
+Key Features
+
+- Fit Robust Bayesian Models: Implements Bayesian Accelerated Failure Time (AFT) mixture cure models using Stan. The framework allows you to:
+
+- Incorporate empirical and skeptical priors to stabilize inference and reduce bias, especially with immature data.
+
+- Use the unique properties of AFT mixture cure models to quantify clinical benefit in a novel way.
+
+- Assess Data Maturity: Run a novel non-identifiability test on the model's parameters. This check serves as a statistical proxy for data maturity, helping to determine if the follow-up is sufficient to reliably estimate the long-term benefit.
+
+- Calculate Holistic Benefit Scores: Compute the final clinical benefit score, the BayeScores.
+
+- The score is derived using concave functions to more realistically reflect clinical utility (e.g., ensuring diminishing returns for each additional month of survival).
+
+- Includes comprehensive visualization tools to display the scores, results, and all model diagnostics.
+
+- Simulate Realistic Scenarios: Generate complex survival data from mixture cure models to validate methods, perform power analyses, and plan future studies.
+
 
 ## Installation
 
@@ -41,9 +53,11 @@ library(bayescores)
 
 ### Step 2: Simulate survival data
 
-Simulate a 300-patient trial with long-term survival fractions of 40% in the experimental arm and 15% in the control arm, and a median survival of 12 months in the control arm. The experimental arm achieves a 25% survival gain among non-cured patients. The maximum follow-up is 3 years, meaning the dataset is still somewhat immature under this specification to provide strong evidence of long-term survival.
+This package provides tools to navigate one of today's most significant clinical challenges: the inherent conflict between speed and certainty in drug development. While accelerated approvals are vital for getting promising therapies to patients, they often rely on immature datasets where long-term efficacy is not yet definitive.
 
-These parameters are therefore intentionally set to represent low-evidence conditions—a toy example designed to illustrate the package’s ability not only to quantify clinical benefit but also to assess the robustness of the analysis and the identifiability of key parameters (that is, the model’s capacity to distinguish hidden long-term survivors from non-cured patients with better short-term prognosis), thereby helping to adjust the model and keep bias under control.
+To illustrate how our package addresses this, we use a toy example specifically designed to mimic these conditions of uncertainty. We simulate a 300-patient trial with promising long-term survival fractions (40% in the experimental arm vs. 15% in the control), but with the maximum follow-up limited to 3 years. This specification intentionally creates an immature dataset, where strong evidence of long-term survival has not yet had time to accumulate.
+
+These low-evidence conditions are chosen to showcase the package's core functionality. It is designed not only to quantify clinical benefit but, more importantly, to assess the robustness of the analysis. Our package confronts the issue of data maturity head-on by using model identifiability as a statistical proxy. This key feature assesses the model’s capacity to distinguish true long-term survivors from non-cured patients with a better short-term prognosis.
 
 
 ```{r simulate-data}
@@ -395,7 +409,7 @@ Okay, so looking at the unadjusted scores, you might be thinking:
 And that's a great question. You should be aware of an inherent challenge in many statistical models—including mixture cure models—when applied to clinical trials with smaller sample sizes (low n). In this example, n = 300 is reasonable, but the short follow-up makes it difficult to accurately model the plateau of the survival curve, as shown in the Kaplan–Meier plot. Such limitations can have a significant impact on the estimation of bayescores.
 
 
-# A solution: empirical bayesian shrinkage
+# Empirical bayesian shrinkage
 
 To address this, we can apply an empirical shrinkage correction. This method leverages data from thousands of previous clinical trials to create a more realistic prior expectation of treatment effects, pulling our potentially exaggerated results toward a more plausible value. The prior is applied to the dominant endpoint—in this case, long-term survival. Applying the Zwet prior is appropriate as a Bayesian regularization mechanism to contain bias under conditions of limited information. This approach controls model instability; it does not magically resolve the underlying identifiability problem, which can only be overcome with longer follow-up.
 This package implements two such data-driven priors:
@@ -461,8 +475,9 @@ You can see how each empirical prior pulls the original estimates toward more co
 
 ***Extended follow-up***
 
-You can clearly see how the identifiability problem disappears once follow-up is extended, and how the model is then able to capture this more complete statistical evidence and act accordingly.  
- 
+To simulate a mature data release, we repeat the trial simulation with an extended follow-up. In this scenario, the long-term survivors are fully segregated from the rest of the patient population, which resolves the non-identifiability issue.
+
+You can clearly see how the model captures this more complete statistical evidence and acts accordingly. This demonstrates the method's capacity to adapt to the amount of information available in a study, providing a more confident and precise measure of the long-term benefit once the data is mature. 
 
 ```{r complete-follow-up}
 
@@ -498,14 +513,14 @@ plot_correlated_densities(bayesian_fit)
 ```
 
 
+***A Framework for Complex Clinical and Ethical Trade-offs***
 
 
-***Complex mixture case (immunotherapy-like)***
+The power of Bayesian AFT mixture cure models lies in their unique ability to evaluate the complex ethical and clinical trade-offs across the entire spectrum of cancer treatment, from curative-intent trials to metastatic disease. Their strength is in decomposing a therapy's effects, avoiding the misleading single averages that hide critical realities.
 
-- Mixed population typical of immunotherapy RCTs.  
-- Experimental arm increases the long-term survivor fraction (cure fraction).  
-- Among non-cured (refractory) patients, there is modest harm (TR < 1).  
-- QoL and Toxicity are **not** simulated here; we assume prior/previous settings.  
+In curative-intent trials, for instance, the model is uniquely suited to answer two fundamental questions simultaneously: Does the therapy increase the number of cured patients? And for the group of patients who are not cured, what is the effect on their time to relapse or progression? This nuanced approach is also critical in metastatic settings, particularly with immunotherapy, where the model evaluates the trade-off between durable, long-term survival for a minority versus the outcome for the refractory majority.
+
+By transparently quantifying each of these distinct effects—the change in the cure rate, the outcome for those not cured, and the chance for long-term survival—these models provide the multi-dimensional evidence essential for assessing the true clinical benefit of modern cancer therapies.
  
 
 ```{r complex-mixture-case}

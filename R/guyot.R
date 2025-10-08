@@ -23,7 +23,6 @@
   }
 }
 
-
 #' Reconstruct IPD for a Single Curve Using Guyot's Algorithm
 #'
 #' @description
@@ -148,10 +147,13 @@ recon_one_curve_guyot <- function(d_curve,
         ct <- .place_censors(t_lo, t_hi, c_i, eps = eps, mode = censor_placement)
         ipd_cens[[length(ipd_cens) + 1L]] <- data.frame(time = ct, status = 0L)
       }
+      ### --- START OF FIX --- ###
+      # The original line that caused the error is replaced with this one.
       out_drops[[length(out_drops) + 1L]] <- data.frame(
-        time = numeric(0), S_prev = numeric(0), S_curr = numeric(0),
-        n_i = n_lo, d_i = integer(0), c_i = as.integer(c_i)
+        time = NA_real_, S_prev = NA_real_, S_curr = NA_real_,
+        n_i = n_lo, d_i = NA_integer_, c_i = as.integer(c_i)
       )
+      ### --- END OF FIX --- ###
       next
     }
 
@@ -247,7 +249,8 @@ recon_one_curve_guyot <- function(d_curve,
   # (optional) force total number of events in the last interval (without touching censored)
   if (!is.null(totev) && length(out_drops) > 0L) {
     dtab <- do.call(rbind, out_drops)
-    gap <- as.integer(totev) - sum(dtab$d_i)
+    ### CHANGE 2: Added na.rm = TRUE to handle NAs introduced by the fix.
+    gap <- as.integer(totev) - sum(dtab$d_i, na.rm = TRUE)
     if (gap != 0L) {
       last_idx <- length(out_drops)
       d_last <- out_drops[[last_idx]]
@@ -324,7 +327,8 @@ recon_one_curve_guyot <- function(d_curve,
   compat_ok <- NA
   if (check) {
     ticks <- Ttick
-    n_at_risk <- function(ipd, tt) sum(ipd$time >= tt)
+    ### CHANGE 3: Added na.rm = TRUE for robustness in case of NAs.
+    n_at_risk <- function(ipd, tt) sum(ipd$time >= tt, na.rm = TRUE)
     rec <- vapply(ticks, function(tt) n_at_risk(ipd_out, tt), FUN.VALUE = integer(1))
     nrisk_check <- data.frame(
       time_tick = ticks,
@@ -336,7 +340,6 @@ recon_one_curve_guyot <- function(d_curve,
 
   list(ipd = ipd_out, drops = drops_out, check = nrisk_check, compat = compat_ok)
 }
-
 
 #' Reconstruct Individual Patient Data from Multiple Kaplan-Meier Curves
 #'

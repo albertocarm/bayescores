@@ -7,14 +7,36 @@ randomized controlled trials (RCTs). This package introduces the
 quantify clinical benefit by accounting for both survival prolongation
 and cure rates.
 
-The package includes functions to:
+Key Features
 
-- Simulate realistic survival data from a mixture cure model.
-- Fit Bayesian Accelerated Failure Time (AFT) mixture cure models using
-  Stan.
-- Visualize model results and diagnostics.
-- Calculate and visualize BayeScores to provide a holistic measure of
-  clinical benefit.
+- Fit Robust Bayesian Models: Implements Bayesian Accelerated Failure
+  Time (AFT) mixture cure models using Stan. The framework allows you
+  to:
+
+- Incorporate empirical and skeptical priors to stabilize inference and
+  reduce bias, especially with immature data.
+
+- Use the unique properties of AFT mixture cure models to quantify
+  clinical benefit in a novel way.
+
+- Assess Data Maturity: Run a novel non-identifiability test on the
+  model’s parameters. This check serves as a statistical proxy for data
+  maturity, helping to determine if the follow-up is sufficient to
+  reliably estimate the long-term benefit.
+
+- Calculate Holistic Benefit Scores: Compute the final clinical benefit
+  score, the BayeScores.
+
+- The score is derived using concave functions to more realistically
+  reflect clinical utility (e.g., ensuring diminishing returns for each
+  additional month of survival).
+
+- Includes comprehensive visualization tools to display the scores,
+  results, and all model diagnostics.
+
+- Simulate Realistic Scenarios: Generate complex survival data from
+  mixture cure models to validate methods, perform power analyses, and
+  plan future studies.
 
 ## Installation
 
@@ -39,21 +61,27 @@ library(bayescores)
 
 ### Step 2: Simulate survival data
 
-Simulate a 300-patient trial with long-term survival fractions of 40% in
-the experimental arm and 15% in the control arm, and a median survival
-of 12 months in the control arm. The experimental arm achieves a 25%
-survival gain among non-cured patients. The maximum follow-up is 3
-years, meaning the dataset is still somewhat immature under this
-specification to provide strong evidence of long-term survival.
+This package provides tools to navigate one of today’s most significant
+clinical challenges: the inherent conflict between speed and certainty
+in drug development. While accelerated approvals are vital for getting
+promising therapies to patients, they often rely on immature datasets
+where long-term efficacy is not yet definitive.
 
-These parameters are therefore intentionally set to represent
-low-evidence conditions—a toy example designed to illustrate the
-package’s ability not only to quantify clinical benefit but also to
-assess the robustness of the analysis and the identifiability of key
-parameters (that is, the model’s capacity to distinguish hidden
-long-term survivors from non-cured patients with better short-term
-prognosis), thereby helping to adjust the model and keep bias under
-control.
+To illustrate how our package addresses this, we use a toy example
+specifically designed to mimic these conditions of uncertainty. We
+simulate a 300-patient trial with promising long-term survival fractions
+(40% in the experimental arm vs. 15% in the control), but with the
+maximum follow-up limited to 3 years. This specification intentionally
+creates an immature dataset, where strong evidence of long-term survival
+has not yet had time to accumulate.
+
+These low-evidence conditions are chosen to showcase the package’s core
+functionality. It is designed not only to quantify clinical benefit but,
+more importantly, to assess the robustness of the analysis. Our package
+confronts the issue of data maturity head-on by using model
+identifiability as a statistical proxy. This key feature assesses the
+model’s capacity to distinguish true long-term survivors from non-cured
+patients with a better short-term prognosis.
 
 ``` r
 set.seed(123)
@@ -176,8 +204,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.00031 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.1 seconds.
+    ## Chain 1: Gradient evaluation took 0.000686 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 6.86 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -194,15 +222,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 3800 / 4000 [ 95%]  (Sampling)
     ## Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 25.153 seconds (Warm-up)
-    ## Chain 1:                58.941 seconds (Sampling)
-    ## Chain 1:                84.094 seconds (Total)
+    ## Chain 1:  Elapsed Time: 25.179 seconds (Warm-up)
+    ## Chain 1:                61.351 seconds (Sampling)
+    ## Chain 1:                86.53 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000309 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 3.09 seconds.
+    ## Chain 2: Gradient evaluation took 0.000312 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 3.12 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -219,15 +247,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 3800 / 4000 [ 95%]  (Sampling)
     ## Chain 2: Iteration: 4000 / 4000 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 23.41 seconds (Warm-up)
-    ## Chain 2:                71.001 seconds (Sampling)
-    ## Chain 2:                94.411 seconds (Total)
+    ## Chain 2:  Elapsed Time: 22.532 seconds (Warm-up)
+    ## Chain 2:                70.608 seconds (Sampling)
+    ## Chain 2:                93.14 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000505 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 5.05 seconds.
+    ## Chain 3: Gradient evaluation took 0.000323 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.23 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -244,15 +272,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 3800 / 4000 [ 95%]  (Sampling)
     ## Chain 3: Iteration: 4000 / 4000 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 21.677 seconds (Warm-up)
-    ## Chain 3:                36.152 seconds (Sampling)
-    ## Chain 3:                57.829 seconds (Total)
+    ## Chain 3:  Elapsed Time: 22.18 seconds (Warm-up)
+    ## Chain 3:                64.98 seconds (Sampling)
+    ## Chain 3:                87.16 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000123 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.23 seconds.
+    ## Chain 4: Gradient evaluation took 0.000498 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 4.98 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -269,9 +297,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 3800 / 4000 [ 95%]  (Sampling)
     ## Chain 4: Iteration: 4000 / 4000 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 6.565 seconds (Warm-up)
-    ## Chain 4:                39.62 seconds (Sampling)
-    ## Chain 4:                46.185 seconds (Total)
+    ## Chain 4:  Elapsed Time: 21.162 seconds (Warm-up)
+    ## Chain 4:                64.526 seconds (Sampling)
+    ## Chain 4:                85.688 seconds (Total)
     ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
@@ -300,7 +328,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ## beta_surv_arm 0.27    0.01 0.29 -0.19 0.06 0.22 0.45  0.92  1573    1
     ## alpha         1.21    0.00 0.10  1.02 1.14 1.21 1.28  1.42  1928    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Sun Oct  5 13:14:24 2025.
+    ## Samples were drawn using NUTS(diag_e) at Sun Oct  5 18:01:09 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -721,7 +749,7 @@ difficult to accurately model the plateau of the survival curve, as
 shown in the Kaplan–Meier plot. Such limitations can have a significant
 impact on the estimation of bayescores.
 
-# A solution: empirical bayesian shrinkage
+# Empirical bayesian shrinkage
 
 To address this, we can apply an empirical shrinkage correction. This
 method leverages data from thousands of previous clinical trials to
@@ -817,9 +845,16 @@ leading to more reliable conclusions for decision-making.
 
 ***Extended follow-up***
 
-You can clearly see how the identifiability problem disappears once
-follow-up is extended, and how the model is then able to capture this
-more complete statistical evidence and act accordingly.
+To simulate a mature data release, we repeat the trial simulation with
+an extended follow-up. In this scenario, the long-term survivors are
+fully segregated from the rest of the patient population, which resolves
+the non-identifiability issue.
+
+You can clearly see how the model captures this more complete
+statistical evidence and acts accordingly. This demonstrates the
+method’s capacity to adapt to the amount of information available in a
+study, providing a more confident and precise measure of the long-term
+benefit once the data is mature.
 
 ``` r
 set.seed(123)
@@ -851,8 +886,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.001082 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 10.82 seconds.
+    ## Chain 1: Gradient evaluation took 0.000567 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 5.67 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -869,15 +904,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 11.484 seconds (Warm-up)
-    ## Chain 1:                14.095 seconds (Sampling)
-    ## Chain 1:                25.579 seconds (Total)
+    ## Chain 1:  Elapsed Time: 10.266 seconds (Warm-up)
+    ## Chain 1:                11.005 seconds (Sampling)
+    ## Chain 1:                21.271 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000171 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.71 seconds.
+    ## Chain 2: Gradient evaluation took 0.000279 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 2.79 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -894,15 +929,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 12.423 seconds (Warm-up)
-    ## Chain 2:                15.439 seconds (Sampling)
-    ## Chain 2:                27.862 seconds (Total)
+    ## Chain 2:  Elapsed Time: 9.618 seconds (Warm-up)
+    ## Chain 2:                14.35 seconds (Sampling)
+    ## Chain 2:                23.968 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000282 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 2.82 seconds.
+    ## Chain 3: Gradient evaluation took 0.000247 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 2.47 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -919,15 +954,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 11.518 seconds (Warm-up)
-    ## Chain 3:                18.508 seconds (Sampling)
-    ## Chain 3:                30.026 seconds (Total)
+    ## Chain 3:  Elapsed Time: 10.417 seconds (Warm-up)
+    ## Chain 3:                16.461 seconds (Sampling)
+    ## Chain 3:                26.878 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000401 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 4.01 seconds.
+    ## Chain 4: Gradient evaluation took 0.000262 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 2.62 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -944,9 +979,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 9.937 seconds (Warm-up)
-    ## Chain 4:                16.789 seconds (Sampling)
-    ## Chain 4:                26.726 seconds (Total)
+    ## Chain 4:  Elapsed Time: 9.463 seconds (Warm-up)
+    ## Chain 4:                15.028 seconds (Sampling)
+    ## Chain 4:                24.491 seconds (Total)
     ## Chain 4:
 
 ``` r
@@ -955,15 +990,29 @@ plot_correlated_densities(bayesian_fit)
 
 ![](README_files/figure-gfm/complete-follow-up-1.png)<!-- -->
 
-***Complex mixture case (immunotherapy-like)***
+***A Framework for Complex Clinical and Ethical Trade-offs***
 
-- Mixed population typical of immunotherapy RCTs.  
-- Experimental arm increases the long-term survivor fraction (cure
-  fraction).  
-- Among non-cured (refractory) patients, there is modest harm (TR \<
-  1).  
-- QoL and Toxicity are **not** simulated here; we assume prior/previous
-  settings.
+The power of Bayesian AFT mixture cure models lies in their unique
+ability to evaluate the complex ethical and clinical trade-offs across
+the entire spectrum of cancer treatment, from curative-intent trials to
+metastatic disease. Their strength is in decomposing a therapy’s
+effects, avoiding the misleading single averages that hide critical
+realities.
+
+In curative-intent trials, for instance, the model is uniquely suited to
+answer two fundamental questions simultaneously: Does the therapy
+increase the number of cured patients? And for the group of patients who
+are not cured, what is the effect on their time to relapse or
+progression? This nuanced approach is also critical in metastatic
+settings, particularly with immunotherapy, where the model evaluates the
+trade-off between durable, long-term survival for a minority versus the
+outcome for the refractory majority.
+
+By transparently quantifying each of these distinct effects—the change
+in the cure rate, the outcome for those not cured, and the chance for
+long-term survival—these models provide the multi-dimensional evidence
+essential for assessing the true clinical benefit of modern cancer
+therapies.
 
 ``` r
 set.seed(123)
@@ -993,8 +1042,8 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
     ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000181 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 1.81 seconds.
+    ## Chain 1: Gradient evaluation took 0.000309 seconds
+    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 3.09 seconds.
     ## Chain 1: Adjust your expectations accordingly!
     ## Chain 1: 
     ## Chain 1: 
@@ -1011,15 +1060,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 2.979 seconds (Warm-up)
-    ## Chain 1:                4.224 seconds (Sampling)
-    ## Chain 1:                7.203 seconds (Total)
+    ## Chain 1:  Elapsed Time: 12.224 seconds (Warm-up)
+    ## Chain 1:                15.118 seconds (Sampling)
+    ## Chain 1:                27.342 seconds (Total)
     ## Chain 1: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
     ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000114 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 1.14 seconds.
+    ## Chain 2: Gradient evaluation took 0.000235 seconds
+    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 2.35 seconds.
     ## Chain 2: Adjust your expectations accordingly!
     ## Chain 2: 
     ## Chain 2: 
@@ -1036,15 +1085,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 2.819 seconds (Warm-up)
-    ## Chain 2:                4.039 seconds (Sampling)
-    ## Chain 2:                6.858 seconds (Total)
+    ## Chain 2:  Elapsed Time: 9.866 seconds (Warm-up)
+    ## Chain 2:                14.278 seconds (Sampling)
+    ## Chain 2:                24.144 seconds (Total)
     ## Chain 2: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
     ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000129 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.29 seconds.
+    ## Chain 3: Gradient evaluation took 0.000123 seconds
+    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 1.23 seconds.
     ## Chain 3: Adjust your expectations accordingly!
     ## Chain 3: 
     ## Chain 3: 
@@ -1061,15 +1110,15 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 3.631 seconds (Warm-up)
-    ## Chain 3:                4.595 seconds (Sampling)
-    ## Chain 3:                8.226 seconds (Total)
+    ## Chain 3:  Elapsed Time: 12.261 seconds (Warm-up)
+    ## Chain 3:                16.922 seconds (Sampling)
+    ## Chain 3:                29.183 seconds (Total)
     ## Chain 3: 
     ## 
     ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
     ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000159 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.59 seconds.
+    ## Chain 4: Gradient evaluation took 0.000567 seconds
+    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 5.67 seconds.
     ## Chain 4: Adjust your expectations accordingly!
     ## Chain 4: 
     ## Chain 4: 
@@ -1086,9 +1135,9 @@ bayesian_fit <- fit_bayesian_cure_model(
     ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
     ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
     ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 3.529 seconds (Warm-up)
-    ## Chain 4:                4.909 seconds (Sampling)
-    ## Chain 4:                8.438 seconds (Total)
+    ## Chain 4:  Elapsed Time: 11.82 seconds (Warm-up)
+    ## Chain 4:                15.017 seconds (Sampling)
+    ## Chain 4:                26.837 seconds (Total)
     ## Chain 4:
 
 ``` r
