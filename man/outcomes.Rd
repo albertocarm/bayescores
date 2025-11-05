@@ -9,7 +9,8 @@ outcomes(
   calibration_args = list(),
   digits = 2,
   shrinkage_method = "none",
-  shrinkage_target = "primary"
+  shrinkage_target = "primary",
+  correlation_method = c("pearson", "spearman", "kendall")
 )
 }
 \arguments{
@@ -24,6 +25,9 @@ Options are "none" (default), "zwet", "sherry", or "skeptical".}
 
 \item{shrinkage_target}{A character string controlling the application of
 shrinkage. Options are "primary" or "both_if_uncorrelated".}
+
+\item{correlation_method}{Character. The method to use: 'pearson' (default),
+'spearman', or 'kendall'. Used for the identifiability check.}
 }
 \value{
 A tibble with a summary of key model outcomes.

@@ -290,7 +290,6 @@ time_ratio <- function(model) {
   return(result)
 }
 
-
 #' @title Plot Correlated Posterior Densities
 #' @description
 #' Creates a 2D density plot for two correlated parameters from a Stan model fit.
@@ -310,13 +309,14 @@ time_ratio <- function(model) {
 #' The function:
 #' \enumerate{
 #'   \item extracts posterior samples with \code{rstan::extract()},
-#'   \item computes Pearson correlation,
+#'   \item computes Pearson, Spearman, or Kendall correlation,
 #'   \item sets independent axis limits via \code{stats::quantile()},
 #'   \item estimates a 2D KDE via \code{MASS::kde2d()},
 #'   \item builds a \code{ggplot2} heatmap with contours and confidence ellipses.
 #' }
 #'
-#' @param x A list-like object that contains a \code{stanfit} at \code{x$stan_fit}.
+#' @param x A list-like object that
+#'   contains a \code{stanfit} at \code{x$stan_fit}.
 #'   The fit must have parameters \code{beta_cure_arm} and \code{beta_surv_arm}.
 #' @param n_grid Integer. Number of grid points per axis for the 2D kernel density
 #'   estimation passed to \code{MASS::kde2d}. Default is \code{100}.
@@ -327,6 +327,8 @@ time_ratio <- function(model) {
 #'   99.8\%: \code{c(0.001, 0.999)}.
 #' @param padding Numeric scalar (>= 0). Fractional padding to expand each axis
 #'   range beyond the selected quantiles. Default \code{0.05} (5\%).
+#' @param correlation_method Character. The method to use: 'pearson' (default),
+#'   'spearman', or 'kendall'. Passed to \code{stats::cor}.
 #'
 #' @return A \code{ggplot} object representing the joint posterior density.
 #'
@@ -345,15 +347,18 @@ time_ratio <- function(model) {
 #' obj <- list(stan_fit = fit)
 #' p <- plot_correlated_densities(obj,
 #'                                n_grid = 150,
-#'                                level_ellipses = c(0.5, 0.9),
-#'                                quantile_range = c(0.005, 0.995),
-#'                                padding = 0.1)
+#'                                correlation_method = "spearman",
+#'                                quantile_range = c(0.005, 0.995))
 #' print(p)
 #' }
 plot_correlated_densities <- function(x, n_grid = 100,
                                       level_ellipses = c(0.5, 0.8, 0.95),
                                       quantile_range = c(0.001, 0.999),
-                                      padding = 0.05) {
+                                      padding = 0.05,
+                                      correlation_method = c("pearson", "spearman", "kendall")) {
+
+  # --- 0) Validate arguments ---
+  correlation_method <- match.arg(correlation_method)
 
   # --- 1) Extract posterior draws ---
   post <- rstan::extract(x$stan_fit)
@@ -363,7 +368,7 @@ plot_correlated_densities <- function(x, n_grid = 100,
   )
 
   # --- 2) Calculate correlation ---
-  rho <- cor(posterior_draws$log_or, posterior_draws$log_hr)
+  rho <- cor(posterior_draws$log_or, posterior_draws$log_hr, method = correlation_method)
 
   # --- 3) Define axis limits INDEPENDENTLY for X and Y ---
   xlims <- stats::quantile(posterior_draws$log_or, probs = quantile_range, na.rm = TRUE)
@@ -380,6 +385,13 @@ plot_correlated_densities <- function(x, n_grid = 100,
     dplyr::mutate(density = as.vector(t(kd$z)))
 
   # --- 5) Build the plot ---
+
+  # Helper for subtitle
+  corr_label <- switch(correlation_method,
+                       "pearson" = "Pearson",
+                       "spearman" = "Spearman",
+                       "kendall" = "Kendall")
+
   p <- ggplot(density_df, aes(x = x, y = y)) +
     geom_tile(aes(fill = density)) +
     geom_contour(aes(z = density), colour = "white", alpha = 0.6, bins = 10) +
@@ -389,7 +401,7 @@ plot_correlated_densities <- function(x, n_grid = 100,
     coord_cartesian(xlim = xlims, ylim = ylims, expand = FALSE) +
     labs(
       title = "Joint Posterior Density",
-      subtitle = paste0("Pearson correlation: ", round(rho, 3)),
+      subtitle = paste0(corr_label, " correlation: ", round(rho, 3)),
       x = "log(OR) Cure", y = "log(TR) Survival", fill = "Density"
     ) +
     theme_minimal(base_size = 14)

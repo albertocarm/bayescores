@@ -151,7 +151,8 @@ bayesian_fit <- fit_bayesian_cure_model(
   event_col = "event",
   arm_col = "arm",
   iter = 4000,
-  chains = 4
+  chains = 4, 
+  suspect_cure = TRUE
 )
 ```
 
@@ -166,7 +167,7 @@ Inspect numerical summaries and visualize posterior distributions. You can verif
   
 ```{r numerical_summary}
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
-outcomes(bayesian_fit)
+outcomes(bayesian_fit, correlation_method = "pearson")
 ```
 
 **MCMC diagnostic plots**
@@ -191,7 +192,7 @@ plot_densities(bayesian_fit)
 The mixture cure model jointly estimates the TR and OR parameters, yielding a joint posterior distribution of plausible values for both. This joint estimation is essential to avoid the bias that would arise if the parameters were fitted separately. In this example, however, we simulated a challenging scenario where the two parameters are difficult to disentangle due to limited follow-up. The model reflects this difficulty through a strong negative correlation between the estimates (Pearson correlation –0.615), which illustrates the lack of identifiability: the model struggles to assign effects correctly given the data limitations. This dependence is clearly visible in the figure.
 
 ```{r plot-joint, fig.cap="Figure 2: Joint posterior density distributions for Time Ratio & Odds Ratio of Cure"}
-plot_correlated_densities(bayesian_fit)
+plot_correlated_densities(bayesian_fit, correlation_method="pearson")
 ```
 
 **Posterior predictive check**

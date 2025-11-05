@@ -9,7 +9,8 @@ model_diagnostics(x, ...)
 \arguments{
 \item{x}{An object, typically a model fit.}
 
-\item{...}{Other arguments.}
+\item{...}{Other arguments.
+• @export}
 }
 \description{
 A generic function to plot model diagnostics.

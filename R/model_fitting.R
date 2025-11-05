@@ -3,6 +3,8 @@
 #'
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
+#' @param suspect_cure Logical. If TRUE, uses standard priors. If FALSE,
+#'   uses skeptical priors to collapse the model towards an AFT.
 #' @param chains,iter,warmup,seed Numeric arguments passed to `rstan::stan`.
 #' @param adapt_delta Target acceptance rate for Stan's NUTS algorithm.
 #' @param ... Additional arguments passed to `rstan::stan`.
@@ -17,19 +19,20 @@
 #' @importFrom rstan stan extract
 #' @export
 fit_bayesian_cure_model <- function(data,
-                                    time_col    = "time",
-                                    event_col   = "event",
-                                    arm_col     = "arm",
-                                    chains      = 4,
-                                    iter        = 2000,
-                                    warmup      = 1000,
-                                    seed        = 555,
-                                    adapt_delta = 0.99,
+                                    time_col     = "time",
+                                    event_col    = "event",
+                                    arm_col      = "arm",
+                                    suspect_cure = TRUE,
+                                    chains       = 4,
+                                    iter         = 2000,
+                                    warmup       = 1000,
+                                    seed         = 555,
+                                    adapt_delta  = 0.99,
                                     ...) {
 
   # Validate and convert 'arm' to a factor
   if (!is.factor(data[[arm_col]])) {
-    message(paste0("Note: converting '", arm_col, "' to factor."))
+    message(paste0("Note: converting '", arm_col, "' to factor.")) #
     data[[arm_col]] <- as.factor(data[[arm_col]])
   }
 
@@ -44,7 +47,10 @@ fit_bayesian_cure_model <- function(data,
     N      = nrow(data),
     tiempo = data[[time_col]],
     evento = data[[event_col]],
-    arm    = as.numeric(data[[arm_col]]) - 1
+    arm    = as.numeric(data[[arm_col]]) - 1,
+
+
+    suspect_cure = as.integer(suspect_cure)
   )
 
   # Stan control settings
@@ -65,6 +71,7 @@ fit_bayesian_cure_model <- function(data,
   # Extract posterior draws (excluding warmup)
   posterior_draws <- rstan::extract(stan_fit, permuted = TRUE, inc_warmup = FALSE)
 
+
   # Calculate the total number of post-warmup draws
   n_draws <- chains * (iter - warmup)
 
@@ -79,17 +86,19 @@ fit_bayesian_cure_model <- function(data,
     ),
     posterior_draws = posterior_draws,
     n_draws         = n_draws # Added the total number of draws to the list
-  )
+  ) #
+
   class(result) <- "bcm_fit"
 
   return(result)
 }
+
 #' Plot Model Diagnostics
 #'
 #' @description A generic function to plot model diagnostics.
 #' @param x An object, typically a model fit.
 #' @param ... Other arguments.
-#' @export
+#'• @export
 model_diagnostics <- function(x, ...) {
   UseMethod("model_diagnostics")
 }

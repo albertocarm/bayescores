@@ -63,8 +63,6 @@ sample_shrinkage_draws <- function(original_draws, method) {
 }
 
 
-
-
 #' Generate a Summary Table of Model Outcomes (Final Version 2)
 #'
 #' @description
@@ -80,6 +78,8 @@ sample_shrinkage_draws <- function(original_draws, method) {
 #'   Options are "none" (default), "zwet", "sherry", or "skeptical".
 #' @param shrinkage_target A character string controlling the application of
 #'   shrinkage. Options are "primary" or "both_if_uncorrelated".
+#' @param correlation_method Character. The method to use: 'pearson' (default),
+#'   'spearman', or 'kendall'. Used for the identifiability check.
 #'
 #' @return A tibble with a summary of key model outcomes.
 #'
@@ -91,10 +91,11 @@ sample_shrinkage_draws <- function(original_draws, method) {
 #' @export
 #'
 outcomes <- function(fit,
-                      calibration_args = list(),
-                      digits = 2,
-                      shrinkage_method = "none",
-                      shrinkage_target = "primary") {
+                     calibration_args = list(),
+                     digits = 2,
+                     shrinkage_method = "none",
+                     shrinkage_target = "primary",
+                     correlation_method = c("pearson", "spearman", "kendall")) {
 
   # --- 1) Input Validation and Data Extraction ---
   valid_methods <- c("zwet", "sherry", "skeptical", "none")
@@ -105,6 +106,9 @@ outcomes <- function(fit,
   if (!shrinkage_target %in% valid_targets) {
     stop(paste("Invalid shrinkage_target. Use one of:", paste(valid_targets, collapse = ", ")))
   }
+  # --- INICIO CAMBIO ---
+  correlation_method <- match.arg(correlation_method)
+  # --- FIN CAMBIO ---
 
   posterior <- rstan::extract(fit$stan_fit)
   log_or <- as.numeric(posterior$beta_cure_arm)
@@ -113,7 +117,9 @@ outcomes <- function(fit,
   if (is.null(log_tr) || is.null(log_or)) {
     stop("`fit` object must contain `beta_cure_arm` and `beta_surv_arm` draws.")
   }
-  rho <- cor(log_or, log_tr)
+  # --- INICIO CAMBIO ---
+  rho <- cor(log_or, log_tr, method = correlation_method)
+  # --- FIN CAMBIO ---
 
   # --- 2) Helper functions ---
   summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
@@ -260,19 +266,14 @@ outcomes <- function(fit,
     rho > -0.30 ~ "Low (-0.15 to -0.30): minor coupling, interpretation still reliable.",
     rho > -0.50 ~ "Moderate (-0.30 to -0.50): noticeable trade-off, joint summaries recommended.",
     rho > -0.70 ~ "Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.",
-    TRUE        ~ "Extreme (< -0.70): practical non-identifiability, requires longer follow-up or informative priors."
+    TRUE         ~ "Extreme (< -0.70): practical non-identifiability, requires longer follow-up or informative priors."
   )
   cat("\n---\n")
   cat("Posterior correlation as an identifiability check:\n")
-  cat(paste0("   Correlation: ", round(rho, 3), "\n"))
+  # --- INICIO CAMBIO ---
+  cat(paste0("   Correlation (", correlation_method, "): ", round(rho, 3), "\n"))
+  # --- FIN CAMBIO ---
   cat(paste0("   Interpretation: ", identifiability_level, "\n"))
   cat("---\n")
   tibble::as_tibble(summary_df)
 }
-
-
-
-
-
-
-

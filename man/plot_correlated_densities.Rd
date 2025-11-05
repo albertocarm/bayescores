@@ -9,11 +9,13 @@ plot_correlated_densities(
   n_grid = 100,
   level_ellipses = c(0.5, 0.8, 0.95),
   quantile_range = c(0.001, 0.999),
-  padding = 0.05
+  padding = 0.05,
+  correlation_method = c("pearson", "spearman", "kendall")
 )
 }
 \arguments{
-\item{x}{A list-like object that contains a \code{stanfit} at \code{x$stan_fit}.
+\item{x}{A list-like object that
+contains a \code{stanfit} at \code{x$stan_fit}.
 The fit must have parameters \code{beta_cure_arm} and \code{beta_surv_arm}.}
 
 \item{n_grid}{Integer. Number of grid points per axis for the 2D kernel density
@@ -28,6 +30,9 @@ probabilities used to set axis limits independently. Defaults to the central
 
 \item{padding}{Numeric scalar (>= 0). Fractional padding to expand each axis
 range beyond the selected quantiles. Default \code{0.05} (5\%).}
+
+\item{correlation_method}{Character. The method to use: 'pearson' (default),
+'spearman', or 'kendall'. Passed to \code{stats::cor}.}
 }
 \value{
 A \code{ggplot} object representing the joint posterior density.
@@ -50,7 +55,7 @@ interpreted as:
 The function:
 \enumerate{
   \item extracts posterior samples with \code{rstan::extract()},
-  \item computes Pearson correlation,
+  \item computes Pearson, Spearman, or Kendall correlation,
   \item sets independent axis limits via \code{stats::quantile()},
   \item estimates a 2D KDE via \code{MASS::kde2d()},
   \item builds a \code{ggplot2} heatmap with contours and confidence ellipses.
@@ -62,9 +67,8 @@ The function:
 obj <- list(stan_fit = fit)
 p <- plot_correlated_densities(obj,
                                n_grid = 150,
-                               level_ellipses = c(0.5, 0.9),
-                               quantile_range = c(0.005, 0.995),
-                               padding = 0.1)
+                               correlation_method = "spearman",
+                               quantile_range = c(0.005, 0.995))
 print(p)
 }
 }
