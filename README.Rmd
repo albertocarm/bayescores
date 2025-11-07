@@ -152,7 +152,7 @@ bayesian_fit <- fit_bayesian_cure_model(
   arm_col = "arm",
   iter = 4000,
   chains = 4, 
-  suspect_cure = TRUE
+  cure_belief = "unknown"
 )
 ```
 
@@ -504,7 +504,8 @@ bayesian_fit <- fit_bayesian_cure_model(
   event_col = "event",
   arm_col   = "arm",
   iter      = 2500,
-  chains    = 4
+  chains    = 4,
+  cure_belief = "unknown"
 )
 
 plot_correlated_densities(bayesian_fit)
@@ -546,7 +547,8 @@ bayesian_fit <- fit_bayesian_cure_model(
   event_col = "event",
   arm_col   = "arm",
   iter      = 2500,
-  chains    = 4
+  chains    = 4, 
+  cure_belief = "unknown"
 )
 
 # 3) Inspect model outcomes

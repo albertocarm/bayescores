@@ -9,7 +9,7 @@ fit_bayesian_cure_model(
   time_col = "time",
   event_col = "event",
   arm_col = "arm",
-  suspect_cure = TRUE,
+  cure_belief = "unknown",
   chains = 4,
   iter = 2000,
   warmup = 1000,
@@ -23,8 +23,10 @@ fit_bayesian_cure_model(
 
 \item{time_col, event_col, arm_col}{Character strings for column names.}
 
-\item{suspect_cure}{Logical. If TRUE, uses standard priors. If FALSE,
-uses skeptical priors to collapse the model towards an AFT.}
+\item{cure_belief}{Character string. Sets the prior belief for the adjuvant
+cure effect. One of "unknown" (default, neutral/weakly informative),
+"unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
+"hammer" prior).}
 
 \item{chains, iter, warmup, seed}{Numeric arguments passed to `rstan::stan`.}
 

@@ -5,7 +5,7 @@
 // 2. A Weibull AFT survival component models the time-to-event for the
 //    "susceptible" (non-cured) population.
 //
-// This implementation includes a conditional skeptical prior on the
+// This implementation includes a 3-level conditional prior on the
 // adjuvant treatment effect (the log-OR for cure).
 
 data {
@@ -15,9 +15,10 @@ data {
   vector[N] arm;                    // Treatment arm (0=control, 1=treatment)
 
   // Flag for conditional priors on the adjuvant cure effect (log-OR)
-  // 1 = (TRUE)  Standard, weakly-informative prior (default)
-  // 0 = (FALSE) Skeptical shrinkage prior (Laplace) on the arm effect
-  int<lower=0, upper=1> suspect_cure;
+  // 1 = "unknown" (weakly-informative, std_normal)
+  // 2 = "unlikely" (skeptical Laplace, scale 0.08)
+  // 3 = "very_unlikely" (hammer Laplace, scale 0.04)
+  int<lower=1, upper=3> cure_prior_type;
 }
 
 parameters {
@@ -44,7 +45,7 @@ transformed parameters {
   // and improved sampler stability.
 
   // beta_cure_arm: log-OR of cure for treatment vs. control
-  // Effective prior (if suspect_cure=1): normal(0, 2.5)
+  // Effective prior (if cure_prior_type=1): normal(0, 2.5)
   real beta_cure_arm = 2.5 * beta_cure_arm_raw;
 
   // beta_surv_arm: log-Time Ratio for treatment vs. control
@@ -66,16 +67,25 @@ model {
   // It is identical to the original model.
   beta_cure_intercept ~ student_t(4, 0, 2.5);
   
-  // Conditional prior for the adjuvant cure *effect*
-  if (suspect_cure == 1) {
-    // Standard, weakly-informative prior (identical to original)
+  // --- Conditional prior for the adjuvant cure *effect* ---
+  if (cure_prior_type == 1) {
+    // Level 1: "unknown" (Standard, weakly-informative)
+    // Effective prior: normal(0, 2.5)
     beta_cure_arm_raw ~ std_normal();
   
+  } else if (cure_prior_type == 2) {
+    // Level 2: "unlikely" (Skeptical L1 shrinkage)
+    // Slightly more skeptical prior.
+    // Effective prior: double_exponential(0, 0.2)
+    // (since 0.08 * 2.5 = 0.2)
+    beta_cure_arm_raw ~ double_exponential(0, 0.08); // <-- This is the new value
+  
   } else {
-    // Skeptical (L1 shrinkage) prior on the arm effect.
-    // This is equivalent to beta_cure_arm ~ double_exponential(0, 1)
-    // on the transformed scale (since 0.4 = 1 / 2.5).
-    beta_cure_arm_raw ~ double_exponential(0, 0.4);
+    // Level 3: "very_unlikely" (Hammer L1 shrinkage)
+    // This is the strongest prior to force the effect to zero.
+    // Effective prior: double_exponential(0, 0.1)
+    // (since 0.04 * 2.5 = 0.1)
+    beta_cure_arm_raw ~ double_exponential(0, 0.04);
   }
 
   // --- Likelihood ---
@@ -106,4 +116,5 @@ model {
     }
   }
 }
+
 

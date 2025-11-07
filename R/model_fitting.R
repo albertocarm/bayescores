@@ -3,8 +3,10 @@
 #'
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
-#' @param suspect_cure Logical. If TRUE, uses standard priors. If FALSE,
-#'   uses skeptical priors to collapse the model towards an AFT.
+#' @param cure_belief Character string. Sets the prior belief for the adjuvant
+#'   cure effect. One of "unknown" (default, neutral/weakly informative),
+#'   "unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
+#'   "hammer" prior).
 #' @param chains,iter,warmup,seed Numeric arguments passed to `rstan::stan`.
 #' @param adapt_delta Target acceptance rate for Stan's NUTS algorithm.
 #' @param ... Additional arguments passed to `rstan::stan`.
@@ -19,20 +21,22 @@
 #' @importFrom rstan stan extract
 #' @export
 fit_bayesian_cure_model <- function(data,
-                                    time_col     = "time",
-                                    event_col    = "event",
-                                    arm_col      = "arm",
-                                    suspect_cure = TRUE,
-                                    chains       = 4,
-                                    iter         = 2000,
-                                    warmup       = 1000,
-                                    seed         = 555,
-                                    adapt_delta  = 0.99,
+                                    time_col      = "time",
+                                    event_col     = "event",
+                                    arm_col       = "arm",
+                                    cure_belief   = "unknown",
+                                    chains        = 4,
+                                    iter          = 2000,
+                                    warmup        = 1000,
+                                    seed          = 555,
+                                    adapt_delta   = 0.99,
                                     ...) {
+
+  cure_belief <- match.arg(cure_belief, c("unknown", "unlikely", "very_unlikely"))
 
   # Validate and convert 'arm' to a factor
   if (!is.factor(data[[arm_col]])) {
-    message(paste0("Note: converting '", arm_col, "' to factor.")) #
+    message(paste0("Note: converting '", arm_col, "' to factor."))
     data[[arm_col]] <- as.factor(data[[arm_col]])
   }
 
@@ -42,6 +46,9 @@ fit_bayesian_cure_model <- function(data,
     stop("Cannot find 'cure_model.stan'. Is the package installed correctly?")
   }
 
+  prior_int_map <- c("unknown" = 1, "unlikely" = 2, "very_unlikely" = 3)
+  cure_prior_type <- prior_int_map[cure_belief]
+
   # Prepare data for Stan
   stan_data <- list(
     N      = nrow(data),
@@ -49,8 +56,7 @@ fit_bayesian_cure_model <- function(data,
     evento = data[[event_col]],
     arm    = as.numeric(data[[arm_col]]) - 1,
 
-
-    suspect_cure = as.integer(suspect_cure)
+    cure_prior_type = as.integer(cure_prior_type)
   )
 
   # Stan control settings
@@ -71,7 +77,6 @@ fit_bayesian_cure_model <- function(data,
   # Extract posterior draws (excluding warmup)
   posterior_draws <- rstan::extract(stan_fit, permuted = TRUE, inc_warmup = FALSE)
 
-
   # Calculate the total number of post-warmup draws
   n_draws <- chains * (iter - warmup)
 
@@ -86,7 +91,7 @@ fit_bayesian_cure_model <- function(data,
     ),
     posterior_draws = posterior_draws,
     n_draws         = n_draws # Added the total number of draws to the list
-  ) #
+  )
 
   class(result) <- "bcm_fit"
 
