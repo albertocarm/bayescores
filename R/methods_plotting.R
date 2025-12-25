@@ -65,7 +65,6 @@ plot_km_curves <- function(data, time_col = "time", event_col = "event", arm_col
 }
 
 
-
 #' @method plot bcm_fit
 #' @importFrom rstan extract
 #' @importFrom ggplot2 ggplot aes geom_ribbon geom_step geom_line scale_y_continuous labs theme_minimal
@@ -79,33 +78,60 @@ plot.bcm_fit <- function(x, ...) {
   time_col <- cols$time_col
   event_col <- cols$event_col
   arm_col <- cols$arm_col
+
   posterior_samples <- rstan::extract(x$stan_fit)
   time_grid <- seq(0, max(plot_data[[time_col]]), length.out = 150)
+
   predicted_curves <- list()
   arm_levels <- levels(plot_data[[arm_col]])
+
+  # Get the shared_shape flag from the fitted object
+  is_shared <- isTRUE(x$shared_shape)
+
   for (i in seq_along(arm_levels)) {
-    b <- i - 1
+    b <- i - 1 # 0 for control, 1 for treatment (assuming factor 0,1)
+
+    # 1. Calculate Cure Rate
     cure_logit <- posterior_samples$beta_cure_intercept + posterior_samples$beta_cure_arm * b
     cure_prob <- 1 / (1 + exp(-cure_logit))
+
+    # 2. Calculate Scale (Time Ratio)
     log_scale <- posterior_samples$beta_surv_intercept + posterior_samples$beta_surv_arm * b
     scale <- exp(log_scale)
-    shape <- posterior_samples$alpha
+
+    # 3. Calculate Shape (Weibull Alpha)
+    # If shared_shape is TRUE, we ignore beta_alpha_arm and use alpha_control for all arms.
+    if (is_shared) {
+      shape <- posterior_samples$alpha_control
+    } else {
+      # If FALSE, treatment (b=1) gets the alpha_control * exp(beta_alpha_arm) shift.
+      shape <- posterior_samples$alpha_control * exp(posterior_samples$beta_alpha_arm * b)
+    }
+
+    # 4. Generate survival curves
     surv_matrix <- sapply(time_grid, function(t) {
+      # Weibull formula: S(t) = exp( - (t/scale)^shape )
       s_weibull <- exp(-(t / scale)^shape)
       s_total <- cure_prob + (1 - cure_prob) * s_weibull
       return(s_total)
     })
+
     predicted_curves[[arm_levels[i]]] <- data.frame(
       time = time_grid,
-      survival = apply(surv_matrix, 2, mean),
+      survival = apply(surv_matrix, 2, mean), # Posterior mean
       arm = arm_levels[i]
     )
   }
+
   predicted_df <- do.call(rbind, predicted_curves)
+
+  # Prepare Kaplan-Meier
   formula_obj <- as.formula(paste("survival::Surv(", time_col, ", ", event_col, ") ~ ", arm_col))
   km_fit <- survival::survfit(formula_obj, data = plot_data)
   km_df <- broom::tidy(km_fit)
   km_df$strata <- gsub(paste0(arm_col, "="), "", km_df$strata)
+
+  # Plotting
   final_plot <- ggplot2::ggplot() +
     ggplot2::geom_ribbon(data = km_df,
                          ggplot2::aes(x = time, ymin = conf.low, ymax = conf.high, group = strata),
@@ -119,17 +145,15 @@ plot.bcm_fit <- function(x, ...) {
     ggplot2::scale_y_continuous(limits = c(0, 1)) +
     ggplot2::labs(
       title = "Kaplan-Meier vs. Bayesian Model Prediction",
-      subtitle = "Black lines: Kaplan-Meier fit. Red lines: Bayesian model prediction.",
+      subtitle = paste("Model Structure:", if(is_shared) "Shared Shape" else "Treatment-Specific Shape"),
       x = "Time",
       y = "Survival Probability",
       linetype = "Arm"
     ) +
     ggplot2::theme_minimal(base_size = 14)
+
   print(final_plot)
 }
-
-
-
 
 
 
@@ -149,6 +173,9 @@ plot.bcm_fit <- function(x, ...) {
 plot_densities <- function(x, ...) {
   UseMethod("plot_densities")
 }
+
+
+
 
 #' @method plot_densities bcm_fit
 #' @rdname plot_densities
@@ -289,6 +316,11 @@ time_ratio <- function(model) {
 
   return(result)
 }
+
+
+
+
+
 
 #' @title Plot Correlated Posterior Densities
 #' @description

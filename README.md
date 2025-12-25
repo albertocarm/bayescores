@@ -71,17 +71,7 @@ To illustrate how our package addresses this, we use a toy example
 specifically designed to mimic these conditions of uncertainty. We
 simulate a 300-patient trial with promising long-term survival fractions
 (40% in the experimental arm vs. 15% in the control), but with the
-maximum follow-up limited to 3 years. This specification intentionally
-creates an immature dataset, where strong evidence of long-term survival
-has not yet had time to accumulate.
-
-These low-evidence conditions are chosen to showcase the package’s core
-functionality. It is designed not only to quantify clinical benefit but,
-more importantly, to assess the robustness of the analysis. Our package
-confronts the issue of data maturity head-on by using model
-identifiability as a statistical proxy. This key feature assesses the
-model’s capacity to distinguish true long-term survivors from non-cured
-patients with a better short-term prognosis.
+maximum follow-up limited to 3 years.
 
 ``` r
 set.seed(123)
@@ -191,6 +181,10 @@ create_amit_plot(
 Fit the Bayesian AFT cure model (use higher `iter` in practice):
 
 ``` r
+library(rstan)
+options(mc.cores = parallel::detectCores())
+rstan_options(auto_write = TRUE)
+
 bayesian_fit <- fit_bayesian_cure_model(
   sim_data,
   time_col = "time",
@@ -198,110 +192,10 @@ bayesian_fit <- fit_bayesian_cure_model(
   arm_col = "arm",
   iter = 4000,
   chains = 4, 
-  cure_belief = "unknown"
+  cure_belief = "unknown",
+  shared_shape = TRUE
 )
 ```
-
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000669 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 6.69 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 4000 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  400 / 4000 [ 10%]  (Warmup)
-    ## Chain 1: Iteration:  800 / 4000 [ 20%]  (Warmup)
-    ## Chain 1: Iteration: 1001 / 4000 [ 25%]  (Sampling)
-    ## Chain 1: Iteration: 1400 / 4000 [ 35%]  (Sampling)
-    ## Chain 1: Iteration: 1800 / 4000 [ 45%]  (Sampling)
-    ## Chain 1: Iteration: 2200 / 4000 [ 55%]  (Sampling)
-    ## Chain 1: Iteration: 2600 / 4000 [ 65%]  (Sampling)
-    ## Chain 1: Iteration: 3000 / 4000 [ 75%]  (Sampling)
-    ## Chain 1: Iteration: 3400 / 4000 [ 85%]  (Sampling)
-    ## Chain 1: Iteration: 3800 / 4000 [ 95%]  (Sampling)
-    ## Chain 1: Iteration: 4000 / 4000 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 19.189 seconds (Warm-up)
-    ## Chain 1:                70.249 seconds (Sampling)
-    ## Chain 1:                89.438 seconds (Total)
-    ## Chain 1: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
-    ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000345 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 3.45 seconds.
-    ## Chain 2: Adjust your expectations accordingly!
-    ## Chain 2: 
-    ## Chain 2: 
-    ## Chain 2: Iteration:    1 / 4000 [  0%]  (Warmup)
-    ## Chain 2: Iteration:  400 / 4000 [ 10%]  (Warmup)
-    ## Chain 2: Iteration:  800 / 4000 [ 20%]  (Warmup)
-    ## Chain 2: Iteration: 1001 / 4000 [ 25%]  (Sampling)
-    ## Chain 2: Iteration: 1400 / 4000 [ 35%]  (Sampling)
-    ## Chain 2: Iteration: 1800 / 4000 [ 45%]  (Sampling)
-    ## Chain 2: Iteration: 2200 / 4000 [ 55%]  (Sampling)
-    ## Chain 2: Iteration: 2600 / 4000 [ 65%]  (Sampling)
-    ## Chain 2: Iteration: 3000 / 4000 [ 75%]  (Sampling)
-    ## Chain 2: Iteration: 3400 / 4000 [ 85%]  (Sampling)
-    ## Chain 2: Iteration: 3800 / 4000 [ 95%]  (Sampling)
-    ## Chain 2: Iteration: 4000 / 4000 [100%]  (Sampling)
-    ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 23.945 seconds (Warm-up)
-    ## Chain 2:                76.286 seconds (Sampling)
-    ## Chain 2:                100.231 seconds (Total)
-    ## Chain 2: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
-    ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000317 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.17 seconds.
-    ## Chain 3: Adjust your expectations accordingly!
-    ## Chain 3: 
-    ## Chain 3: 
-    ## Chain 3: Iteration:    1 / 4000 [  0%]  (Warmup)
-    ## Chain 3: Iteration:  400 / 4000 [ 10%]  (Warmup)
-    ## Chain 3: Iteration:  800 / 4000 [ 20%]  (Warmup)
-    ## Chain 3: Iteration: 1001 / 4000 [ 25%]  (Sampling)
-    ## Chain 3: Iteration: 1400 / 4000 [ 35%]  (Sampling)
-    ## Chain 3: Iteration: 1800 / 4000 [ 45%]  (Sampling)
-    ## Chain 3: Iteration: 2200 / 4000 [ 55%]  (Sampling)
-    ## Chain 3: Iteration: 2600 / 4000 [ 65%]  (Sampling)
-    ## Chain 3: Iteration: 3000 / 4000 [ 75%]  (Sampling)
-    ## Chain 3: Iteration: 3400 / 4000 [ 85%]  (Sampling)
-    ## Chain 3: Iteration: 3800 / 4000 [ 95%]  (Sampling)
-    ## Chain 3: Iteration: 4000 / 4000 [100%]  (Sampling)
-    ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 30.492 seconds (Warm-up)
-    ## Chain 3:                80.979 seconds (Sampling)
-    ## Chain 3:                111.471 seconds (Total)
-    ## Chain 3: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
-    ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000123 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 1.23 seconds.
-    ## Chain 4: Adjust your expectations accordingly!
-    ## Chain 4: 
-    ## Chain 4: 
-    ## Chain 4: Iteration:    1 / 4000 [  0%]  (Warmup)
-    ## Chain 4: Iteration:  400 / 4000 [ 10%]  (Warmup)
-    ## Chain 4: Iteration:  800 / 4000 [ 20%]  (Warmup)
-    ## Chain 4: Iteration: 1001 / 4000 [ 25%]  (Sampling)
-    ## Chain 4: Iteration: 1400 / 4000 [ 35%]  (Sampling)
-    ## Chain 4: Iteration: 1800 / 4000 [ 45%]  (Sampling)
-    ## Chain 4: Iteration: 2200 / 4000 [ 55%]  (Sampling)
-    ## Chain 4: Iteration: 2600 / 4000 [ 65%]  (Sampling)
-    ## Chain 4: Iteration: 3000 / 4000 [ 75%]  (Sampling)
-    ## Chain 4: Iteration: 3400 / 4000 [ 85%]  (Sampling)
-    ## Chain 4: Iteration: 3800 / 4000 [ 95%]  (Sampling)
-    ## Chain 4: Iteration: 4000 / 4000 [100%]  (Sampling)
-    ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 29.074 seconds (Warm-up)
-    ## Chain 4:                70.999 seconds (Sampling)
-    ## Chain 4:                100.073 seconds (Total)
-    ## Chain 4:
 
 ### Step 5: Analyze and visualize model results
 
@@ -317,7 +211,7 @@ fractions of long‑term survivors. However, the model also signals an
 identifiability issue (see below).
 
 ``` r
-print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha"))
+print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_control"))
 ```
 
     ## Inference for Stan model: anon_model.
@@ -327,9 +221,9 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha")
     ##               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
     ## beta_cure_arm 1.45    0.03 1.37 -2.52 1.14 1.62 2.12  3.61  1558    1
     ## beta_surv_arm 0.28    0.01 0.29 -0.19 0.06 0.23 0.46  0.90  1685    1
-    ## alpha         1.22    0.00 0.10  1.02 1.14 1.21 1.28  1.42  2195    1
+    ## alpha_control 1.22    0.00 0.10  1.02 1.14 1.21 1.28  1.42  2195    1
     ## 
-    ## Samples were drawn using NUTS(diag_e) at Fri Nov  7 18:47:10 2025.
+    ## Samples were drawn using NUTS(diag_e) at Thu Dec 25 21:38:32 2025.
     ## For each parameter, n_eff is a crude measure of effective sample size,
     ## and Rhat is the potential scale reduction factor on split chains (at 
     ## convergence, Rhat=1).
@@ -341,18 +235,21 @@ outcomes(bayesian_fit, correlation_method = "pearson")
     ## 
     ## ---
     ## Posterior correlation as an identifiability check:
-    ##    Correlation (pearson): -0.642
-    ##    Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+    ##     Correlation (pearson): r = -0.642
+    ##     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
+    ##     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+    ##     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
     ## ---
 
-    ## # A tibble: 5 × 2
+    ## # A tibble: 6 × 2
     ##   Metric                                     `Result (95% CI)`    
     ##   <chr>                                      <chr>                
     ## 1 Time Ratio (TR)                            1.25 (0.82 - 2.46)   
     ## 2 Odds Ratio (OR) for Cure                   5.05 (0.08 - 37.10)  
-    ## 3 Long-Term Survival Rate (%) - Control      8.39 (0.31 - 18.05)  
-    ## 4 Long-Term Survival Rate (%) - Experimental 34.65 (0.09 - 47.90) 
-    ## 5 Absolute Difference in Survival Rate (%)   24.81 (-4.73 - 40.06)
+    ## 3 Shape Ratio (SR)                           1.00 (1.00 - 1.00)   
+    ## 4 Long-Term Survival Rate (%) - Control      8.39 (0.31 - 18.05)  
+    ## 5 Long-Term Survival Rate (%) - Experimental 34.65 (0.09 - 47.90) 
+    ## 6 Absolute Difference in Survival Rate (%)   24.81 (-4.73 - 40.06)
 
 **MCMC diagnostic plots**
 
@@ -371,18 +268,20 @@ diagnose_fit(bayesian_fit$stan_fit)
     ## beta_cure_arm_raw   1558.431 1.000684 Excellent convergence
     ## beta_surv_intercept 2866.368 1.000795 Excellent convergence
     ## beta_surv_arm_raw   1685.307 1.000571 Excellent convergence
-    ## alpha               2195.331 1.000643 Excellent convergence
+    ## alpha_control       2195.331 1.000643 Excellent convergence
     ## beta_cure_arm       1558.431 1.000684 Excellent convergence
     ## beta_surv_arm       1685.307 1.000571 Excellent convergence
+    ## beta_alpha_arm           NaN      NaN         Not available
     ## lp__                1401.601 1.001237 Excellent convergence
     ##                           n_eff_interpretation    recommendation
     ## beta_cure_intercept High effective sample size No action needed.
     ## beta_cure_arm_raw   High effective sample size No action needed.
     ## beta_surv_intercept High effective sample size No action needed.
     ## beta_surv_arm_raw   High effective sample size No action needed.
-    ## alpha               High effective sample size No action needed.
+    ## alpha_control       High effective sample size No action needed.
     ## beta_cure_arm       High effective sample size No action needed.
     ## beta_surv_arm       High effective sample size No action needed.
+    ## beta_alpha_arm                   Not available No action needed.
     ## lp__                High effective sample size No action needed.
 
 ``` r
@@ -408,14 +307,7 @@ Difference.</figcaption>
 **Joint posterior densities** The mixture cure model jointly estimates
 the TR and OR parameters, yielding a joint posterior distribution of
 plausible values for both. This joint estimation is essential to avoid
-the bias that would arise if the parameters were fitted separately. In
-this example, however, we simulated a challenging scenario where the two
-parameters are difficult to disentangle due to limited follow-up. The
-model reflects this difficulty through a strong negative correlation
-between the estimates (Pearson correlation –0.615), which illustrates
-the lack of identifiability: the model struggles to assign effects
-correctly given the data limitations. This dependence is clearly visible
-in the figure.
+the bias that would arise if the parameters were fitted separately.
 
 ``` r
 plot_correlated_densities(bayesian_fit, correlation_method="pearson")
@@ -475,13 +367,6 @@ disorders” = 1.2, “Respiratory, thoracic and mediastinal disorders” =
 The clinical impact of a side effect is highly context-dependent. For
 example, severe nausea might be considered more burdensome in a
 palliative setting than in a curative one.
-
-We strongly encourage stakeholders—clinicians, patient representatives,
-and regulators—to discuss and customize these weights to reflect the
-specific disease context and patient population of the trial being
-evaluated. The `calculate_toxicity_analysis` function is designed for
-this flexibility via the `soc_weights` argument, allowing for a more
-nuanced and clinically relevant analysis.
 
 # Understanding the Toxicity Analysis in Practice
 
@@ -631,8 +516,10 @@ outcomes_obj <- outcomes(
     ## 
     ## ---
     ## Posterior correlation as an identifiability check:
-    ##    Correlation (pearson): -0.642
-    ##    Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+    ##     Correlation (pearson): r = -0.642
+    ##     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
+    ##     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+    ##     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
     ## ---
 
 ``` r
@@ -677,9 +564,9 @@ print(final_scores$component_summary)
     ## 2          Utility TR (for TR>1) 50.375113          0.000000        98.26259410
     ## 3          Penalty TR (for TR<1)  0.000000        -26.036544         0.00000000
     ## 4      Efficacy Score (Combined) 91.592521         65.870512        98.51355881
-    ## 5      QoL Contribution (points)  3.880705         -9.660809        19.79435311
-    ## 6 Toxicity Contribution (points) -3.223914        -22.722043        -0.05653932
-    ## 7            FINAL UTILITY SCORE 92.978780         46.043948        99.88194905
+    ## 5      QoL Contribution (points)  3.836730         -9.462712        19.76837841
+    ## 6 Toxicity Contribution (points) -3.200908        -21.917134        -0.05729233
+    ## 7            FINAL UTILITY SCORE 93.032129         46.907196        99.87485414
 
 ``` r
 print(final_scores$identifiability_level)
@@ -717,11 +604,8 @@ plot.</figcaption>
 
 It’s clear that estimating clinical benefit carries substantial
 uncertainty—studies are noisy, and sample sizes are limited. We’ve
-rigorously propagated every source of uncertainty throughout the
-analysis, so that you alone judge the credibility of the results.
-
-That is the power of the BayeScore: it isn’t a single point estimate but
-a full Bayesian distribution!
+propagated every source of uncertainty throughout the analysis, so that
+you alone judge the credibility of the results.
 
 ``` r
 plot_final_utility_density(final_scores)
@@ -734,35 +618,13 @@ alt="Figure 7: Final BayeScore posterior distribution." />
 distribution.</figcaption>
 </figure>
 
-***Note on model overestimation and a proposed solution***
-
-Okay, so looking at the unadjusted scores, you might be thinking:
-
-> “Hold on… a high score for a study with 300 subjects, based on
-> long-term survival but with such short follow-up, seems a bit
-> exaggerated—even assuming better QoL. What’s going on here?”
-
-And that’s a great question. You should be aware of an inherent
-challenge in many statistical models—including mixture cure models—when
-applied to clinical trials with smaller sample sizes (low n). In this
-example, n = 300 is reasonable, but the short follow-up makes it
-difficult to accurately model the plateau of the survival curve, as
-shown in the Kaplan–Meier plot. Such limitations can have a significant
-impact on the estimation of bayescores.
-
 # Empirical bayesian shrinkage
 
-To address this, we can apply an empirical shrinkage correction. This
-method leverages data from thousands of previous clinical trials to
-create a more realistic prior expectation of treatment effects, pulling
-our potentially exaggerated results toward a more plausible value. The
-prior is applied to the dominant endpoint—in this case, long-term
-survival. Applying the Zwet prior is appropriate as a Bayesian
-regularization mechanism to contain bias under conditions of limited
-information. This approach controls model instability; it does not
-magically resolve the underlying identifiability problem, which can only
-be overcome with longer follow-up. This package implements two such
-data-driven priors:
+Applying the Zwet prior is appropriate as a Bayesian regularization
+mechanism to contain bias under conditions of limited information. This
+approach controls model instability; it does not magically resolve the
+underlying identifiability problem, which can only be overcome with
+longer follow-up. This package implements two such data-driven priors:
 
 - **“zwet”**: a general prior based on 23 551 trials from all fields of
   medicine.
@@ -821,9 +683,9 @@ print(comparison)
 ```
 
     ##       prior   Median
-    ## 7  unshrunk 92.97878
-    ## 71     zwet 79.15840
-    ## 72   sherry 87.70364
+    ## 7  unshrunk 93.03213
+    ## 71     zwet 78.80190
+    ## 72   sherry 87.97045
 
 ``` r
 # plot utility donuts for each prior
@@ -837,402 +699,6 @@ plot_utility_donut(final_scores_sherry, trial_name ="sherry's shrinkage")
 ```
 
 ![](README_files/figure-gfm/apply_shrinkage-2.png)<!-- -->
-
-You can see how each empirical prior pulls the original estimates toward
-more conservative, data-driven values. This shrinkage step provides a
-robust sensitivity analysis, helping to understand how potential
-overestimation might impact the overall utility of a treatment and
-leading to more reliable conclusions for decision-making.
-
-***Extended follow-up***
-
-To simulate a mature data release, we repeat the trial simulation with
-an extended follow-up. In this scenario, the long-term survivors are
-fully segregated from the rest of the patient population, which resolves
-the non-identifiability issue.
-
-You can clearly see how the model captures this more complete
-statistical evidence and acts accordingly. This demonstrates the
-method’s capacity to adapt to the amount of information available in a
-study, providing a more confident and precise measure of the long-term
-benefit once the data is mature.
-
-``` r
-set.seed(123)
-
-# 1) Simulate with extended follow-up
-set.seed(123)
-
-sim_data <- simulate_weibull_cure_data(
-  n_patients = 300,
-  cure_fraction_ctrl = 0.15,
-  cure_fraction_exp = 0.40,
-  max_follow_up = 5*12,
-  weibull_shape = 1.2,
-  median_survival_ctrl = 12,
-  time_ratio_exp = 1.25
-)
-
-# 2) Fit Bayesian mixture cure model
-bayesian_fit <- fit_bayesian_cure_model(
-  sim_data,
-  time_col  = "time",
-  event_col = "event",
-  arm_col   = "arm",
-  iter      = 2500,
-  chains    = 4,
-  cure_belief = "unknown"
-)
-```
-
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000698 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 6.98 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 1: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 1: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 1: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 1: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 1: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 1: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 1: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 1: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 11.169 seconds (Warm-up)
-    ## Chain 1:                25.465 seconds (Sampling)
-    ## Chain 1:                36.634 seconds (Total)
-    ## Chain 1: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
-    ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000617 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 6.17 seconds.
-    ## Chain 2: Adjust your expectations accordingly!
-    ## Chain 2: 
-    ## Chain 2: 
-    ## Chain 2: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 2: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 2: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 2: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 2: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 2: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 2: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 2: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 2: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 2: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 11.468 seconds (Warm-up)
-    ## Chain 2:                11.923 seconds (Sampling)
-    ## Chain 2:                23.391 seconds (Total)
-    ## Chain 2: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
-    ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000366 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 3.66 seconds.
-    ## Chain 3: Adjust your expectations accordingly!
-    ## Chain 3: 
-    ## Chain 3: 
-    ## Chain 3: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 3: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 3: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 3: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 3: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 3: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 3: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 3: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 3: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 3: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 11.041 seconds (Warm-up)
-    ## Chain 3:                24.436 seconds (Sampling)
-    ## Chain 3:                35.477 seconds (Total)
-    ## Chain 3: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
-    ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000375 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 3.75 seconds.
-    ## Chain 4: Adjust your expectations accordingly!
-    ## Chain 4: 
-    ## Chain 4: 
-    ## Chain 4: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 4: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 4: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 4: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 4: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 4: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 4: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 4: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 4: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 4: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 10.656 seconds (Warm-up)
-    ## Chain 4:                18.039 seconds (Sampling)
-    ## Chain 4:                28.695 seconds (Total)
-    ## Chain 4:
-
-``` r
-plot_correlated_densities(bayesian_fit)
-```
-
-![](README_files/figure-gfm/complete-follow-up-1.png)<!-- -->
-
-***A Framework for Complex Clinical and Ethical Trade-offs***
-
-The power of Bayesian AFT mixture cure models lies in their unique
-ability to evaluate the complex ethical and clinical trade-offs across
-the entire spectrum of cancer treatment, from curative-intent trials to
-metastatic disease. Their strength is in decomposing a therapy’s
-effects, avoiding the misleading single averages that hide critical
-realities.
-
-In curative-intent trials, for instance, the model is uniquely suited to
-answer two fundamental questions simultaneously: Does the therapy
-increase the number of cured patients? And for the group of patients who
-are not cured, what is the effect on their time to relapse or
-progression? This nuanced approach is also critical in metastatic
-settings, particularly with immunotherapy, where the model evaluates the
-trade-off between durable, long-term survival for a minority versus the
-outcome for the refractory majority.
-
-By transparently quantifying each of these distinct effects—the change
-in the cure rate, the outcome for those not cured, and the chance for
-long-term survival—these models provide the multi-dimensional evidence
-essential for assessing the true clinical benefit of modern cancer
-therapies.
-
-``` r
-set.seed(123)
-
-# 1) Simulate an archetypal mixed cohort
-sim_data <- simulate_weibull_cure_data(
-  n_patients          = 300,
-  cure_fraction_ctrl  = 0.20,
-  cure_fraction_exp   = 0.35,
-  max_follow_up       = 60,
-  weibull_shape       = 1.2,
-  median_survival_ctrl= 12,
-  time_ratio_exp      = 0.75
-)
-
-# 2) Fit Bayesian mixture cure model
-bayesian_fit <- fit_bayesian_cure_model(
-  sim_data,
-  time_col  = "time",
-  event_col = "event",
-  arm_col   = "arm",
-  iter      = 2500,
-  chains    = 4, 
-  cure_belief = "unknown"
-)
-```
-
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 1).
-    ## Chain 1: 
-    ## Chain 1: Gradient evaluation took 0.000602 seconds
-    ## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 6.02 seconds.
-    ## Chain 1: Adjust your expectations accordingly!
-    ## Chain 1: 
-    ## Chain 1: 
-    ## Chain 1: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 1: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 1: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 1: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 1: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 1: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 1: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 1: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 1: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 1: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 1: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 1: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 1: 
-    ## Chain 1:  Elapsed Time: 10.219 seconds (Warm-up)
-    ## Chain 1:                16.446 seconds (Sampling)
-    ## Chain 1:                26.665 seconds (Total)
-    ## Chain 1: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 2).
-    ## Chain 2: 
-    ## Chain 2: Gradient evaluation took 0.000288 seconds
-    ## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 2.88 seconds.
-    ## Chain 2: Adjust your expectations accordingly!
-    ## Chain 2: 
-    ## Chain 2: 
-    ## Chain 2: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 2: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 2: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 2: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 2: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 2: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 2: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 2: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 2: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 2: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 2: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 2: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 2: 
-    ## Chain 2:  Elapsed Time: 12.831 seconds (Warm-up)
-    ## Chain 2:                15.112 seconds (Sampling)
-    ## Chain 2:                27.943 seconds (Total)
-    ## Chain 2: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 3).
-    ## Chain 3: 
-    ## Chain 3: Gradient evaluation took 0.000694 seconds
-    ## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 6.94 seconds.
-    ## Chain 3: Adjust your expectations accordingly!
-    ## Chain 3: 
-    ## Chain 3: 
-    ## Chain 3: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 3: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 3: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 3: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 3: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 3: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 3: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 3: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 3: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 3: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 3: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 3: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 3: 
-    ## Chain 3:  Elapsed Time: 11.591 seconds (Warm-up)
-    ## Chain 3:                13.124 seconds (Sampling)
-    ## Chain 3:                24.715 seconds (Total)
-    ## Chain 3: 
-    ## 
-    ## SAMPLING FOR MODEL 'anon_model' NOW (CHAIN 4).
-    ## Chain 4: 
-    ## Chain 4: Gradient evaluation took 0.000379 seconds
-    ## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 3.79 seconds.
-    ## Chain 4: Adjust your expectations accordingly!
-    ## Chain 4: 
-    ## Chain 4: 
-    ## Chain 4: Iteration:    1 / 2500 [  0%]  (Warmup)
-    ## Chain 4: Iteration:  250 / 2500 [ 10%]  (Warmup)
-    ## Chain 4: Iteration:  500 / 2500 [ 20%]  (Warmup)
-    ## Chain 4: Iteration:  750 / 2500 [ 30%]  (Warmup)
-    ## Chain 4: Iteration: 1000 / 2500 [ 40%]  (Warmup)
-    ## Chain 4: Iteration: 1001 / 2500 [ 40%]  (Sampling)
-    ## Chain 4: Iteration: 1250 / 2500 [ 50%]  (Sampling)
-    ## Chain 4: Iteration: 1500 / 2500 [ 60%]  (Sampling)
-    ## Chain 4: Iteration: 1750 / 2500 [ 70%]  (Sampling)
-    ## Chain 4: Iteration: 2000 / 2500 [ 80%]  (Sampling)
-    ## Chain 4: Iteration: 2250 / 2500 [ 90%]  (Sampling)
-    ## Chain 4: Iteration: 2500 / 2500 [100%]  (Sampling)
-    ## Chain 4: 
-    ## Chain 4:  Elapsed Time: 10.904 seconds (Warm-up)
-    ## Chain 4:                15.709 seconds (Sampling)
-    ## Chain 4:                26.613 seconds (Total)
-    ## Chain 4:
-
-``` r
-# 3) Inspect model outcomes
-mod_out <- outcomes(bayesian_fit)
-```
-
-    ## 
-    ## ---
-    ## Posterior correlation as an identifiability check:
-    ##    Correlation (pearson): -0.053
-    ##    Interpretation: Negligible (0 to -0.15): effects separable, estimation robust.
-    ## ---
-
-``` r
-print(mod_out)
-```
-
-    ## # A tibble: 5 × 2
-    ##   Metric                                     `Result (95% CI)`    
-    ##   <chr>                                      <chr>                
-    ## 1 Time Ratio (TR)                            0.86 (0.70 - 1.07)   
-    ## 2 Odds Ratio (OR) for Cure                   1.67 (1.00 - 2.78)   
-    ## 3 Long-Term Survival Rate (%) - Control      22.77 (16.62 - 30.09)
-    ## 4 Long-Term Survival Rate (%) - Experimental 33.01 (25.76 - 40.79)
-    ## 5 Absolute Difference in Survival Rate (%)   10.16 (-0.08 - 20.10)
-
-``` r
-# Plot model fit
-plot(bayesian_fit)
-```
-
-![](README_files/figure-gfm/complex-mixture-case-1.png)<!-- -->
-
-``` r
-# 4) Obtain MCMC draws for efficacy components
-outcomes_obj <- outcomes(
-  fit              = bayesian_fit,
-  shrinkage_method = "none"
-)
-```
-
-    ## 
-    ## ---
-    ## Posterior correlation as an identifiability check:
-    ##    Correlation (pearson): -0.053
-    ##    Interpretation: Negligible (0 to -0.15): effects separable, estimation robust.
-    ## ---
-
-``` r
-efficacy_draws <- get_bayescores_draws(
-  fit              = bayesian_fit,
-  shrinkage_method = "none"
-)
-```
-
-*Disutility penalty*
-
-Here we introduce a disutility penalty for scenarios where the majority
-experiences modest harm (TR \< 1), even when a minority achieves
-substantial long-term benefit. This penalty reduces the overall utility
-in proportion to the magnitude of short-term harm, ensuring that large
-gains for a few do not overshadow consistent detriment for many.
-
-``` r
-# 5) Final calibration for utilities & disutilities
-my_final_calibration <- list(
-  efficacy = list(
-    cure_utility_target = list(effect_value = 0.20, utility_value = 75),
-    tr_utility_target   = list(effect_value = 1.25, utility_value = 50),
-    tr_disutility_target= list(effect_value = 0.85, utility_value = 20)
-  )
-)
-
-# 6) Compute final BayeScores
-final_utilities <- get_bayescores(
-  efficacy_inputs = efficacy_draws,
-  qol_scores = qol_scores,
-  toxicity_scores = toxicity_output$toxicity_effect_vector,
-  calibration_args = my_final_calibration
-)
-
-cat("--- Final BayeScores Summary ---\n")
-```
-
-    ## --- Final BayeScores Summary ---
-
-``` r
-plot_utility_donut(final_utilities, trial_name ="Simulated dataset (unshrinkaged)")
-```
-
-![](README_files/figure-gfm/disutilities-1.png)<!-- -->
 
 ***Sensitivity Analysis Dashboard***
 
@@ -1273,16 +739,11 @@ print(dashboard)
 
 ***Reconstructing Survival Data from Published Plots***
 
-A perceived limitation of bayescores is its requirement for Individual
-Patient Data (IPD), in contrast to other value frameworks that can use
-aggregated data reported in the literature. To mitigate this limitation,
-this section demonstrates a workflow to reconstruct IPD from a published
-Kaplan-Meier curve image. The goal is to transform a static plot into a
-usable dataset, enabling full re-analysis and custom visualization.
-
-For this demonstration, we used Figure 2 from Hortobagyi, G. N., et
-al. “Updated results from MONALEESA-2…” Annals of Oncology 29.7 (2018).
-This is an Open Access article under the CC-BY-NC license.
+The goal is to transform a static plot into a usable dataset, enabling
+full re-analysis and custom visualization. For this demonstration, we
+used Figure 2 from Hortobagyi, G. N., et al. “Updated results from
+MONALEESA-2…” Annals of Oncology 29.7 (2018). This is an Open Access
+article under the CC-BY-NC license.
 
 ``` r
 image_path <- system.file("extdata", "mona2.png", package = "bayescores")
@@ -1434,34 +895,20 @@ ggsurvplot(
 )
 ```
 
-    ## Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
-    ## ℹ Please use tidy evaluation idioms with `aes()`.
-    ## ℹ See also `vignette("ggplot2-in-packages")` for more information.
-    ## ℹ The deprecated feature was likely used in the survminer package.
-    ##   Please report the issue at <https://github.com/kassambara/survminer/issues>.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-    ## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
-    ## ℹ Please use `linewidth` instead.
-    ## ℹ The deprecated feature was likely used in the ggpubr package.
-    ##   Please report the issue at <https://github.com/kassambara/ggpubr/issues>.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-    ## Warning: ggtheme is not a valid theme.
-    ## Please use `theme()` to construct themes.
-
-    ## Ignoring unknown labels:
-    ## • fill : ""
-    ## • linetype : "1"
-    ## Ignoring unknown labels:
-    ## • fill : ""
-    ## • linetype : "1"
-
 ![](README_files/figure-gfm/ipd%20plot-1.png)<!-- -->
+
+**Interactive Shiny App for Clinical Data Extraction**
+
+To facilitate the information acquisition process, we have developed an
+interactive function that allows easy digitalization of Kaplan–Meier
+curves from supplementary papers, and simplifies the input of
+quality-of-life (QoL) and toxicity data in a user-friendly manner.
+
+``` r
+bayescores()
+```
+
+![](README_files/figure-gfm/app-1.png)<!-- -->
 
 ## Why bayescores? a more meaningful approach
 
@@ -1471,26 +918,38 @@ ggsurvplot(
   fraction. This resolves the problem of “double counting” benefit—first
   via the HR and again through a separate long-term bonus—ensuring both
   metrics remain independent.
-- **Accounts for cure scenarios**: explicitly models cure rates and
-  long-term survivor fractions, making it particularly relevant for
-  immunotherapy and other treatments with a survival plateau.  
+- **Incorporates mechanistic knowledge**: allows the encoding of
+  pharmacological context through priors. For example, the model can
+  account for the fact that immunotherapy often produces a “tail” of
+  long-term survivors, whereas agents like CDK4/6 inhibitors or
+  chemotherapy typically yield a temporal delay without a genuine cure
+  fraction.
+- **Resolves identifiability challenges**: uses informed priors to solve
+  “equifinality” in complex datasets (e.g., crossing curves),
+  effectively distinguishing between a genuine biological plateau and an
+  artifact caused by sparse data or heavy censoring.
+- **Contextualizes data maturity**: models the underlying structure
+  rather than just observed events, making the framework resilient to
+  “snapshots” taken at different follow-up times. It quantifies the
+  stability of the survival benefit, preventing premature claims of cure
+  in immature datasets while validating solid plateaus in mature ones.
 - **Embraces uncertainty**: the Bayesian framework propagates
   uncertainty from all model stages, displaying full posterior
   distributions rather than collapsing results into single point
-  estimates.  
+  estimates.
 - **No thresholds**: uses continuous parameters and proportional weights
   rather than fixed cut-offs, producing smooth, gradual changes in the
   score. This avoids all-or-nothing jumps and makes the valuation
   process transparent, reproducible, and customizable to stakeholder
-  priorities.  
+  priorities.
 - **Integrates multiple dimensions**: combines efficacy, toxicity, and
   quality of life within a unified decision-analytic framework (MAUT),
   with hierarchical aggregation that mirrors clinical reasoning:
-  efficacy first, then QoL, then toxicity.  
+  efficacy first, then QoL, then toxicity.
 - **Customizable toxicity weighting**: Weighted Toxicity Scores can
   incorporate grade-specific and type-specific penalties, reflecting the
   clinical relevance of different adverse events and aligning with
-  disease-specific “toxicity budgets.”  
+  disease-specific “toxicity budgets.”
 - **Accessible implementation**: provided as an open-source R package
   (`bayescores`) with full workflow examples on GitHub, including KM
   curve digitization and IPD reconstruction tools, plus a web interface

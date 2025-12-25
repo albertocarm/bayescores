@@ -101,8 +101,14 @@ diagnose_fit <- function(fit,
 }
 
 
-
-
+#' @title Model Diagnostics
+#' @description Generic function to run diagnostics on fitted models.
+#' @param x A fitted model object.
+#' @param ... Additional arguments passed to methods.
+#' @export
+model_diagnostics <- function(x, ...) {
+  UseMethod("model_diagnostics")
+}
 
 
 
@@ -112,11 +118,25 @@ diagnose_fit <- function(fit,
 #' @export
 model_diagnostics.bcm_fit <- function(x, ...) {
   stan_fit <- x$stan_fit
+
+  # Define base parameters that are always present
+  # Note: alpha has been renamed to alpha_control in the new model
   params_to_check <- c("beta_cure_intercept", "beta_cure_arm",
-                       "beta_surv_intercept", "beta_surv_arm", "alpha")
+                       "beta_surv_intercept", "beta_surv_arm",
+                       "alpha_control")
+
+  # Only include the shape treatment effect if shared_shape is FALSE
+  if (!isTRUE(x$shared_shape)) {
+    params_to_check <- c(params_to_check, "beta_alpha_arm")
+  }
+
+  # Generate and print the trace plots for the selected parameters
   trace_plot <- rstan::stan_trace(stan_fit, pars = params_to_check)
   print(trace_plot)
 }
+
+
+
 
 
 

@@ -2,6 +2,64 @@
 # Dataset Documentation
 # -----------------------------------------------------------------------------
 
+
+#' Data from the esopec Trial
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{Numeric vector representing the survival time (e.g., in months).}
+#'   \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}
+#'   \item{id}{Numeric vector to identify subjetc.}
+#'   \item{arm}{Factor or character vector for treatment arm (e.g., 'Control', 'Experimental').}
+#' }
+#' @source \url{http://link.to.the.publication/esopec}
+"esopec"
+
+#' Data from the natalee Trial
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{Numeric vector representing the survival time (e.g., in months).}
+#'   \item{status}{Numeric vector indicating event status (1 for event, 0 for censored).}
+#'   \item{curve}{Factor or character vector for treatment arm (e.g., 'Control', 'Experimental').}
+#' }
+#' @source \url{http://link.to.the.publication/natalee}
+"natalee"
+
+
+#' Data from the KEYNOTE062 Trial
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{Numeric vector representing the survival time (e.g., in months).}
+#'   \item{event}{Numeric vector indicating event status (1 for event, 0 for censored).}
+#'   \item{id}{Numeric vector to identify subjetc.}
+#'   \item{arm}{Factor or character vector for treatment arm (e.g., 'Control', 'Experimental').}
+#' }
+#' @source \url{http://link.to.the.publication/KEYNOTE062}
+"KEYNOTE062"
+
+#' Data from the monarchE Trial
+#'
+#' A dataset containing digitized survival data from a clinical trial.
+#'
+#' @format A data frame with three variables
+#' \describe{
+#'   \item{time}{Numeric vector representing the survival time (e.g., in months).}
+#'   \item{status}{Numeric vector indicating event status (1 for event, 0 for censored).}
+#'   \item{curve}{Factor or character vector for treatment arm (e.g., 'Control', 'Experimental').}
+#' }
+#' @source \url{http://link.to.the.publication/monarchE}
+"monarchE"
+
+
+
 #' Data from the AURA3_1A Trial
 #'
 #' A dataset containing digitized survival data from a clinical trial.
@@ -1082,4 +1140,83 @@ NULL
 #' @name keynote_119_toxicity
 #' @docType data
 #' @usage data(keynote_119_toxicity)
+NULL
+
+#' Toxicity and QoL data from natalee_toxicity
+#'
+#' @format A data frame with 8 variables
+#' \describe{
+#'   \item{EventName}{Adverse event name.}
+#'   \item{SystemOrganClass}{System organ class.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) any-grade in control.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) any-grade in experimental.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) grade 3–4 in control.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) grade 3–4 in experimental.}
+#'   \item{qol}{Numeric QoL score.}
+#'   \item{N_patients}{Named numeric vector with n per arm.}
+#' }
+#' @source \url{<pon-la-correcta>}
+#' @name natalee_toxicity
+#' @docType data
+#' @usage data(natalee_toxicity)
+NULL
+
+#' Toxicity and QoL data from monarchE_toxicity
+#'
+#' @format A data frame with 8 variables
+#' \describe{
+#'   \item{EventName}{Adverse event name.}
+#'   \item{SystemOrganClass}{System organ class.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) any-grade in control.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) any-grade in experimental.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) grade 3–4 in control.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) grade 3–4 in experimental.}
+#'   \item{qol}{Numeric QoL score.}
+#'   \item{N_patients}{Named numeric vector with n per arm.}
+#' }
+#' @source \url{<pon-la-correcta>}
+#' @name monarchE_toxicity
+#' @docType data
+#' @usage data(monarchE_toxicity)
+NULL
+
+
+
+#' Toxicity and QoL data from Keynote062_toxicity
+#'
+#' @format A data frame with 8 variables
+#' \describe{
+#'   \item{EventName}{Adverse event name.}
+#'   \item{SystemOrganClass}{System organ class.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) any-grade in control.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) any-grade in experimental.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) grade 3–4 in control.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) grade 3–4 in experimental.}
+#'   \item{qol}{Numeric QoL score.}
+#'   \item{N_patients}{Named numeric vector with n per arm.}
+#' }
+#' @source \url{<pon-la-correcta>}
+#' @name Keynote062_toxicity
+#' @docType data
+#' @usage data(Keynote062_toxicity)
+NULL
+
+
+#' Toxicity and QoL data from esopec_toxicity
+#'
+#' @format A data frame with 8 variables
+#' \describe{
+#'   \item{EventName}{Adverse event name.}
+#'   \item{SystemOrganClass}{System organ class.}
+#'   \item{Incidence_G1_4_Control}{Incidence (\%) any-grade in control.}
+#'   \item{Incidence_G1_4_Experimental}{Incidence (\%) any-grade in experimental.}
+#'   \item{Incidence_G3_4_Control}{Incidence (\%) grade 3–4 in control.}
+#'   \item{Incidence_G3_4_Experimental}{Incidence (\%) grade 3–4 in experimental.}
+#'   \item{qol}{Numeric QoL score.}
+#'   \item{N_patients}{Named numeric vector with n per arm.}
+#' }
+#' @source \url{<pon-la-correcta>}
+#' @name esopec_toxicity
+#' @docType data
+#' @usage data(esopec_toxicity)
 NULL

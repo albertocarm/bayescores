@@ -71,11 +71,11 @@ get_bayescores <- function(
   )
 
   identifiability_level <- dplyr::case_when(
-    rho <= -0.70 ~ "Extreme",
-    rho <= -0.50 ~ "Strong",
-    rho <= -0.30 ~ "Moderate",
-    rho <= -0.15 ~ "Low",
-    TRUE         ~ "Negligible"
+    rho > -0.15 ~ "Negligible",
+    rho > -0.30 ~ "Low",
+    rho > -0.50 ~ "Moderate",
+    rho > -0.70 ~ "Strong",
+    TRUE        ~ "Extreme"
   )
 
   # --- Step 8: Return list with the new element ---

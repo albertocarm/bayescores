@@ -2,7 +2,7 @@
 % Please edit documentation in R/outcomes_shrinkage.R
 \name{outcomes}
 \alias{outcomes}
-\title{Generate a Summary Table of Model Outcomes (Final Version 2)}
+\title{Generate a Summary Table of Model Outcomes (Final Version 2.1)}
 \usage{
 outcomes(
   fit,
@@ -34,7 +34,5 @@ A tibble with a summary of key model outcomes.
 }
 \description{
 Extracts data directly from the fit object to calculate and display key model
-outcomes. All shrinkage methods ("zwet", "sherry", "skeptical") now respect
-the `shrinkage_target` argument, applying shrinkage strategically based on
-endpoint utility and parameter correlation.
+outcomes, now including the Shape Ratio (SR) to account for flexible hazard dynamics.
 }

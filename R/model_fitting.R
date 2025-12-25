@@ -4,19 +4,28 @@
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
 #' @param cure_belief Character string. Sets the prior belief for the adjuvant
-#'   cure effect. One of "unknown" (default, neutral/weakly informative),
-#'   "unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
-#'   "hammer" prior).
+#'    cure effect. One of "unknown" (default, neutral/weakly informative),
+#'    "unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
+#'    "hammer" prior).
+#' @param use_historical_prior Logical. If TRUE, overrides `cure_belief` and uses
+#'    an informative historical prior defined by `historical_prior_params`.
+#'    Default is FALSE.
+#' @param historical_prior_params Numeric vector of length 2 (Mean, SD).
+#'    Used only if `use_historical_prior = TRUE`. Defines the Normal prior
+#'    for the treatment effect log-OR. Default is c(0, 1).
+#' @param shared_shape Logical. If TRUE, both treatment arms share the same Weibull
+#'    shape parameter (proportional hazards). If FALSE (default), allows independent
+#'    shapes for each arm.
 #' @param chains,iter,warmup,seed Numeric arguments passed to `rstan::stan`.
 #' @param adapt_delta Target acceptance rate for Stan's NUTS algorithm.
 #' @param ... Additional arguments passed to `rstan::stan`.
 #'
 #' @return A custom S3 object of class `bcm_fit`, a list with elements:
-#'   - `stan_fit`: the original `stanfit` object
-#'   - `original_data`: the input data frame
-#'   - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
-#'   - `posterior_draws`: list of posterior samples for each parameter
-#'   - `n_draws`: the total number of post-warmup posterior draws
+#'    - `stan_fit`: the original `stanfit` object
+#'    - `original_data`: the input data frame
+#'    - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
+#'    - `posterior_draws`: list of posterior samples for each parameter
+#'    - `n_draws`: the total number of post-warmup posterior draws
 #'
 #' @importFrom rstan stan extract
 #' @export
@@ -25,11 +34,14 @@ fit_bayesian_cure_model <- function(data,
                                     event_col     = "event",
                                     arm_col       = "arm",
                                     cure_belief   = "unknown",
+                                    shared_shape  = FALSE,
                                     chains        = 4,
                                     iter          = 2000,
                                     warmup        = 1000,
                                     seed          = 555,
                                     adapt_delta   = 0.99,
+                                    use_historical_prior = FALSE,
+                                    historical_prior_params = c(0, 1),
                                     ...) {
 
   cure_belief <- match.arg(cure_belief, c("unknown", "unlikely", "very_unlikely"))
@@ -56,7 +68,14 @@ fit_bayesian_cure_model <- function(data,
     evento = data[[event_col]],
     arm    = as.numeric(data[[arm_col]]) - 1,
 
-    cure_prior_type = as.integer(cure_prior_type)
+    cure_prior_type = as.integer(cure_prior_type),
+
+    # New arguments mapped to Stan
+    use_historical_prior = as.integer(use_historical_prior),
+    historical_prior_params = historical_prior_params,
+
+    # Argument for shape flexibility
+    shared_shape = as.integer(shared_shape)
   )
 
   # Stan control settings
@@ -90,13 +109,19 @@ fit_bayesian_cure_model <- function(data,
       arm_col   = arm_col
     ),
     posterior_draws = posterior_draws,
-    n_draws         = n_draws # Added the total number of draws to the list
+    n_draws         = n_draws, # Added the total number of draws to the list
+    shared_shape    = shared_shape
   )
 
   class(result) <- "bcm_fit"
 
   return(result)
 }
+
+
+
+
+
 
 #' Plot Model Diagnostics
 #'

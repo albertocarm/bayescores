@@ -61,25 +61,21 @@ sample_shrinkage_draws <- function(original_draws, method) {
   }
   s * corrected_snr_samples
 }
-
-
-#' Generate a Summary Table of Model Outcomes (Final Version 2)
+#' Generate a Summary Table of Model Outcomes (Final Version 2.1)
 #'
 #' @description
 #' Extracts data directly from the fit object to calculate and display key model
-#' outcomes. All shrinkage methods ("zwet", "sherry", "skeptical") now respect
-#' the `shrinkage_target` argument, applying shrinkage strategically based on
-#' endpoint utility and parameter correlation.
+#' outcomes, now including the Shape Ratio (SR) to account for flexible hazard dynamics.
 #'
 #' @param fit The fitted model object from `fit_bayesian_cure_model`.
 #' @param calibration_args An optional list to override default utility calibration.
 #' @param digits The number of decimal places for rounding.
 #' @param shrinkage_method A character string specifying the shrinkage method.
-#'   Options are "none" (default), "zwet", "sherry", or "skeptical".
+#'    Options are "none" (default), "zwet", "sherry", or "skeptical".
 #' @param shrinkage_target A character string controlling the application of
-#'   shrinkage. Options are "primary" or "both_if_uncorrelated".
+#'    shrinkage. Options are "primary" or "both_if_uncorrelated".
 #' @param correlation_method Character. The method to use: 'pearson' (default),
-#'   'spearman', or 'kendall'. Used for the identifiability check.
+#'    'spearman', or 'kendall'. Used for the identifiability check.
 #'
 #' @return A tibble with a summary of key model outcomes.
 #'
@@ -106,20 +102,19 @@ outcomes <- function(fit,
   if (!shrinkage_target %in% valid_targets) {
     stop(paste("Invalid shrinkage_target. Use one of:", paste(valid_targets, collapse = ", ")))
   }
-  # --- INICIO CAMBIO ---
+
   correlation_method <- match.arg(correlation_method)
-  # --- FIN CAMBIO ---
 
   posterior <- rstan::extract(fit$stan_fit)
   log_or <- as.numeric(posterior$beta_cure_arm)
   log_tr <- as.numeric(posterior$beta_surv_arm)
+  log_sr <- as.numeric(posterior$beta_alpha_arm) # NUEVO: Shape Ratio
 
   if (is.null(log_tr) || is.null(log_or)) {
     stop("`fit` object must contain `beta_cure_arm` and `beta_surv_arm` draws.")
   }
-  # --- INICIO CAMBIO ---
+
   rho <- cor(log_or, log_tr, method = correlation_method)
-  # --- FIN CAMBIO ---
 
   # --- 2) Helper functions ---
   summarize_draws <- function(draws, is_log_scale = FALSE, multiplier = 1) {
@@ -133,21 +128,26 @@ outcomes <- function(fit,
 
   # Helper for skeptical shrinkage on whitened draws
   apply_skeptical_shrinkage <- function(log_or_draws, log_tr_draws) {
-    theta <- cbind(log_or_draws, log_tr_draws)
+    theta <- cbind(as.numeric(log_or_draws), as.numeric(log_tr_draws))
     mu <- colMeans(theta)
     S  <- stats::cov(theta)
     eg <- eigen(S, symmetric = TRUE)
+
     lam <- base::pmax(eg$values, 1e-12)
     Q   <- eg$vectors
-    Winv <- Q %*% diag(sqrt(lam)) %*% t(Q)
+
     W    <- Q %*% diag(1/sqrt(lam)) %*% t(Q)
-    mz <- as.numeric(W %*% mu)
-    mz_sh <- mz / 2 # Shrinkage step
-    mu_sh <- as.numeric(Winv %*% mz_sh)
-    shift <- mu_sh - mu
+    Winv <- Q %*% diag(sqrt(lam)) %*% t(Q)
+
+    Z <- sweep(theta, 2, mu, "-") %*% W
+    mz_sh <- as.numeric(W %*% mu) / 2
+    Z_sh  <- Z / sqrt(2)
+
+    theta_sh <- sweep(Z_sh %*% Winv, 2, as.numeric(Winv %*% mz_sh), "+")
+
     list(
-      cor_log_or = log_or_draws + shift[1],
-      cor_log_tr = log_tr_draws + shift[2]
+      cor_log_or = as.numeric(theta_sh[, 1]),
+      cor_log_tr = as.numeric(theta_sh[, 2])
     )
   }
 
@@ -157,11 +157,15 @@ outcomes <- function(fit,
   diff_orig  <- p_exp_orig - p_ctrl
 
   summary_df <- data.frame(
-    Metric = c("Time Ratio (TR)", "Odds Ratio (OR) for Cure", "Long-Term Survival Rate (%) - Control",
+    Metric = c("Time Ratio (TR)", "Odds Ratio (OR) for Cure", "Shape Ratio (SR)", # NUEVO: SR añadido
+               "Long-Term Survival Rate (%) - Control",
                "Long-Term Survival Rate (%) - Experimental", "Absolute Difference in Survival Rate (%)"),
     `Result (95% CI)` = c(
-      summarize_draws(log_tr, is_log_scale = TRUE), summarize_draws(log_or, is_log_scale = TRUE),
-      summarize_draws(p_ctrl, multiplier = 100), summarize_draws(p_exp_orig, multiplier = 100),
+      summarize_draws(log_tr, is_log_scale = TRUE),
+      summarize_draws(log_or, is_log_scale = TRUE),
+      summarize_draws(log_sr, is_log_scale = TRUE), # NUEVO: SR draws
+      summarize_draws(p_ctrl, multiplier = 100),
+      summarize_draws(p_exp_orig, multiplier = 100),
       summarize_draws(diff_orig, multiplier = 100)
     ),
     check.names = FALSE, stringsAsFactors = FALSE
@@ -173,7 +177,6 @@ outcomes <- function(fit,
     cor_log_tr <- log_tr
     shrink_label <- ""
 
-    # --- Determine Primary Endpoint via Utility for all methods ---
     defaults <- list(efficacy = list(cure_utility_target = list(effect_value = 0.15, utility_value = 40), tr_utility_target = list(effect_value = 1.25, utility_value = 35)))
     recursive_merge <- function(default, user) { for (name in names(user)) { if (is.list(user[[name]]) && is.list(default[[name]])) { default[[name]] <- recursive_merge(default[[name]], user[[name]]) } else { default[[name]] <- user[[name]] } }; return(default) }
     cal <- recursive_merge(defaults, calibration_args)
@@ -189,7 +192,6 @@ outcomes <- function(fit,
     median_u_tr <- median(fn_u_tr(exp(log_tr) - 1.0))
     primary_endpoint <- if (median_u_cure >= median_u_tr) "OR" else "TR"
 
-    # --- Determine which parameters to shrink ---
     method_name <- tools::toTitleCase(shrinkage_method)
     apply_to_or <- FALSE; apply_to_tr <- FALSE
     is_low_corr <- abs(rho) < 0.30
@@ -207,35 +209,31 @@ outcomes <- function(fit,
       }
     }
 
-    # --- Apply the chosen shrinkage method ---
     if (shrinkage_method == "skeptical") {
       if (apply_to_or && apply_to_tr) {
         shrunk_draws <- apply_skeptical_shrinkage(log_or, log_tr)
         cor_log_or <- shrunk_draws$cor_log_or
         cor_log_tr <- shrunk_draws$cor_log_tr
       } else if (apply_to_or) {
-        # Applying 1D skeptical prior is equivalent to sample_shrinkage_draws with N(0,1)
-        # For simplicity, we create a temporary 1D skeptical sampler
         temp_skeptical_sampler <- function(draws) {
           b <- mean(draws); s <- sd(draws); if(s==0) return(draws)
-          shrunk_b <- b / 2 # Shrinking mean towards 0
-          return(draws - (b - shrunk_b))
+          shrunk_b <- b / 2
+          return((draws - b) / sqrt(2) + shrunk_b)
         }
         cor_log_or <- temp_skeptical_sampler(log_or)
-      } else { # apply_to_tr
+      } else {
         temp_skeptical_sampler <- function(draws) {
           b <- mean(draws); s <- sd(draws); if(s==0) return(draws)
-          shrunk_b <- b / 2 # Shrinking mean towards 0
-          return(draws - (b - shrunk_b))
+          shrunk_b <- b / 2
+          return((draws - b) / sqrt(2) + shrunk_b)
         }
         cor_log_tr <- temp_skeptical_sampler(log_tr)
       }
-    } else { # Zwet or Sherry
+    } else {
       if (apply_to_or) cor_log_or <- sample_shrinkage_draws(log_or, method = shrinkage_method)
       if (apply_to_tr) cor_log_tr <- sample_shrinkage_draws(log_tr, method = shrinkage_method)
     }
 
-    # --- Create corrected rows for the output table ---
     p_exp_cor <- 1 / (1 + exp(-(posterior$beta_cure_intercept + cor_log_or)))
     diff_cor  <- p_exp_cor - p_ctrl
     corrected_rows <- data.frame(
@@ -246,17 +244,22 @@ outcomes <- function(fit,
         paste0("Abs. Diff. in Survival (%) - Corrected (", shrink_label, ")")
       ),
       `Result (95% CI)` = c(
-        summarize_draws(cor_log_tr, is_log_scale = TRUE), summarize_draws(cor_log_or, is_log_scale = TRUE),
-        summarize_draws(p_exp_cor, multiplier = 100), summarize_draws(diff_cor, multiplier = 100)
+        summarize_draws(cor_log_tr, is_log_scale = TRUE),
+        summarize_draws(cor_log_or, is_log_scale = TRUE),
+        summarize_draws(p_exp_cor, multiplier = 100),
+        summarize_draws(diff_cor, multiplier = 100)
       ),
       check.names = FALSE, stringsAsFactors = FALSE
     )
+
+    # AJUSTE DE ÍNDICES: Ahora que SR es la fila 3, las tasas empiezan en la 4.
     summary_df <- rbind(
-      summary_df[1,], if(!identical(cor_log_tr, log_tr)) corrected_rows[1,],
-      summary_df[2,], if(!identical(cor_log_or, log_or)) corrected_rows[2,],
-      summary_df[3,],
-      summary_df[4,], corrected_rows[3,],
-      summary_df[5,], corrected_rows[4,]
+      summary_df[1,], if(!identical(cor_log_tr, log_tr)) corrected_rows[1,], # TR
+      summary_df[2,], if(!identical(cor_log_or, log_or)) corrected_rows[2,], # OR
+      summary_df[3,], # SR (Sin corrección aplicada)
+      summary_df[4,], # Control Rate
+      summary_df[5,], if(!identical(cor_log_or, log_or)) corrected_rows[3,], # Exp Rate
+      summary_df[6,], if(!identical(cor_log_or, log_or)) corrected_rows[4,]  # Diff
     )
   }
 
@@ -270,10 +273,19 @@ outcomes <- function(fit,
   )
   cat("\n---\n")
   cat("Posterior correlation as an identifiability check:\n")
-  # --- INICIO CAMBIO ---
-  cat(paste0("   Correlation (", correlation_method, "): ", round(rho, 3), "\n"))
-  # --- FIN CAMBIO ---
-  cat(paste0("   Interpretation: ", identifiability_level, "\n"))
+
+  cor_symbol <- switch(correlation_method, "pearson" = "r", "spearman" = "rho", "kendall" = "tau")
+  cat(paste0("    Correlation (", correlation_method, "): ", cor_symbol, " = ", round(rho, 3), "\n"))
+
+  if (correlation_method %in% c("pearson", "spearman")) {
+    rho2 <- round(rho^2 * 100, 1)
+    cat(paste0("    Explained Variance (", cor_symbol, "^2): ", round(rho^2, 3),
+               " (approx. ", rho2, "% information overlap)\n"))
+    cat(paste0("    Note: Roughly ", rho2,
+               "% of the cure variance is structurally indistinguishable from the time effect.\n"))
+  }
+
+  cat(paste0("    Interpretation: ", identifiability_level, "\n"))
   cat("---\n")
   tibble::as_tibble(summary_df)
 }
