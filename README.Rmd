@@ -2,11 +2,16 @@
 ---
   output: github_document
 ---
-  
+
 
 
 ```{r setup, include=FALSE}
 devtools::load_all()
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-", 
+  out.width = "100%")
 ```
 
 # bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials Using Bayesian Inference and Multi-Attribute Utility Theory
@@ -620,9 +625,8 @@ ggsurvplot(
 To facilitate the information acquisition process, we have developed an interactive function that allows easy digitalization of Kaplan–Meier curves from supplementary papers, and simplifies the input of quality-of-life (QoL) and toxicity data in a user-friendly manner.
 
 
-```{r app, message = FALSE , warning = FALSE}
+{r app, message = FALSE, warning = FALSE, eval = FALSE}
 bayescores()
-```
 
 ## Why bayescores? a more meaningful approach
 

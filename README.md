@@ -74,6 +74,7 @@ simulate a 300-patient trial with promising long-term survival fractions
 maximum follow-up limited to 3 years.
 
 ``` r
+
 set.seed(123)
 
 sim_data <- simulate_weibull_cure_data(
@@ -90,9 +91,10 @@ sim_data <- simulate_weibull_cure_data(
 plot_km_curves(sim_data)
 ```
 
-![](README_files/figure-gfm/simulate-data-1.png)<!-- -->
+<img src="man/figures/README-simulate-data-1.png" width="100%" />
 
 ``` r
+
 data(package = "bayescores")
 ```
 
@@ -160,7 +162,7 @@ create_amit_plot(
 )
 ```
 
-![](README_files/figure-gfm/plot_any_grade_toxicity-1.png)<!-- -->
+<img src="man/figures/README-plot_any_grade_toxicity-1.png" width="100%" />
 
 **Severe toxicity (Grades 3+)**
 
@@ -174,13 +176,14 @@ create_amit_plot(
 )
 ```
 
-![](README_files/figure-gfm/plot_severe_toxicity-1.png)<!-- -->
+<img src="man/figures/README-plot_severe_toxicity-1.png" width="100%" />
 
 ### Step 4: Fit the Bayesian cure model
 
 Fit the Bayesian AFT cure model (use higher `iter` in practice):
 
 ``` r
+
 library(rstan)
 options(mc.cores = parallel::detectCores())
 rstan_options(auto_write = TRUE)
@@ -212,44 +215,38 @@ identifiability issue (see below).
 
 ``` r
 print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_control"))
-```
-
-    ## Inference for Stan model: anon_model.
-    ## 4 chains, each with iter=4000; warmup=1000; thin=1; 
-    ## post-warmup draws per chain=3000, total post-warmup draws=12000.
-    ## 
-    ##               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
-    ## beta_cure_arm 1.45    0.03 1.37 -2.52 1.14 1.62 2.12  3.61  1558    1
-    ## beta_surv_arm 0.28    0.01 0.29 -0.19 0.06 0.23 0.46  0.90  1685    1
-    ## alpha_control 1.22    0.00 0.10  1.02 1.14 1.21 1.28  1.42  2195    1
-    ## 
-    ## Samples were drawn using NUTS(diag_e) at Thu Dec 25 21:38:32 2025.
-    ## For each parameter, n_eff is a crude measure of effective sample size,
-    ## and Rhat is the potential scale reduction factor on split chains (at 
-    ## convergence, Rhat=1).
-
-``` r
+#> Inference for Stan model: anon_model.
+#> 4 chains, each with iter=4000; warmup=1000; thin=1; 
+#> post-warmup draws per chain=3000, total post-warmup draws=12000.
+#> 
+#>               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
+#> beta_cure_arm 1.45    0.03 1.37 -2.52 1.14 1.62 2.12  3.61  1558    1
+#> beta_surv_arm 0.28    0.01 0.29 -0.19 0.06 0.23 0.46  0.90  1685    1
+#> alpha_control 1.22    0.00 0.10  1.02 1.14 1.21 1.28  1.42  2195    1
+#> 
+#> Samples were drawn using NUTS(diag_e) at Fri Dec 26 08:43:25 2025.
+#> For each parameter, n_eff is a crude measure of effective sample size,
+#> and Rhat is the potential scale reduction factor on split chains (at 
+#> convergence, Rhat=1).
 outcomes(bayesian_fit, correlation_method = "pearson")
+#> 
+#> ---
+#> Posterior correlation as an identifiability check:
+#>     Correlation (pearson): r = -0.642
+#>     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
+#>     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+#>     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+#> ---
+#> # A tibble: 6 × 2
+#>   Metric                                     `Result (95% CI)`    
+#>   <chr>                                      <chr>                
+#> 1 Time Ratio (TR)                            1.25 (0.82 - 2.46)   
+#> 2 Odds Ratio (OR) for Cure                   5.05 (0.08 - 37.10)  
+#> 3 Shape Ratio (SR)                           1.00 (1.00 - 1.00)   
+#> 4 Long-Term Survival Rate (%) - Control      8.39 (0.31 - 18.05)  
+#> 5 Long-Term Survival Rate (%) - Experimental 34.65 (0.09 - 47.90) 
+#> 6 Absolute Difference in Survival Rate (%)   24.81 (-4.73 - 40.06)
 ```
-
-    ## 
-    ## ---
-    ## Posterior correlation as an identifiability check:
-    ##     Correlation (pearson): r = -0.642
-    ##     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
-    ##     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
-    ##     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
-    ## ---
-
-    ## # A tibble: 6 × 2
-    ##   Metric                                     `Result (95% CI)`    
-    ##   <chr>                                      <chr>                
-    ## 1 Time Ratio (TR)                            1.25 (0.82 - 2.46)   
-    ## 2 Odds Ratio (OR) for Cure                   5.05 (0.08 - 37.10)  
-    ## 3 Shape Ratio (SR)                           1.00 (1.00 - 1.00)   
-    ## 4 Long-Term Survival Rate (%) - Control      8.39 (0.31 - 18.05)  
-    ## 5 Long-Term Survival Rate (%) - Experimental 34.65 (0.09 - 47.90) 
-    ## 6 Absolute Difference in Survival Rate (%)   24.81 (-4.73 - 40.06)
 
 **MCMC diagnostic plots**
 
@@ -261,34 +258,31 @@ sufficiently large) to confirm robust inference.
 
 ``` r
 diagnose_fit(bayesian_fit$stan_fit)
-```
+#>                        n_eff     Rhat   Rhat_interpretation
+#> beta_cure_intercept 1029.839 1.002518 Excellent convergence
+#> beta_cure_arm_raw   1558.431 1.000684 Excellent convergence
+#> beta_surv_intercept 2866.368 1.000795 Excellent convergence
+#> beta_surv_arm_raw   1685.307 1.000571 Excellent convergence
+#> alpha_control       2195.331 1.000643 Excellent convergence
+#> beta_cure_arm       1558.431 1.000684 Excellent convergence
+#> beta_surv_arm       1685.307 1.000571 Excellent convergence
+#> beta_alpha_arm           NaN      NaN         Not available
+#> lp__                1401.601 1.001237 Excellent convergence
+#>                           n_eff_interpretation    recommendation
+#> beta_cure_intercept High effective sample size No action needed.
+#> beta_cure_arm_raw   High effective sample size No action needed.
+#> beta_surv_intercept High effective sample size No action needed.
+#> beta_surv_arm_raw   High effective sample size No action needed.
+#> alpha_control       High effective sample size No action needed.
+#> beta_cure_arm       High effective sample size No action needed.
+#> beta_surv_arm       High effective sample size No action needed.
+#> beta_alpha_arm                   Not available No action needed.
+#> lp__                High effective sample size No action needed.
 
-    ##                        n_eff     Rhat   Rhat_interpretation
-    ## beta_cure_intercept 1029.839 1.002518 Excellent convergence
-    ## beta_cure_arm_raw   1558.431 1.000684 Excellent convergence
-    ## beta_surv_intercept 2866.368 1.000795 Excellent convergence
-    ## beta_surv_arm_raw   1685.307 1.000571 Excellent convergence
-    ## alpha_control       2195.331 1.000643 Excellent convergence
-    ## beta_cure_arm       1558.431 1.000684 Excellent convergence
-    ## beta_surv_arm       1685.307 1.000571 Excellent convergence
-    ## beta_alpha_arm           NaN      NaN         Not available
-    ## lp__                1401.601 1.001237 Excellent convergence
-    ##                           n_eff_interpretation    recommendation
-    ## beta_cure_intercept High effective sample size No action needed.
-    ## beta_cure_arm_raw   High effective sample size No action needed.
-    ## beta_surv_intercept High effective sample size No action needed.
-    ## beta_surv_arm_raw   High effective sample size No action needed.
-    ## alpha_control       High effective sample size No action needed.
-    ## beta_cure_arm       High effective sample size No action needed.
-    ## beta_surv_arm       High effective sample size No action needed.
-    ## beta_alpha_arm                   Not available No action needed.
-    ## lp__                High effective sample size No action needed.
-
-``` r
 model_diagnostics(bayesian_fit)
 ```
 
-![](README_files/figure-gfm/mcmc_plots-1.png)<!-- -->
+<img src="man/figures/README-mcmc_plots-1.png" width="100%" />
 
 **Posterior distributions**
 
@@ -296,13 +290,16 @@ model_diagnostics(bayesian_fit)
 plot_densities(bayesian_fit)
 ```
 
-<figure>
-<img src="README_files/figure-gfm/plot-parameters-1.png"
-alt="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference." />
-<figcaption aria-hidden="true">Figure 1: Posterior density distributions
-for Time Ratio, Odds Ratio of Cure, and Cure Probability
-Difference.</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-plot-parameters-1.png" alt="Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of Cure, and Cure Probability Difference." width="100%" />
+<p class="caption">
+
+Figure 1: Posterior density distributions for Time Ratio, Odds Ratio of
+Cure, and Cure Probability Difference.
+</p>
+
+</div>
 
 **Joint posterior densities** The mixture cure model jointly estimates
 the TR and OR parameters, yielding a joint posterior distribution of
@@ -313,12 +310,16 @@ the bias that would arise if the parameters were fitted separately.
 plot_correlated_densities(bayesian_fit, correlation_method="pearson")
 ```
 
-<figure>
-<img src="README_files/figure-gfm/plot-joint-1.png"
-alt="Figure 2: Joint posterior density distributions for Time Ratio &amp; Odds Ratio of Cure" />
-<figcaption aria-hidden="true">Figure 2: Joint posterior density
-distributions for Time Ratio &amp; Odds Ratio of Cure</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-plot-joint-1.png" alt="Figure 2: Joint posterior density distributions for Time Ratio & Odds Ratio of Cure" width="100%" />
+<p class="caption">
+
+Figure 2: Joint posterior density distributions for Time Ratio & Odds
+Ratio of Cure
+</p>
+
+</div>
 
 **Posterior predictive check** You can observe how the model’s
 predictions align satisfactorily with the Kaplan–Meier estimator:
@@ -327,12 +328,15 @@ predictions align satisfactorily with the Kaplan–Meier estimator:
 plot(bayesian_fit)
 ```
 
-<figure>
-<img src="README_files/figure-gfm/plot-model-fit-1.png"
-alt="Figure 3: Posterior predictive check (model vs Kaplan-Meier data)." />
-<figcaption aria-hidden="true">Figure 3: Posterior predictive check
-(model vs Kaplan-Meier data).</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-plot-model-fit-1.png" alt="Figure 3: Posterior predictive check (model vs Kaplan-Meier data)." width="100%" />
+<p class="caption">
+
+Figure 3: Posterior predictive check (model vs Kaplan-Meier data).
+</p>
+
+</div>
 
 ### Step 6: Integrate toxicity data
 
@@ -454,12 +458,15 @@ qol_scores <- sample_qol_scores(
 plot_qol_histogram(qol_scores)
 ```
 
-<figure>
-<img src="README_files/figure-gfm/qol-weighting-1.png"
-alt="Figure 5: Multinomial distribution of QoL levels." />
-<figcaption aria-hidden="true">Figure 5: Multinomial distribution of QoL
-levels.</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-qol-weighting-1.png" alt="Figure 5: Multinomial distribution of QoL levels." width="100%" />
+<p class="caption">
+
+Figure 5: Multinomial distribution of QoL levels.
+</p>
+
+</div>
 
 We have chosen this methodology because quality‑of‑life data are
 published very inconsistently—indeed, the data are a mess—and the
@@ -507,22 +514,20 @@ You answer the question:
 For example, in our analysis, we used the following calibration:
 
 ``` r
+
 outcomes_obj <- outcomes(
   fit = bayesian_fit,
   shrinkage_method = "none"
 )
-```
+#> 
+#> ---
+#> Posterior correlation as an identifiability check:
+#>     Correlation (pearson): r = -0.642
+#>     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
+#>     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+#>     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
+#> ---
 
-    ## 
-    ## ---
-    ## Posterior correlation as an identifiability check:
-    ##     Correlation (pearson): r = -0.642
-    ##     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
-    ##     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
-    ##     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
-    ## ---
-
-``` r
 efficacy_draws <- get_bayescores_draws(
   fit = bayesian_fit,
   shrinkage_method = "none"
@@ -551,28 +556,19 @@ final_scores <- get_bayescores(
   calibration_args = my_final_calibration
 )
 cat("--- Final Bayescores Summary ---\n")
-```
-
-    ## --- Final Bayescores Summary ---
-
-``` r
+#> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
-```
-
-    ##                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-    ## 1           Utility Cure (0-100) 82.092623          0.000000        93.77517734
-    ## 2          Utility TR (for TR>1) 50.375113          0.000000        98.26259410
-    ## 3          Penalty TR (for TR<1)  0.000000        -26.036544         0.00000000
-    ## 4      Efficacy Score (Combined) 91.592521         65.870512        98.51355881
-    ## 5      QoL Contribution (points)  3.836730         -9.462712        19.76837841
-    ## 6 Toxicity Contribution (points) -3.200908        -21.917134        -0.05729233
-    ## 7            FINAL UTILITY SCORE 93.032129         46.907196        99.87485414
-
-``` r
+#>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
+#> 1           Utility Cure (0-100) 82.092623          0.000000        93.77517734
+#> 2          Utility TR (for TR>1) 50.375113          0.000000        98.26259410
+#> 3          Penalty TR (for TR<1)  0.000000        -26.036544         0.00000000
+#> 4      Efficacy Score (Combined) 91.592521         65.870512        98.51355881
+#> 5      QoL Contribution (points)  3.812320         -9.675117        19.90665083
+#> 6 Toxicity Contribution (points) -3.194181        -22.268382        -0.05583949
+#> 7            FINAL UTILITY SCORE 92.999251         46.293717        99.88178844
 print(final_scores$identifiability_level)
+#> [1] "Extreme"
 ```
-
-    ## [1] "Extreme"
 
 ### Step 9: Visualize final clinical benefit
 
@@ -593,12 +589,15 @@ disentangle these parameters.
 plot_utility_donut(final_scores, trial_name ="Simulated dataset (unshrinkaged)")
 ```
 
-<figure>
-<img src="README_files/figure-gfm/plot-donut-1.png"
-alt="Figure 6: BayeScore donut plot." />
-<figcaption aria-hidden="true">Figure 6: BayeScore donut
-plot.</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-plot-donut-1.png" alt="Figure 6: BayeScore donut plot." width="100%" />
+<p class="caption">
+
+Figure 6: BayeScore donut plot.
+</p>
+
+</div>
 
 **Final score posterior distribution**
 
@@ -611,12 +610,15 @@ you alone judge the credibility of the results.
 plot_final_utility_density(final_scores)
 ```
 
-<figure>
-<img src="README_files/figure-gfm/plot-score-density-1.png"
-alt="Figure 7: Final BayeScore posterior distribution." />
-<figcaption aria-hidden="true">Figure 7: Final BayeScore posterior
-distribution.</figcaption>
-</figure>
+<div class="figure">
+
+<img src="man/figures/README-plot-score-density-1.png" alt="Figure 7: Final BayeScore posterior distribution." width="100%" />
+<p class="caption">
+
+Figure 7: Final BayeScore posterior distribution.
+</p>
+
+</div>
 
 # Empirical bayesian shrinkage
 
@@ -680,25 +682,22 @@ comparison <- rbind(
 )
 
 print(comparison)
-```
+#>       prior   Median
+#> 7  unshrunk 92.99925
+#> 71     zwet 79.31159
+#> 72   sherry 87.88360
 
-    ##       prior   Median
-    ## 7  unshrunk 93.03213
-    ## 71     zwet 78.80190
-    ## 72   sherry 87.97045
-
-``` r
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
 ```
 
-![](README_files/figure-gfm/apply_shrinkage-1.png)<!-- -->
+<img src="man/figures/README-apply_shrinkage-1.png" width="100%" />
 
 ``` r
 plot_utility_donut(final_scores_sherry, trial_name ="sherry's shrinkage")
 ```
 
-![](README_files/figure-gfm/apply_shrinkage-2.png)<!-- -->
+<img src="man/figures/README-apply_shrinkage-2.png" width="100%" />
 
 ***Sensitivity Analysis Dashboard***
 
@@ -725,17 +724,14 @@ calibration_settings <- list(
 dashboard <- generate_sensitivity_dashboard(
   calibration_args = calibration_settings
 )
-```
+#> Generating data for all 8 plots...
+#>  Data generation complete.
 
-    ## Generating data for all 8 plots...
-    ##  Data generation complete.
-
-``` r
 # Finally, display the plot
 print(dashboard)
 ```
 
-![](README_files/figure-gfm/sensitivity-dashboard-1.png)<!-- -->
+<img src="man/figures/README-sensitivity-dashboard-1.png" width="100%" />
 
 ***Reconstructing Survival Data from Published Plots***
 
@@ -752,14 +748,13 @@ image_path <- system.file("extdata", "mona2.png", package = "bayescores")
 library(magick)
 trial_plot <- image_read(image_path)
 print(trial_plot)
+#> # A tibble: 1 × 7
+#>   format width height colorspace matte filesize density
+#>   <chr>  <int>  <int> <chr>      <lgl>    <int> <chr>  
+#> 1 PNG      913    478 sRGB       TRUE     34793 57x57
 ```
 
-    ## # A tibble: 1 × 7
-    ##   format width height colorspace matte filesize density
-    ##   <chr>  <int>  <int> <chr>      <lgl>    <int> <chr>  
-    ## 1 PNG      913    478 sRGB       TRUE     34793 57x57
-
-<img src="README_files/figure-gfm/monaleesa-2-1.png" width="913" />
+<img src="man/figures/README-monaleesa-2-1.png" width="100%" />
 
 The workflow consists of three main steps:
 
@@ -794,6 +789,7 @@ aggregated digitized data. This step effectively creates a full
 patient-level dataset.
 
 ``` r
+
 # The IPD reconstruction algorithm requires two inputs: the digitized curve
 # coordinates and the number of patients at risk at specific time points.
 # This data frame is a manual transcription of the "No. at risk" table
@@ -822,27 +818,22 @@ res1 <- reconstruct_ipd(
   plot_km   = subset(plot_km_monaleesa, curve == 1), # Use digitized data for curve 1
   nrisk_tbl = subset(nrisk_tbl_all,   curve == 1)  # Use risk numbers for curve 1
 )
-```
+#> # A tibble: 1 × 2
+#>   curve ok   
+#>   <int> <lgl>
+#> 1     1 TRUE
 
-    ## # A tibble: 1 × 2
-    ##   curve ok   
-    ##   <int> <lgl>
-    ## 1     1 TRUE
-
-``` r
 # Reconstruct IPD for the second curve (Placebo arm)
 res2 <- reconstruct_ipd(
   plot_km   = subset(plot_km_monaleesa, curve == 2), # Use digitized data for curve 2
   nrisk_tbl = subset(nrisk_tbl_all,   curve == 2)  # Use risk numbers for curve 2
 )
-```
+#> # A tibble: 1 × 2
+#>   curve ok   
+#>   <int> <lgl>
+#> 1     2 TRUE
 
-    ## # A tibble: 1 × 2
-    ##   curve ok   
-    ##   <int> <lgl>
-    ## 1     2 TRUE
 
-``` r
 # The final step is to merge the results from both reconstructions into a single,
 # tidy dataset that is ready for analysis and plotting.
 
@@ -875,6 +866,7 @@ create fully customized, publication-quality plots with ggsurvplot,
 providing complete analytical and visual control.
 
 ``` r
+
 fit <- survfit(Surv(time, status) ~ curve, data = res$ipd)
 
 ggsurvplot(
@@ -895,7 +887,7 @@ ggsurvplot(
 )
 ```
 
-![](README_files/figure-gfm/ipd%20plot-1.png)<!-- -->
+<img src="man/figures/README-ipd plot-1.png" width="100%" />
 
 **Interactive Shiny App for Clinical Data Extraction**
 
@@ -904,11 +896,7 @@ interactive function that allows easy digitalization of Kaplan–Meier
 curves from supplementary papers, and simplifies the input of
 quality-of-life (QoL) and toxicity data in a user-friendly manner.
 
-``` r
-bayescores()
-```
-
-![](README_files/figure-gfm/app-1.png)<!-- -->
+{r app, message = FALSE, warning = FALSE, eval = FALSE} bayescores()
 
 ## Why bayescores? a more meaningful approach
 
