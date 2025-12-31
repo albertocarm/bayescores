@@ -597,7 +597,7 @@ res <- list(
 *Re-analysis and Visualization*
 Once the IPD is generated, it can be used directly within bayescores or for any other analysis. This allows users to verify the original study's results with survfit and coxph or create fully customized, publication-quality plots with ggsurvplot, providing complete analytical and visual control.
 
-```{r ipd plot,  message = FALSE , warning = FALSE}
+```{r ipd,  message = FALSE , warning = FALSE}
 
 fit <- survfit(Surv(time, status) ~ curve, data = res$ipd)
 
@@ -625,7 +625,6 @@ ggsurvplot(
 To facilitate the information acquisition process, we have developed an interactive function that allows easy digitalization of Kaplan–Meier curves from supplementary papers, and simplifies the input of quality-of-life (QoL) and toxicity data in a user-friendly manner.
 
 
-{r app, message = FALSE, warning = FALSE, eval = FALSE}
 bayescores()
 
 ## Why bayescores? a more meaningful approach

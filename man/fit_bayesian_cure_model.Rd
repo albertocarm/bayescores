@@ -27,9 +27,8 @@ fit_bayesian_cure_model(
 \item{time_col, event_col, arm_col}{Character strings for column names.}
 
 \item{cure_belief}{Character string. Sets the prior belief for the adjuvant
-cure effect. One of "unknown" (default, neutral/weakly informative),
-"unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
-"hammer" prior).}
+cure effect. One of "unknown", "unlikely", "very_unlikely",
+"optimistic" (Heavy Radial), or "mild_optimistic" (Standard Radial).}
 
 \item{shared_shape}{Logical. If TRUE, both treatment arms share the same Weibull
 shape parameter (proportional hazards). If FALSE (default), allows independent

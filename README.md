@@ -220,11 +220,11 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> post-warmup draws per chain=3000, total post-warmup draws=12000.
 #> 
 #>               mean se_mean   sd  2.5%  25%  50%  75% 97.5% n_eff Rhat
-#> beta_cure_arm 1.45    0.03 1.37 -2.52 1.14 1.62 2.12  3.61  1558    1
-#> beta_surv_arm 0.28    0.01 0.29 -0.19 0.06 0.23 0.46  0.90  1685    1
-#> alpha_control 1.22    0.00 0.10  1.02 1.14 1.21 1.28  1.42  2195    1
+#> beta_cure_arm 1.51    0.03 1.33 -2.32 1.17 1.64 2.14  3.73  1882    1
+#> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
+#> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Fri Dec 26 08:43:25 2025.
+#> Samples were drawn using NUTS(diag_e) at Wed Dec 31 19:14:15 2025.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -232,20 +232,20 @@ outcomes(bayesian_fit, correlation_method = "pearson")
 #> 
 #> ---
 #> Posterior correlation as an identifiability check:
-#>     Correlation (pearson): r = -0.642
-#>     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
-#>     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+#>     Correlation (pearson): r = -0.636
+#>     Explained Variance (r^2): 0.404 (approx. 40.4% information overlap)
+#>     Note: Roughly 40.4% of the cure variance is structurally indistinguishable from the time effect.
 #>     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
 #> ---
 #> # A tibble: 6 × 2
 #>   Metric                                     `Result (95% CI)`    
 #>   <chr>                                      <chr>                
-#> 1 Time Ratio (TR)                            1.25 (0.82 - 2.46)   
-#> 2 Odds Ratio (OR) for Cure                   5.05 (0.08 - 37.10)  
+#> 1 Time Ratio (TR)                            1.24 (0.82 - 2.46)   
+#> 2 Odds Ratio (OR) for Cure                   5.17 (0.10 - 41.69)  
 #> 3 Shape Ratio (SR)                           1.00 (1.00 - 1.00)   
-#> 4 Long-Term Survival Rate (%) - Control      8.39 (0.31 - 18.05)  
-#> 5 Long-Term Survival Rate (%) - Experimental 34.65 (0.09 - 47.90) 
-#> 6 Absolute Difference in Survival Rate (%)   24.81 (-4.73 - 40.06)
+#> 4 Long-Term Survival Rate (%) - Control      8.49 (0.29 - 17.98)  
+#> 5 Long-Term Survival Rate (%) - Experimental 34.95 (0.15 - 47.72) 
+#> 6 Absolute Difference in Survival Rate (%)   25.17 (-4.66 - 40.24)
 ```
 
 **MCMC diagnostic plots**
@@ -259,15 +259,15 @@ sufficiently large) to confirm robust inference.
 ``` r
 diagnose_fit(bayesian_fit$stan_fit)
 #>                        n_eff     Rhat   Rhat_interpretation
-#> beta_cure_intercept 1029.839 1.002518 Excellent convergence
-#> beta_cure_arm_raw   1558.431 1.000684 Excellent convergence
-#> beta_surv_intercept 2866.368 1.000795 Excellent convergence
-#> beta_surv_arm_raw   1685.307 1.000571 Excellent convergence
-#> alpha_control       2195.331 1.000643 Excellent convergence
-#> beta_cure_arm       1558.431 1.000684 Excellent convergence
-#> beta_surv_arm       1685.307 1.000571 Excellent convergence
+#> beta_cure_intercept 1213.619 1.004241 Excellent convergence
+#> beta_cure_arm_raw   1882.108 1.003172 Excellent convergence
+#> beta_surv_intercept 2604.070 1.000782 Excellent convergence
+#> beta_surv_arm_raw   1676.556 1.004597 Excellent convergence
+#> alpha_control       1884.498 1.003176 Excellent convergence
+#> beta_cure_arm       1882.108 1.003172 Excellent convergence
+#> beta_surv_arm       1676.556 1.004597 Excellent convergence
 #> beta_alpha_arm           NaN      NaN         Not available
-#> lp__                1401.601 1.001237 Excellent convergence
+#> lp__                1228.668 1.006883 Excellent convergence
 #>                           n_eff_interpretation    recommendation
 #> beta_cure_intercept High effective sample size No action needed.
 #> beta_cure_arm_raw   High effective sample size No action needed.
@@ -522,9 +522,9 @@ outcomes_obj <- outcomes(
 #> 
 #> ---
 #> Posterior correlation as an identifiability check:
-#>     Correlation (pearson): r = -0.642
-#>     Explained Variance (r^2): 0.412 (approx. 41.2% information overlap)
-#>     Note: Roughly 41.2% of the cure variance is structurally indistinguishable from the time effect.
+#>     Correlation (pearson): r = -0.636
+#>     Explained Variance (r^2): 0.404 (approx. 40.4% information overlap)
+#>     Note: Roughly 40.4% of the cure variance is structurally indistinguishable from the time effect.
 #>     Interpretation: Strong (-0.50 to -0.70): high ambiguity, marginal estimates fragile.
 #> ---
 
@@ -558,14 +558,14 @@ final_scores <- get_bayescores(
 cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
-#>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.092623          0.000000        93.77517734
-#> 2          Utility TR (for TR>1) 50.375113          0.000000        98.26259410
-#> 3          Penalty TR (for TR<1)  0.000000        -26.036544         0.00000000
-#> 4      Efficacy Score (Combined) 91.592521         65.870512        98.51355881
-#> 5      QoL Contribution (points)  3.812320         -9.675117        19.90665083
-#> 6 Toxicity Contribution (points) -3.194181        -22.268382        -0.05583949
-#> 7            FINAL UTILITY SCORE 92.999251         46.293717        99.88178844
+#>                        Component   Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
+#> 1           Utility Cure (0-100) 82.53543          0.000000        93.85172165
+#> 2          Utility TR (for TR>1) 48.80124          0.000000        98.24367936
+#> 3          Penalty TR (for TR<1)  0.00000        -27.234938         0.00000000
+#> 4      Efficacy Score (Combined) 91.45194         65.108020        98.54577821
+#> 5      QoL Contribution (points)  3.91159         -9.762729        20.13517646
+#> 6 Toxicity Contribution (points) -3.23996        -22.196938        -0.06067797
+#> 7            FINAL UTILITY SCORE 92.91971         46.583550        99.87229780
 print(final_scores$identifiability_level)
 #> [1] "Extreme"
 ```
@@ -683,9 +683,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.99925
-#> 71     zwet 79.31159
-#> 72   sherry 87.88360
+#> 7  unshrunk 92.91971
+#> 71     zwet 78.69344
+#> 72   sherry 88.44609
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
@@ -887,7 +887,7 @@ ggsurvplot(
 )
 ```
 
-<img src="man/figures/README-ipd plot-1.png" width="100%" />
+<img src="man/figures/README-ipd-1.png" width="100%" />
 
 **Interactive Shiny App for Clinical Data Extraction**
 
@@ -896,7 +896,7 @@ interactive function that allows easy digitalization of Kaplan–Meier
 curves from supplementary papers, and simplifies the input of
 quality-of-life (QoL) and toxicity data in a user-friendly manner.
 
-{r app, message = FALSE, warning = FALSE, eval = FALSE} bayescores()
+bayescores()
 
 ## Why bayescores? a more meaningful approach
 

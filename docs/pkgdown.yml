@@ -2,8 +2,5 @@ pandoc: '3.4'
 pkgdown: 2.0.7
 pkgdown_sha: ~
 articles: {}
-last_built: 2025-12-26T07:44Z
-urls:
-  reference: https://albertocarm.github.io/bayescores/reference
-  article: https://albertocarm.github.io/bayescores/articles
+last_built: 2025-12-31T17:52Z
 

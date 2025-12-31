@@ -4,9 +4,8 @@
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
 #' @param cure_belief Character string. Sets the prior belief for the adjuvant
-#'    cure effect. One of "unknown" (default, neutral/weakly informative),
-#'    "unlikely" (skeptical Laplace prior), or "very_unlikely" (strong
-#'    "hammer" prior).
+#'    cure effect. One of "unknown", "unlikely", "very_unlikely",
+#'    "optimistic" (Heavy Radial), or "mild_optimistic" (Standard Radial).
 #' @param use_historical_prior Logical. If TRUE, overrides `cure_belief` and uses
 #'    an informative historical prior defined by `historical_prior_params`.
 #'    Default is FALSE.
@@ -44,7 +43,7 @@ fit_bayesian_cure_model <- function(data,
                                     historical_prior_params = c(0, 1),
                                     ...) {
 
-  cure_belief <- match.arg(cure_belief, c("unknown", "unlikely", "very_unlikely"))
+  cure_belief <- match.arg(cure_belief, c("unknown", "unlikely", "very_unlikely", "optimistic", "mild_optimistic"))
 
   # Validate and convert 'arm' to a factor
   if (!is.factor(data[[arm_col]])) {
@@ -58,7 +57,7 @@ fit_bayesian_cure_model <- function(data,
     stop("Cannot find 'cure_model.stan'. Is the package installed correctly?")
   }
 
-  prior_int_map <- c("unknown" = 1, "unlikely" = 2, "very_unlikely" = 3)
+  prior_int_map <- c("unknown" = 1, "unlikely" = 2, "very_unlikely" = 3, "optimistic" = 4, "mild_optimistic" = 5)
   cure_prior_type <- prior_int_map[cure_belief]
 
   # Prepare data for Stan
@@ -81,10 +80,22 @@ fit_bayesian_cure_model <- function(data,
   # Stan control settings
   control_list <- list(adapt_delta = adapt_delta)
 
+  # Initialization function
+  init_fun <- function() {
+    if (cure_prior_type >= 4) {
+      # Safe positive start for radial priors (4 and 5)
+      list(beta_cure_arm_raw = runif(1, 0.05, 0.2))
+    } else {
+      # Standard random start for others
+      list(beta_cure_arm_raw = rnorm(1, 0, 0.1))
+    }
+  }
+
   # Fit model
   stan_fit <- rstan::stan(
     file    = stan_model_path,
     data    = stan_data,
+    init    = init_fun,
     chains  = chains,
     iter    = iter,
     warmup  = warmup,
@@ -109,7 +120,7 @@ fit_bayesian_cure_model <- function(data,
       arm_col   = arm_col
     ),
     posterior_draws = posterior_draws,
-    n_draws         = n_draws, # Added the total number of draws to the list
+    n_draws         = n_draws,
     shared_shape    = shared_shape
   )
 
@@ -117,10 +128,6 @@ fit_bayesian_cure_model <- function(data,
 
   return(result)
 }
-
-
-
-
 
 
 #' Plot Model Diagnostics
