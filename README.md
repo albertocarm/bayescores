@@ -224,7 +224,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
 #> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Wed Dec 31 19:14:15 2025.
+#> Samples were drawn using NUTS(diag_e) at Tue Jan  6 09:50:38 2026.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -553,21 +553,22 @@ final_scores <- get_bayescores(
   efficacy_inputs = efficacy_draws,
   qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
-  calibration_args = my_final_calibration
+  calibration_args = my_final_calibration,
+  correlation_method= "pearson"
 )
 cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
-#>                        Component   Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.53543          0.000000        93.85172165
-#> 2          Utility TR (for TR>1) 48.80124          0.000000        98.24367936
-#> 3          Penalty TR (for TR<1)  0.00000        -27.234938         0.00000000
-#> 4      Efficacy Score (Combined) 91.45194         65.108020        98.54577821
-#> 5      QoL Contribution (points)  3.91159         -9.762729        20.13517646
-#> 6 Toxicity Contribution (points) -3.23996        -22.196938        -0.06067797
-#> 7            FINAL UTILITY SCORE 92.91971         46.583550        99.87229780
+#>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
+#> 1           Utility Cure (0-100) 82.535431           0.00000        93.85172165
+#> 2          Utility TR (for TR>1) 48.801244           0.00000        98.24367936
+#> 3          Penalty TR (for TR<1)  0.000000         -27.23494         0.00000000
+#> 4      Efficacy Score (Combined) 91.451942          65.10802        98.54577821
+#> 5      QoL Contribution (points)  3.899428          -9.60446        20.63752258
+#> 6 Toxicity Contribution (points) -3.310793         -21.87517        -0.05676421
+#> 7            FINAL UTILITY SCORE 92.752598          47.96544        99.87616618
 print(final_scores$identifiability_level)
-#> [1] "Extreme"
+#> [1] "Strong"
 ```
 
 ### Step 9: Visualize final clinical benefit
@@ -683,9 +684,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.91971
-#> 71     zwet 78.69344
-#> 72   sherry 88.44609
+#> 7  unshrunk 92.75260
+#> 71     zwet 78.27554
+#> 72   sherry 87.69789
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")

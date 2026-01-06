@@ -213,7 +213,7 @@
 <span><span class="co">#&gt; beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1</span></span>
 <span><span class="co">#&gt; alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Samples were drawn using NUTS(diag_e) at Wed Dec 31 18:51:49 2025.</span></span>
+<span><span class="co">#&gt; Samples were drawn using NUTS(diag_e) at Tue Jan  6 09:50:38 2026.</span></span>
 <span><span class="co">#&gt; For each parameter, n_eff is a crude measure of effective sample size,</span></span>
 <span><span class="co">#&gt; and Rhat is the potential scale reduction factor on split chains (at </span></span>
 <span><span class="co">#&gt; convergence, Rhat=1).</span></span>
@@ -440,21 +440,22 @@ You answer the question:</p>
 <span>  efficacy_inputs <span class="op">=</span> <span class="va">efficacy_draws</span>,</span>
 <span>  qol_scores <span class="op">=</span> <span class="va">qol_scores</span>,</span>
 <span>  toxicity_scores <span class="op">=</span> <span class="va">toxicity_output</span><span class="op">$</span><span class="va">toxicity_effect_vector</span>,</span>
-<span>  calibration_args <span class="op">=</span> <span class="va">my_final_calibration</span></span>
+<span>  calibration_args <span class="op">=</span> <span class="va">my_final_calibration</span>,</span>
+<span>  correlation_method<span class="op">=</span> <span class="st">"pearson"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"--- Final Bayescores Summary ---\n"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; --- Final Bayescores Summary ---</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">final_scores</span><span class="op">$</span><span class="va">component_summary</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%</span></span>
-<span><span class="co">#&gt; 1           Utility Cure (0-100) 82.535431          0.000000         93.8517217</span></span>
-<span><span class="co">#&gt; 2          Utility TR (for TR&gt;1) 48.801244          0.000000         98.2436794</span></span>
-<span><span class="co">#&gt; 3          Penalty TR (for TR&lt;1)  0.000000        -27.234938          0.0000000</span></span>
-<span><span class="co">#&gt; 4      Efficacy Score (Combined) 91.451942         65.108020         98.5457782</span></span>
-<span><span class="co">#&gt; 5      QoL Contribution (points)  3.926562         -9.710938         20.0592359</span></span>
-<span><span class="co">#&gt; 6 Toxicity Contribution (points) -3.218808        -22.049724         -0.0597732</span></span>
-<span><span class="co">#&gt; 7            FINAL UTILITY SCORE 93.000998         47.028930         99.8710979</span></span>
+<span><span class="co">#&gt; 1           Utility Cure (0-100) 82.535431           0.00000        93.85172165</span></span>
+<span><span class="co">#&gt; 2          Utility TR (for TR&gt;1) 48.801244           0.00000        98.24367936</span></span>
+<span><span class="co">#&gt; 3          Penalty TR (for TR&lt;1)  0.000000         -27.23494         0.00000000</span></span>
+<span><span class="co">#&gt; 4      Efficacy Score (Combined) 91.451942          65.10802        98.54577821</span></span>
+<span><span class="co">#&gt; 5      QoL Contribution (points)  3.899428          -9.60446        20.63752258</span></span>
+<span><span class="co">#&gt; 6 Toxicity Contribution (points) -3.310793         -21.87517        -0.05676421</span></span>
+<span><span class="co">#&gt; 7            FINAL UTILITY SCORE 92.752598          47.96544        99.87616618</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">final_scores</span><span class="op">$</span><span class="va">identifiability_level</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Extreme"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Strong"</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="step-9-visualize-final-clinical-benefit">Step 9: Visualize final clinical benefit<a class="anchor" aria-label="anchor" href="#step-9-visualize-final-clinical-benefit"></a>
 </h3>
@@ -532,9 +533,9 @@ Figure 7: Final BayeScore posterior distribution.
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">comparison</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       prior   Median</span></span>
-<span><span class="co">#&gt; 7  unshrunk 93.00100</span></span>
-<span><span class="co">#&gt; 71     zwet 79.05390</span></span>
-<span><span class="co">#&gt; 72   sherry 87.75289</span></span>
+<span><span class="co">#&gt; 7  unshrunk 92.75260</span></span>
+<span><span class="co">#&gt; 71     zwet 78.27554</span></span>
+<span><span class="co">#&gt; 72   sherry 87.69789</span></span>
 <span></span>
 <span><span class="co"># plot utility donuts for each prior</span></span>
 <span><span class="fu"><a href="reference/plot_utility_donut.html">plot_utility_donut</a></span><span class="op">(</span><span class="va">final_scores_zwet</span>, trial_name <span class="op">=</span><span class="st">"Zwet's shrinkage"</span><span class="op">)</span></span></code></pre></div>
@@ -689,7 +690,7 @@ Figure 7: Final BayeScore posterior distribution.
 <span>  legend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.75</span>, <span class="fl">0.85</span><span class="op">)</span>,</span>
 <span>  risk.table <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README-ipd_plot-1.png" width="100%"></p>
+<p><img src="reference/figures/README-ipd-1.png" width="100%"></p>
 <p><strong>Interactive Shiny App for Clinical Data Extraction</strong></p>
 <p>To facilitate the information acquisition process, we have developed an interactive function that allows easy digitalization of Kaplan–Meier curves from supplementary papers, and simplifies the input of quality-of-life (QoL) and toxicity data in a user-friendly manner.</p>
 <p>bayescores()</p>

@@ -38,6 +38,7 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
   if (nrow(penalty_row) > 0) {
     # If one or more penalty rows are found, take the first one
     penalty_name <- penalty_row$Component[1]
+    penalty_name <- penalty_row$Component[1]
     median_penalty <- penalty_row$Median[1]
 
     # Shorten the specific penalty name for a better fit in the plot
@@ -47,13 +48,27 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
     penalty_text <- paste0("\n", penalty_name, ": ", round(median_penalty, 1))
   }
 
-  # --- AÑADIDO: Extraer el nivel de identificabilidad ---
-  identifiability_text <- "" # Inicializar como texto vacío
-  if (!is.null(final_utility_results$identifiability_level)) {
-    level <- final_utility_results$identifiability_level
-    identifiability_text <- paste0("\nNon-identifiability check: ", level)
+  # --- MODIFICADO: Extraer info de correlación en lugar de identificabilidad ---
+  correlation_text <- "" # Inicializar como texto vacío
+  if (!is.null(final_utility_results$correlation_method) && !is.null(final_utility_results$correlation_value)) {
+
+    # Capitalizar el método
+    method_raw <- final_utility_results$correlation_method
+    method_cap <- paste0(toupper(substr(method_raw, 1, 1)), substr(method_raw, 2, nchar(method_raw)))
+
+    # Asignar símbolo (r, rho griego, tau griego)
+    symbol <- switch(method_raw,
+                     "pearson" = "r",
+                     "spearman" = "\u03C1", # Greek rho
+                     "kendall" = "\u03C4",  # Greek tau
+                     "r") # Fallback
+
+    # Formatear valor a 3 decimales
+    val <- sprintf("%.3f", final_utility_results$correlation_value)
+
+    correlation_text <- paste0("\n", method_cap, " ", symbol, " = ", val)
   }
-  # --- FIN DE LA ADICIÓN ---
+  # --- FIN DE LA MODIFICACIÓN ---
 
   # Safety checks in case a component is missing
   if (length(median_eff_score) == 0) median_eff_score <- 0
@@ -78,7 +93,7 @@ plot_utility_donut <- function(final_utility_results, trial_name = NULL) {
                         "\nQoL Adj: ", round(median_qol_adj, 1),
                         "\n-----------------",
                         "\nFinal Score: ", round(median_final, 1),
-                        identifiability_text # <-- AÑADIDO: Mostrar el nivel de identificabilidad
+                        correlation_text # <-- MODIFICADO: Mostrar info de correlación
                       ),
                       size = 5.0, lineheight = 1.1, hjust = 0.5, vjust = 0.5) +
     ggplot2::coord_polar(theta = "y", start = 0) +

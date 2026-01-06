@@ -8,7 +8,8 @@ get_bayescores(
   efficacy_inputs,
   qol_scores,
   toxicity_scores,
-  calibration_args = list()
+  calibration_args = list(),
+  correlation_method = "pearson"
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ get_bayescores(
 \item{toxicity_scores}{A numeric vector of posterior samples for Toxicity effect.}
 
 \item{calibration_args}{Optional list to override default calibration.}
+
+\item{correlation_method}{Character. The method to use: 'pearson' (default), 'spearman', or 'kendall'.}
 }
 \value{
 A list with the final utility vector and a summary data frame.

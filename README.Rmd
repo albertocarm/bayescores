@@ -374,7 +374,8 @@ final_scores <- get_bayescores(
   efficacy_inputs = efficacy_draws,
   qol_scores = qol_scores,
   toxicity_scores = toxicity_output$toxicity_effect_vector,
-  calibration_args = my_final_calibration
+  calibration_args = my_final_calibration,
+  correlation_method= "pearson"
 )
 cat("--- Final Bayescores Summary ---\n")
 print(final_scores$component_summary)

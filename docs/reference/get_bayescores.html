@@ -55,7 +55,8 @@ Toxicity's impact is now proportional to the base efficacy score.</p>
 <span>  <span class="va">efficacy_inputs</span>,</span>
 <span>  <span class="va">qol_scores</span>,</span>
 <span>  <span class="va">toxicity_scores</span>,</span>
-<span>  calibration_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  calibration_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  correlation_method <span class="op">=</span> <span class="st">"pearson"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,6 +76,10 @@ Toxicity's impact is now proportional to the base efficacy score.</p>
 
 <dt>calibration_args</dt>
 <dd><p>Optional list to override default calibration.</p></dd>
+
+
+<dt>correlation_method</dt>
+<dd><p>Character. The method to use: 'pearson' (default), 'spearman', or 'kendall'.</p></dd>
 
 </dl></div>
     <div class="section level2">

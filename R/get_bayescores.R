@@ -7,12 +7,18 @@
 #' @param qol_scores A numeric vector of posterior samples for QoL effect.
 #' @param toxicity_scores A numeric vector of posterior samples for Toxicity effect.
 #' @param calibration_args Optional list to override default calibration.
+#' @param correlation_method Character. The method to use: 'pearson' (default), 'spearman', or 'kendall'.
 #' @return A list with the final utility vector and a summary data frame.
 #' @export
-#' @importFrom stats median quantile
+#' @importFrom stats median quantile cor
 get_bayescores <- function(
-    efficacy_inputs, qol_scores, toxicity_scores, calibration_args = list()
+    efficacy_inputs, qol_scores, toxicity_scores, calibration_args = list(), correlation_method = "pearson"
 ) {
+
+  # --- Validation: Correlation Method ---
+  if (!correlation_method %in% c("pearson", "spearman", "kendall")) {
+    stop("Invalid correlation_method. Allowed values are: 'pearson', 'spearman', 'kendall'.")
+  }
 
   # --- Step 1 & 2: No changes ---
   defaults <- list(efficacy = list(cure_utility_target = list(effect_value = 0.15, utility_value = 40), tr_utility_target = list(effect_value = 1.25, utility_value = 35), tr_disutility_target = list(effect_value = 0.75, utility_value = 35), tr_baseline = 1.0))
@@ -65,10 +71,17 @@ get_bayescores <- function(
   rownames(component_summary) <- NULL
 
   # --- Step 7: Identifiability Check ---
-  rho <- cor(
-    efficacy_inputs$cure_posterior_samples,
-    efficacy_inputs$tr_posterior_samples
-  )
+  # MODIFICACION: Usamos los draws crudos (si existen) para medir identificabilidad estadística real.
+  # Si no existen (versiones viejas), usa el fallback clínico.
+  if (!is.null(efficacy_inputs$log_or_draws) && !is.null(efficacy_inputs$log_tr_draws)) {
+    rho <- cor(efficacy_inputs$log_or_draws, efficacy_inputs$log_tr_draws, method = correlation_method)
+  } else {
+    rho <- cor(
+      log(base::pmax(1e-10, efficacy_inputs$cure_posterior_samples)), # proteccion log(0)
+      log(efficacy_inputs$tr_posterior_samples),
+      method = correlation_method
+    )
+  }
 
   identifiability_level <- dplyr::case_when(
     rho > -0.15 ~ "Negligible",
@@ -82,10 +95,11 @@ get_bayescores <- function(
   return(list(
     final_utility_vector = final_utility_vector,
     component_summary = component_summary,
-    identifiability_level = identifiability_level
+    identifiability_level = identifiability_level,
+    correlation_method = correlation_method,
+    correlation_value = rho
   ))
 }
-
 
 
 #' Get Original or Shrunk MCMC Draws for Subsequent Analyses (Updated)
@@ -211,16 +225,11 @@ get_bayescores_draws <- function(fit,
   return(
     list(
       tr_posterior_samples = exp(final_log_tr_draws),
-      cure_posterior_samples = cure_diff_draws
+      cure_posterior_samples = cure_diff_draws,
+      # NUEVO: Pasamos los logs crudos "ocultos" para que Step 7 de get_bayescores
+      # pueda calcular la identificabilidad estadística real (-0.41)
+      log_or_draws = final_log_or_draws,
+      log_tr_draws = final_log_tr_draws
     )
   )
 }
-
-
-
-
-
-
-
-
-
