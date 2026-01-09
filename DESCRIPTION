@@ -25,19 +25,7 @@ Imports:
     ggsci,
     MASS,
     tidyr,
-    rlang,
-    bslib,
-    DT,
-    bsicons,
-    future,
-    magick,
-    promises,
-    shiny,
-    stringr,
-    survminer,
-    tesseract,
-    writexl,
-    SurvdigitizeR
+    rlang     
 RoxygenNote: 7.2.3
 URL: https://github.com/albertocarm/bayescores, https://albertocarm.github.io/bayescores/
 BugReports: https://github.com/albertocarm/bayescores/issues

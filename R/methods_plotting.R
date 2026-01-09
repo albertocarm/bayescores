@@ -80,13 +80,27 @@ plot.bcm_fit <- function(x, ...) {
   arm_col <- cols$arm_col
 
   posterior_samples <- rstan::extract(x$stan_fit)
+
+  # --- Robustness Fix: Handle variable name changes and missing flags ---
+  # 1. Map 'alpha' to 'alpha_control' if the specific name is missing
+  if (is.null(posterior_samples$alpha_control) && !is.null(posterior_samples$alpha)) {
+    posterior_samples$alpha_control <- posterior_samples$alpha
+  }
+
+  # 2. Determine shared_shape dynamically based on available parameters
+  # If beta_alpha_arm is missing in posterior, we must force shared shape to avoid NULL errors
+  if (is.null(posterior_samples$beta_alpha_arm)) {
+    is_shared <- TRUE
+  } else {
+    # If the parameter exists, respect the object flag (or default to FALSE if NULL)
+    is_shared <- isTRUE(x$shared_shape)
+  }
+  # --------------------------------------------------------------------
+
   time_grid <- seq(0, max(plot_data[[time_col]]), length.out = 150)
 
   predicted_curves <- list()
   arm_levels <- levels(plot_data[[arm_col]])
-
-  # Get the shared_shape flag from the fitted object
-  is_shared <- isTRUE(x$shared_shape)
 
   for (i in seq_along(arm_levels)) {
     b <- i - 1 # 0 for control, 1 for treatment (assuming factor 0,1)
@@ -154,8 +168,6 @@ plot.bcm_fit <- function(x, ...) {
 
   print(final_plot)
 }
-
-
 
 
 
