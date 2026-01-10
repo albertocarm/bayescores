@@ -967,6 +967,8 @@ citation("bayescores")
   ESMO-MCBS v2.0 Score (Guided by Objective)
 - [`calculate_toxicity_analysis()`](calculate_toxicity_analysis.md) :
   Calculate a complete toxicity analysis
+- [`check_false_plateau()`](check_false_plateau.md) : Check for False
+  Plateau or Structural Instability
 - [`checkmate649_toxicity`](checkmate649_toxicity.md) : Toxicity and
   quality of life data from the CheckMate-649 trial
 - [`cm649`](cm649.md) : Data from the CheckMate-649 Trial
