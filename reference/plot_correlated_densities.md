@@ -11,7 +11,7 @@ approximation.
 ``` r
 plot_correlated_densities(
   x,
-  n_grid = 100,
+  n_grid = 400,
   level_ellipses = c(0.5, 0.8, 0.95),
   quantile_range = c(0.001, 0.999),
   padding = 0.05,
@@ -31,7 +31,7 @@ plot_correlated_densities(
   Integer. Number of grid points per axis for the 2D kernel density
   estimation passed to
   [`MASS::kde2d`](https://rdrr.io/pkg/MASS/man/kde2d.html). Default is
-  `100`.
+  `400`.
 
 - level_ellipses:
 
@@ -91,9 +91,9 @@ if (FALSE) { # \dontrun{
 # Suppose 'fit' is a stanfit with parameters beta_cure_arm and beta_surv_arm:
 obj <- list(stan_fit = fit)
 p <- plot_correlated_densities(obj,
-                               n_grid = 150,
-                               correlation_method = "spearman",
-                               quantile_range = c(0.005, 0.995))
+                                n_grid = 400,
+                                correlation_method = "spearman",
+                                quantile_range = c(0.005, 0.995))
 print(p)
 } # }
 ```
