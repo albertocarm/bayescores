@@ -6,7 +6,7 @@
 \usage{
 plot_correlated_densities(
   x,
-  n_grid = 100,
+  n_grid = 400,
   level_ellipses = c(0.5, 0.8, 0.95),
   quantile_range = c(0.001, 0.999),
   padding = 0.05,
@@ -19,7 +19,7 @@ contains a \code{stanfit} at \code{x$stan_fit}.
 The fit must have parameters \code{beta_cure_arm} and \code{beta_surv_arm}.}
 
 \item{n_grid}{Integer. Number of grid points per axis for the 2D kernel density
-estimation passed to \code{MASS::kde2d}. Default is \code{100}.}
+estimation passed to \code{MASS::kde2d}. Default is \code{400}.}
 
 \item{level_ellipses}{Numeric vector of probability levels for confidence
 ellipses (bivariate normal contours). Default \code{c(0.5, 0.8, 0.95)}.}
@@ -66,9 +66,9 @@ The function:
 # Suppose 'fit' is a stanfit with parameters beta_cure_arm and beta_surv_arm:
 obj <- list(stan_fit = fit)
 p <- plot_correlated_densities(obj,
-                               n_grid = 150,
-                               correlation_method = "spearman",
-                               quantile_range = c(0.005, 0.995))
+                                n_grid = 400,
+                                correlation_method = "spearman",
+                                quantile_range = c(0.005, 0.995))
 print(p)
 }
 }

@@ -332,8 +332,6 @@ time_ratio <- function(model) {
 
 
 
-
-
 #' @title Plot Correlated Posterior Densities
 #' @description
 #' Creates a 2D density plot for two correlated parameters from a Stan model fit.
@@ -363,7 +361,7 @@ time_ratio <- function(model) {
 #'   contains a \code{stanfit} at \code{x$stan_fit}.
 #'   The fit must have parameters \code{beta_cure_arm} and \code{beta_surv_arm}.
 #' @param n_grid Integer. Number of grid points per axis for the 2D kernel density
-#'   estimation passed to \code{MASS::kde2d}. Default is \code{100}.
+#'   estimation passed to \code{MASS::kde2d}. Default is \code{400}.
 #' @param level_ellipses Numeric vector of probability levels for confidence
 #'   ellipses (bivariate normal contours). Default \code{c(0.5, 0.8, 0.95)}.
 #' @param quantile_range Numeric vector of length 2 with lower and upper tail
@@ -390,12 +388,12 @@ time_ratio <- function(model) {
 #' # Suppose 'fit' is a stanfit with parameters beta_cure_arm and beta_surv_arm:
 #' obj <- list(stan_fit = fit)
 #' p <- plot_correlated_densities(obj,
-#'                                n_grid = 150,
-#'                                correlation_method = "spearman",
-#'                                quantile_range = c(0.005, 0.995))
+#'                                 n_grid = 400,
+#'                                 correlation_method = "spearman",
+#'                                 quantile_range = c(0.005, 0.995))
 #' print(p)
 #' }
-plot_correlated_densities <- function(x, n_grid = 100,
+plot_correlated_densities <- function(x, n_grid = 400,
                                       level_ellipses = c(0.5, 0.8, 0.95),
                                       quantile_range = c(0.001, 0.999),
                                       padding = 0.05,
@@ -437,7 +435,8 @@ plot_correlated_densities <- function(x, n_grid = 100,
                        "kendall" = "Kendall")
 
   p <- ggplot(density_df, aes(x = x, y = y)) +
-    geom_tile(aes(fill = density)) +
+    # CAMBIO CRÍTICO AQUÍ: geom_raster con interpolación para suavizar visualmente
+    geom_raster(aes(fill = density), interpolate = TRUE) +
     geom_contour(aes(z = density), colour = "white", alpha = 0.6, bins = 10) +
     scale_fill_viridis_c(option = "plasma") +
     annotate("point", x = mean(posterior_draws$log_or), y = mean(posterior_draws$log_hr),
