@@ -1,12 +1,13 @@
+
 #' @title Fit the Bayesian Cure Model (Engine)
 #' @description Prepares data, calls the external Stan cure model, and stores MCMC draws.
 #'
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
-#' @param cure_belief Character string. Sets the prior belief for the adjuvant
-#'    cure effect. One of "unknown", "unlikely", "very_unlikely",
-#'    "optimistic" (Heavy Radial), or "mild_optimistic" (Standard Radial).
-#' @param use_historical_prior Logical. If TRUE, overrides `cure_belief` and uses
+#' @param tail_assumption Character string. Sets the prior belief strategy for the adjuvant
+#'    cure effect. One of "neutral", "immature_skeptical", "biologically_null",
+#'    "supportive", or "optimistic".
+#' @param use_historical_prior Logical. If TRUE, overrides `tail_assumption` and uses
 #'    an informative historical prior defined by `historical_prior_params`.
 #'    Default is FALSE.
 #' @param historical_prior_params Numeric vector of length 2 (Mean, SD).
@@ -32,7 +33,7 @@ fit_bayesian_cure_model <- function(data,
                                     time_col      = "time",
                                     event_col     = "event",
                                     arm_col       = "arm",
-                                    cure_belief   = "unknown",
+                                    tail_assumption = "neutral",
                                     shared_shape  = FALSE,
                                     chains        = 4,
                                     iter          = 2000,
@@ -43,7 +44,7 @@ fit_bayesian_cure_model <- function(data,
                                     historical_prior_params = c(0, 1),
                                     ...) {
 
-  cure_belief <- match.arg(cure_belief, c("unknown", "unlikely", "very_unlikely", "optimistic", "mild_optimistic"))
+  tail_assumption <- match.arg(tail_assumption, c("neutral", "immature_skeptical", "biologically_null", "supportive", "optimistic"))
 
   # Validate and convert 'arm' to a factor
   if (!is.factor(data[[arm_col]])) {
@@ -57,8 +58,9 @@ fit_bayesian_cure_model <- function(data,
     stop("Cannot find 'cure_model.stan'. Is the package installed correctly?")
   }
 
-  prior_int_map <- c("unknown" = 1, "unlikely" = 2, "very_unlikely" = 3, "optimistic" = 4, "mild_optimistic" = 5)
-  cure_prior_type <- prior_int_map[cure_belief]
+  # Updated mapping to match new Stan logic
+  prior_int_map <- c("neutral" = 1, "immature_skeptical" = 2, "biologically_null" = 3, "supportive" = 4, "optimistic" = 5)
+  cure_prior_type <- prior_int_map[tail_assumption]
 
   # Prepare data for Stan
   stan_data <- list(
@@ -128,6 +130,13 @@ fit_bayesian_cure_model <- function(data,
 
   return(result)
 }
+
+
+
+
+
+
+
 
 
 #' Plot Model Diagnostics

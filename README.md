@@ -195,7 +195,7 @@ bayesian_fit <- fit_bayesian_cure_model(
   arm_col = "arm",
   iter = 4000,
   chains = 4, 
-  cure_belief = "unknown",
+  tail_assumption = "neutral",
   shared_shape = TRUE
 )
 ```
@@ -224,7 +224,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
 #> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Fri Jan  9 14:32:43 2026.
+#> Samples were drawn using NUTS(diag_e) at Tue Jan 27 20:14:58 2026.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -560,13 +560,13 @@ cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
 #>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.535431          0.000000        93.85172165
-#> 2          Utility TR (for TR>1) 48.801244          0.000000        98.24367936
-#> 3          Penalty TR (for TR<1)  0.000000        -27.234938         0.00000000
-#> 4      Efficacy Score (Combined) 91.451942         65.108020        98.54577821
-#> 5      QoL Contribution (points)  3.877353         -9.668272        20.09439998
-#> 6 Toxicity Contribution (points) -3.303384        -22.018823        -0.05744786
-#> 7            FINAL UTILITY SCORE 92.836502         47.703224        99.87941219
+#> 1           Utility Cure (0-100) 82.535431          0.000000         93.8517217
+#> 2          Utility TR (for TR>1) 48.801244          0.000000         98.2436794
+#> 3          Penalty TR (for TR<1)  0.000000        -27.234938          0.0000000
+#> 4      Efficacy Score (Combined) 91.451942         65.108020         98.5457782
+#> 5      QoL Contribution (points)  3.915637         -9.634322         20.1290210
+#> 6 Toxicity Contribution (points) -3.269444        -22.338685         -0.0574658
+#> 7            FINAL UTILITY SCORE 92.910607         47.192252         99.8752520
 print(final_scores$identifiability_level)
 #> [1] "Strong"
 ```
@@ -684,9 +684,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.83650
-#> 71     zwet 78.44029
-#> 72   sherry 87.77234
+#> 7  unshrunk 92.91061
+#> 71     zwet 78.68400
+#> 72   sherry 88.18727
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")

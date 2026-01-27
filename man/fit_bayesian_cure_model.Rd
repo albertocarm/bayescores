@@ -9,7 +9,7 @@ fit_bayesian_cure_model(
   time_col = "time",
   event_col = "event",
   arm_col = "arm",
-  cure_belief = "unknown",
+  tail_assumption = "neutral",
   shared_shape = FALSE,
   chains = 4,
   iter = 2000,
@@ -26,9 +26,9 @@ fit_bayesian_cure_model(
 
 \item{time_col, event_col, arm_col}{Character strings for column names.}
 
-\item{cure_belief}{Character string. Sets the prior belief for the adjuvant
-cure effect. One of "unknown", "unlikely", "very_unlikely",
-"optimistic" (Heavy Radial), or "mild_optimistic" (Standard Radial).}
+\item{tail_assumption}{Character string. Sets the prior belief strategy for the adjuvant
+cure effect. One of "neutral", "immature_skeptical", "biologically_null",
+"supportive", or "optimistic".}
 
 \item{shared_shape}{Logical. If TRUE, both treatment arms share the same Weibull
 shape parameter (proportional hazards). If FALSE (default), allows independent
@@ -38,7 +38,7 @@ shapes for each arm.}
 
 \item{adapt_delta}{Target acceptance rate for Stan's NUTS algorithm.}
 
-\item{use_historical_prior}{Logical. If TRUE, overrides `cure_belief` and uses
+\item{use_historical_prior}{Logical. If TRUE, overrides `tail_assumption` and uses
 an informative historical prior defined by `historical_prior_params`.
 Default is FALSE.}
 

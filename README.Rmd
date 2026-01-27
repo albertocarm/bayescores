@@ -159,7 +159,7 @@ bayesian_fit <- fit_bayesian_cure_model(
   arm_col = "arm",
   iter = 4000,
   chains = 4, 
-  cure_belief = "unknown",
+  tail_assumption = "neutral",
   shared_shape = TRUE
 )
 ```

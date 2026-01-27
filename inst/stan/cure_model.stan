@@ -1,10 +1,17 @@
 // Stan Model: Weibull AFT Mixture Cure Model
+// Modified for 'Tail Assumption' logic
 
 data {
   int<lower=1> N;
   vector<lower=0>[N] tiempo;
   int<lower=0, upper=1> evento[N];
   vector[N] arm;
+  // cure_prior_type mapping:
+  // 1: neutral (Data-Driven / Agnostic)
+  // 2: immature_skeptical (Safety Brake / Skeptical)
+  // 3: biologically_null (Structural AFT / Null)
+  // 4: supportive (Phase II Evidence / Mild)
+  // 5: optimistic (Strong Evidence)
   int<lower=1, upper=5> cure_prior_type; 
   int<lower=0, upper=1> use_historical_prior;
   vector[2] historical_prior_params; 
@@ -21,9 +28,10 @@ parameters {
 }
 
 transformed parameters {
+  // Scaling factors kept exactly as original
   real beta_cure_arm = 2.5 * beta_cure_arm_raw;
   real beta_surv_arm = 2.5 * beta_surv_arm_raw;
-   
+    
   real beta_alpha_arm;
   if (shared_shape == 1) {
     beta_alpha_arm = 0.0;
@@ -33,6 +41,7 @@ transformed parameters {
 }
 
 model {
+  // Priors for survival and shape parameters (Unchanged)
   beta_surv_intercept ~ student_t(4, 0, 2.5);
   beta_surv_arm_raw ~ std_normal();
   alpha_control ~ gamma(1, 1);
@@ -42,7 +51,8 @@ model {
   }
 
   beta_cure_intercept ~ student_t(4, 0, 2.5);
-    
+     
+  // Logic for Cure Arm Prior (Modified labels and order)
   if (use_historical_prior == 1) {
     beta_cure_arm_raw ~ normal(
         historical_prior_params[1] / 2.5, 
@@ -50,31 +60,46 @@ model {
     );
   } else {
     if (cure_prior_type == 1) {
-      // Unknown (Neutral)
+      // 1. NEUTRAL (Agostic / Data-Driven)
+      // Corresponds to old 'unknown'
       beta_cure_arm_raw ~ std_normal();
+      
     } else if (cure_prior_type == 2) {
-      // Unlikely (Laplace 0.08)
+      // 2. IMMATURE_SKEPTICAL (Safety Brake)
+      // Corresponds to old 'unlikely'. 
+      // Using Laplace with scale 0.08 (strong shrinkage for immature data)
       beta_cure_arm_raw ~ double_exponential(0, 0.08); 
+      
     } else if (cure_prior_type == 3) {
-      // Very Unlikely (Laplace 0.04)
+      // 3. BIOLOGICALLY_NULL (Structural AFT)
+      // Corresponds to old 'very_unlikely'.
+      // Using Laplace with scale 0.04 (extreme shrinkage/collapse)
       beta_cure_arm_raw ~ double_exponential(0, 0.04);
+      
     } else if (cure_prior_type == 4) {
-      // Optimistic (Heavy Radial)
+      // 4. SUPPORTIVE (Mild Evidence)
+      // Corresponds to old 'mild_optimistic' (previously type 5)
+      // Logic swapped to match the new vector order.
       if (beta_cure_arm_raw < 0) {
         target += negative_infinity();
       } else {
-        beta_cure_arm_raw ~ weibull(1.5, 0.4);
-      }
-    } else if (cure_prior_type == 5) {
-      // Mild Optimistic (Standard Radial)
-      if (beta_cure_arm_raw < 0) {
-        target += negative_infinity();
-      } else {
+        // Weibull parameters for mild/supportive prior
         beta_cure_arm_raw ~ weibull(2.0, 0.2828);
+      }
+      
+    } else if (cure_prior_type == 5) {
+      // 5. OPTIMISTIC (Strong Evidence)
+      // Corresponds to old 'optimistic' (previously type 4)
+      if (beta_cure_arm_raw < 0) {
+        target += negative_infinity();
+      } else {
+        // Weibull parameters for optimistic/strong prior
+        beta_cure_arm_raw ~ weibull(1.5, 0.4);
       }
     }
   }
 
+  // Likelihood (Unchanged)
   for (i in 1:N) {
     real cure_logit = beta_cure_intercept + beta_cure_arm * arm[i];
     real surv_log_scale = exp(beta_surv_intercept + beta_surv_arm * arm[i]);
