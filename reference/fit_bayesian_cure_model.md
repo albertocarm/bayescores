@@ -11,7 +11,7 @@ fit_bayesian_cure_model(
   time_col = "time",
   event_col = "event",
   arm_col = "arm",
-  cure_belief = "unknown",
+  tail_assumption = "neutral",
   shared_shape = FALSE,
   chains = 4,
   iter = 2000,
@@ -34,11 +34,11 @@ fit_bayesian_cure_model(
 
   Character strings for column names.
 
-- cure_belief:
+- tail_assumption:
 
-  Character string. Sets the prior belief for the adjuvant cure effect.
-  One of "unknown", "unlikely", "very_unlikely", "optimistic" (Heavy
-  Radial), or "mild_optimistic" (Standard Radial).
+  Character string. Sets the prior belief strategy for the adjuvant cure
+  effect. One of "neutral", "immature_skeptical", "biologically_null",
+  "supportive", or "optimistic".
 
 - shared_shape:
 
@@ -56,9 +56,9 @@ fit_bayesian_cure_model(
 
 - use_historical_prior:
 
-  Logical. If TRUE, overrides \`cure_belief\` and uses an informative
-  historical prior defined by \`historical_prior_params\`. Default is
-  FALSE.
+  Logical. If TRUE, overrides \`tail_assumption\` and uses an
+  informative historical prior defined by \`historical_prior_params\`.
+  Default is FALSE.
 
 - historical_prior_params:
 
