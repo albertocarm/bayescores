@@ -1,4 +1,115 @@
-url: ~
+url: https://albertocarm.github.io/bayescores/
+
 template:
   bootstrap: 5
+  bootswatch: cosmo
+  bslib:
+    primary: "#2c3e50"
+    border-radius: 0.25rem
+    btn-border-radius: 0.25rem
+  includes:
+    in_header: |
+      <link rel="icon" href="man/figures/logo.png" type="image/png">
 
+home:
+  title: "bayescores - Bayesian Clinical Benefit Scores for RCTs"
+  description: >
+    Comprehensive quantification of clinical benefit in randomized controlled
+    trials using Bayesian AFT mixture cure models and multi-attribute utility theory.
+  sidebar:
+    structure: [links, license, community, citation, authors, dev]
+    components:
+      links:
+        title: Links
+        text: |
+          - [Report a bug](https://github.com/albertocarm/bayescores/issues)
+          - [Browse source code](https://github.com/albertocarm/bayescores/)
+
+navbar:
+  structure:
+    left:  [intro, reference, articles]
+    right: [search, github]
+  components:
+    reference:
+      text: Reference
+      href: reference/index.html
+    github:
+      icon: fab fa-github fa-lg
+      href: https://github.com/albertocarm/bayescores/
+      aria-label: GitHub
+
+reference:
+  - title: "Model Fitting & Diagnostics"
+    desc: "Fit Bayesian AFT mixture cure models and assess convergence"
+    contents:
+      - fit_bayesian_cure_model
+      - outcomes
+      - diagnose_fit
+      - model_diagnostics
+      - check_false_plateau
+
+  - title: "BayeScores Calculation"
+    desc: "Compute and summarize Bayesian clinical benefit scores"
+    contents:
+      - get_bayescores
+      - get_bayescores_draws
+      - summarize_final_utility
+      - summarize_cure_rates
+      - time_ratio
+      - calculate_asco_nhb
+      - calculate_esmo_mcbs
+      - print.bayes_summary
+
+  - title: "Posterior Extraction"
+    desc: "Extract MCMC posterior samples"
+    contents:
+      - extract_mcmc_time_ratios
+      - extract_mcmc_cure_diffs
+
+  - title: "Toxicity Analysis"
+    desc: "Weighted toxicity scoring and visualization"
+    contents:
+      - calculate_toxicity_analysis
+      - create_amit_plot
+
+  - title: "Quality of Life"
+    desc: "Sample and visualize QoL distributions"
+    contents:
+      - sample_qol_scores
+      - generate_qol_vector
+
+  - title: "Visualization"
+    desc: "Plotting functions for model results and clinical scores"
+    contents:
+      - plot_densities
+      - plot_correlated_densities
+      - plot_utility_donut
+      - plot_final_utility_density
+      - plot_km_curves
+      - plot_qol_histogram
+      - plot_toxicity_density
+      - generate_sensitivity_dashboard
+      - run_plot_scenario
+
+  - title: "Simulation & Data Reconstruction"
+    desc: "Generate synthetic trial data and reconstruct IPD from published curves"
+    contents:
+      - simulate_weibull_cure_data
+      - simulate_trial_data
+      - reconstruct_ipd
+
+  - title: "Included Datasets"
+    desc: "Pre-loaded RCT survival and toxicity data"
+    contents:
+      - has_keyword("datasets")
+      - Keynote062_toxicity
+      - esopec_toxicity
+      - keynote_119_toxicity
+      - monarchE_toxicity
+      - natalee_toxicity
+      - kn119
+
+footer:
+  structure:
+    left: developed_by
+    right: built_with
