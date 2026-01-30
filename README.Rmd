@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
   out.width = "100%")
 ```
 
-# bayescores <img src="inst/extdata/logoH1.png" align="right" height="150" />
+# bayescores <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/albertocarm/bayescores/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/albertocarm/bayescores/actions/workflows/pkgdown.yaml)

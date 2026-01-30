@@ -7,6 +7,9 @@ template:
     primary: "#2c3e50"
     border-radius: 0.25rem
     btn-border-radius: 0.25rem
+  includes:
+    in_header: |
+      <link rel="icon" href="man/figures/logo.png" type="image/png">
 
 home:
   title: "bayescores - Bayesian Clinical Benefit Scores for RCTs"
