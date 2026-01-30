@@ -57,6 +57,8 @@ reference:
       - summarize_cure_rates
       - time_ratio
       - calculate_asco_nhb
+      - calculate_esmo_mcbs
+      - print.bayes_summary
 
   - title: "Posterior Extraction"
     desc: "Extract MCMC posterior samples"
@@ -85,6 +87,7 @@ reference:
       - plot_final_utility_density
       - plot_km_curves
       - plot_qol_histogram
+      - plot_toxicity_density
       - generate_sensitivity_dashboard
       - run_plot_scenario
 
@@ -99,6 +102,12 @@ reference:
     desc: "Pre-loaded RCT survival and toxicity data"
     contents:
       - has_keyword("datasets")
+      - Keynote062_toxicity
+      - esopec_toxicity
+      - keynote_119_toxicity
+      - monarchE_toxicity
+      - natalee_toxicity
+      - kn119
 
 footer:
   structure:
