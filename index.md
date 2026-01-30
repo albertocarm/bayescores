@@ -223,7 +223,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
 #> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Tue Jan 27 20:14:58 2026.
+#> Samples were drawn using NUTS(diag_e) at Fri Jan 30 20:07:42 2026.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -542,13 +542,13 @@ cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
 #>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.535431          0.000000         93.8517217
-#> 2          Utility TR (for TR>1) 48.801244          0.000000         98.2436794
-#> 3          Penalty TR (for TR<1)  0.000000        -27.234938          0.0000000
-#> 4      Efficacy Score (Combined) 91.451942         65.108020         98.5457782
-#> 5      QoL Contribution (points)  3.915637         -9.634322         20.1290210
-#> 6 Toxicity Contribution (points) -3.269444        -22.338685         -0.0574658
-#> 7            FINAL UTILITY SCORE 92.910607         47.192252         99.8752520
+#> 1           Utility Cure (0-100) 82.535431           0.00000        93.85172165
+#> 2          Utility TR (for TR>1) 48.801244           0.00000        98.24367936
+#> 3          Penalty TR (for TR<1)  0.000000         -27.23494         0.00000000
+#> 4      Efficacy Score (Combined) 91.451942          65.10802        98.54577821
+#> 5      QoL Contribution (points)  3.953580          -9.68866        20.10829930
+#> 6 Toxicity Contribution (points) -3.268844         -22.13845        -0.05742913
+#> 7            FINAL UTILITY SCORE 92.875119          48.01128        99.87587228
 print(final_scores$identifiability_level)
 #> [1] "Strong"
 ```
@@ -656,9 +656,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.91061
-#> 71     zwet 78.68400
-#> 72   sherry 88.18727
+#> 7  unshrunk 92.87512
+#> 71     zwet 78.22219
+#> 72   sherry 87.55711
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
