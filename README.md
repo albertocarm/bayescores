@@ -1,42 +1,69 @@
 
-# bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials Using Bayesian Inference and Multi-Attribute Utility Theory
+# bayescores <img src="man/figures/logo.png" align="right" height="139" />
 
-**`bayescores`** provides a comprehensive toolkit for analyzing
-randomized controlled trials (RCTs). This package introduces the
-**Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to
-quantify clinical benefit by accounting for both survival prolongation
-and cure rates.
+<!-- badges: start -->
 
-Key Features
+[![R-CMD-check](https://github.com/albertocarm/bayescores/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/albertocarm/bayescores/actions/workflows/pkgdown.yaml)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![License:
+MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+<!-- badges: end -->
 
-- Fit Robust Bayesian Models: Implements Bayesian Accelerated Failure
-  Time (AFT) mixture cure models using Stan. The framework allows you
-  to:
+> **Comprehensive Quantification of Clinical Benefit in Randomized
+> Controlled Trials Using Bayesian Inference and Multi-Attribute Utility
+> Theory**
 
-- Incorporate empirical and skeptical priors to stabilize inference and
-  reduce bias, especially with immature data.
+**`bayescores`** provides a toolkit for analyzing randomized controlled
+trials (RCTs). It introduces the **Bayesian Clinical Benefit Scores
+(BayeScores)**, a novel metric that quantifies clinical benefit by
+jointly accounting for survival prolongation, cure rates, toxicity, and
+quality of life.
 
-- Use the unique properties of AFT mixture cure models to quantify
-  clinical benefit in a novel way.
+## Overview
 
-- Assess Data Maturity: Run a novel non-identifiability test on the
-  model’s parameters. This check serves as a statistical proxy for data
-  maturity, helping to determine if the follow-up is sufficient to
-  reliably estimate the long-term benefit.
+The package implements a full analytical pipeline:
 
-- Calculate Holistic Benefit Scores: Compute the final clinical benefit
-  score, the BayeScores.
+    Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
+                                                   |
+                        +--------------------------+--------------------------+
+                        |                          |                          |
+                  Efficacy Scores          Toxicity Scores            QoL Scores
+                  (TR + Cure Rate)       (Weighted Burden)         (Multinomial)
+                        |                          |                          |
+                        +-----------+--------------+--------------------------+
+                                    |
+                             BayeScores
+                        (Multi-Attribute Utility)
 
-- The score is derived using concave functions to more realistically
-  reflect clinical utility (e.g., ensuring diminishing returns for each
-  additional month of survival).
+## Key Features
 
-- Includes comprehensive visualization tools to display the scores,
-  results, and all model diagnostics.
-
-- Simulate Realistic Scenarios: Generate complex survival data from
+- **Fit Robust Bayesian Models**: Bayesian Accelerated Failure Time
+  (AFT) mixture cure models via Stan.
+  - Incorporate empirical and skeptical priors to stabilize inference
+    and reduce bias, especially with immature data.
+  - Use the unique properties of AFT mixture cure models to quantify
+    clinical benefit in a novel way.
+- **Assess Data Maturity**: A novel non-identifiability test on model
+  parameters serves as a statistical proxy for data maturity, helping
+  determine if follow-up is sufficient to reliably estimate long-term
+  benefit.
+- **Calculate Holistic Benefit Scores**: Compute the BayeScores using
+  concave utility functions that reflect diminishing marginal returns
+  for each additional month of survival.
+- **Visualize Everything**: Comprehensive plotting tools for posterior
+  distributions, donut charts, sensitivity dashboards, AMIT toxicity
+  plots, and model diagnostics.
+- **Simulate Realistic Scenarios**: Generate complex survival data from
   mixture cure models to validate methods, perform power analyses, and
   plan future studies.
+- **Bayesian Shrinkage Priors**: Apply empirical priors from [van Zwet
+  et al. (2021)](https://doi.org/10.1002/sim.9173) or [Sherry et
+  al. (2024)](https://doi.org/10.1200/PO.24.00363) to regularize
+  treatment effects.
+- **IPD Reconstruction**: Reconstruct individual patient data from
+  published Kaplan-Meier curves using the [Guyot et
+  al. (2012)](https://doi.org/10.1186/1471-2288-12-9) algorithm.
 
 ## Installation
 
@@ -224,7 +251,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
 #> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Fri Jan 30 20:07:42 2026.
+#> Samples were drawn using NUTS(diag_e) at Fri Jan 30 20:17:48 2026.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -560,13 +587,13 @@ cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
 #>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.535431           0.00000        93.85172165
-#> 2          Utility TR (for TR>1) 48.801244           0.00000        98.24367936
-#> 3          Penalty TR (for TR<1)  0.000000         -27.23494         0.00000000
-#> 4      Efficacy Score (Combined) 91.451942          65.10802        98.54577821
-#> 5      QoL Contribution (points)  3.953580          -9.68866        20.10829930
-#> 6 Toxicity Contribution (points) -3.268844         -22.13845        -0.05742913
-#> 7            FINAL UTILITY SCORE 92.875119          48.01128        99.87587228
+#> 1           Utility Cure (0-100) 82.535431          0.000000        93.85172165
+#> 2          Utility TR (for TR>1) 48.801244          0.000000        98.24367936
+#> 3          Penalty TR (for TR<1)  0.000000        -27.234938         0.00000000
+#> 4      Efficacy Score (Combined) 91.451942         65.108020        98.54577821
+#> 5      QoL Contribution (points)  3.940021         -9.560371        19.70425563
+#> 6 Toxicity Contribution (points) -3.288842        -22.472809        -0.05507841
+#> 7            FINAL UTILITY SCORE 92.840335         46.636106        99.87624304
 print(final_scores$identifiability_level)
 #> [1] "Strong"
 ```
@@ -684,9 +711,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.87512
-#> 71     zwet 78.22219
-#> 72   sherry 87.55711
+#> 7  unshrunk 92.84034
+#> 71     zwet 78.62315
+#> 72   sherry 87.69943
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
@@ -901,50 +928,19 @@ library(bystools)
 
 bystools()
 
-## Why bayescores? a more meaningful approach
+## Why bayescores?
 
-- **Clinically interpretable**: time ratios are easier to explain to
-  clinicians and patients than hazard ratios, and mixture cure models
-  separate short-term survival effects from the long-term survivor
-  fraction. This resolves the problem of “double counting” benefit—first
-  via the HR and again through a separate long-term bonus—ensuring both
-  metrics remain independent.
-- **Incorporates mechanistic knowledge**: allows the encoding of
-  pharmacological context through priors. For example, the model can
-  account for the fact that immunotherapy often produces a “tail” of
-  long-term survivors, whereas agents like CDK4/6 inhibitors or
-  chemotherapy typically yield a temporal delay without a genuine cure
-  fraction.
-- **Resolves identifiability challenges**: uses informed priors to solve
-  “equifinality” in complex datasets (e.g., crossing curves),
-  effectively distinguishing between a genuine biological plateau and an
-  artifact caused by sparse data or heavy censoring.
-- **Contextualizes data maturity**: models the underlying structure
-  rather than just observed events, making the framework resilient to
-  “snapshots” taken at different follow-up times. It quantifies the
-  stability of the survival benefit, preventing premature claims of cure
-  in immature datasets while validating solid plateaus in mature ones.
-- **Embraces uncertainty**: the Bayesian framework propagates
-  uncertainty from all model stages, displaying full posterior
-  distributions rather than collapsing results into single point
-  estimates.
-- **No thresholds**: uses continuous parameters and proportional weights
-  rather than fixed cut-offs, producing smooth, gradual changes in the
-  score. This avoids all-or-nothing jumps and makes the valuation
-  process transparent, reproducible, and customizable to stakeholder
-  priorities.
-- **Integrates multiple dimensions**: combines efficacy, toxicity, and
-  quality of life within a unified decision-analytic framework (MAUT),
-  with hierarchical aggregation that mirrors clinical reasoning:
-  efficacy first, then QoL, then toxicity.
-- **Customizable toxicity weighting**: Weighted Toxicity Scores can
-  incorporate grade-specific and type-specific penalties, reflecting the
-  clinical relevance of different adverse events and aligning with
-  disease-specific “toxicity budgets.”
-- **Accessible implementation**: provided as an open-source R package
-  (`bayescores`) with full workflow examples on GitHub, including KM
-  curve digitization and IPD reconstruction tools, plus a web interface
-  for no-code calculation and visualization.
+| Principle | Description |
+|:---|:---|
+| **Clinically interpretable** | Time ratios are easier to explain than hazard ratios. Mixture cure models separate short-term survival effects from the long-term survivor fraction, avoiding “double counting” of benefit. |
+| **Mechanistic priors** | Encode pharmacological context through priors (e.g., immunotherapy producing long-term survivors vs. CDK4/6 inhibitors yielding temporal delays). |
+| **Identifiability-aware** | Informed priors solve equifinality in complex datasets, distinguishing genuine plateaus from artifacts of sparse data or heavy censoring. |
+| **Data maturity** | Quantifies the stability of survival benefit, preventing premature claims of cure in immature datasets while validating solid plateaus in mature ones. |
+| **Full uncertainty** | Propagates uncertainty from all model stages, displaying posterior distributions rather than collapsing results into point estimates. |
+| **No thresholds** | Continuous parameters and proportional weights produce smooth score changes, avoiding all-or-nothing jumps. |
+| **Multi-dimensional** | Combines efficacy, toxicity, and QoL within a unified MAUT framework with hierarchical aggregation mirroring clinical reasoning. |
+| **Customizable toxicity** | Weighted Toxicity Scores incorporate grade- and type-specific penalties, aligning with disease-specific “toxicity budgets.” |
+| **Open source** | Full workflow examples, KM curve digitization, IPD reconstruction tools, and a Shiny web interface. |
 
 ## Citation
 
