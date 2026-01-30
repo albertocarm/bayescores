@@ -1,41 +1,61 @@
-# bayescores: Comprehensive Quantification of Clinical Benefit in Randomized Controlled Trials Using Bayesian Inference and Multi-Attribute Utility Theory
+# bayescores
 
-**`bayescores`** provides a comprehensive toolkit for analyzing
-randomized controlled trials (RCTs). This package introduces the
-**Bayesian Clinical Benefit Scores (BayeScores)**, a novel metric to
-quantify clinical benefit by accounting for both survival prolongation
-and cure rates.
+> **Comprehensive Quantification of Clinical Benefit in Randomized
+> Controlled Trials Using Bayesian Inference and Multi-Attribute Utility
+> Theory**
 
-Key Features
+**`bayescores`** provides a toolkit for analyzing randomized controlled
+trials (RCTs). It introduces the **Bayesian Clinical Benefit Scores
+(BayeScores)**, a novel metric that quantifies clinical benefit by
+jointly accounting for survival prolongation, cure rates, toxicity, and
+quality of life.
 
-- Fit Robust Bayesian Models: Implements Bayesian Accelerated Failure
-  Time (AFT) mixture cure models using Stan. The framework allows you
-  to:
+## Overview
 
-- Incorporate empirical and skeptical priors to stabilize inference and
-  reduce bias, especially with immature data.
+The package implements a full analytical pipeline:
 
-- Use the unique properties of AFT mixture cure models to quantify
-  clinical benefit in a novel way.
+``` R
+Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
+                                               |
+                    +--------------------------+--------------------------+
+                    |                          |                          |
+              Efficacy Scores          Toxicity Scores            QoL Scores
+              (TR + Cure Rate)       (Weighted Burden)         (Multinomial)
+                    |                          |                          |
+                    +-----------+--------------+--------------------------+
+                                |
+                         BayeScores
+                    (Multi-Attribute Utility)
+```
 
-- Assess Data Maturity: Run a novel non-identifiability test on the
-  model’s parameters. This check serves as a statistical proxy for data
-  maturity, helping to determine if the follow-up is sufficient to
-  reliably estimate the long-term benefit.
+## Key Features
 
-- Calculate Holistic Benefit Scores: Compute the final clinical benefit
-  score, the BayeScores.
-
-- The score is derived using concave functions to more realistically
-  reflect clinical utility (e.g., ensuring diminishing returns for each
-  additional month of survival).
-
-- Includes comprehensive visualization tools to display the scores,
-  results, and all model diagnostics.
-
-- Simulate Realistic Scenarios: Generate complex survival data from
+- **Fit Robust Bayesian Models**: Bayesian Accelerated Failure Time
+  (AFT) mixture cure models via Stan.
+  - Incorporate empirical and skeptical priors to stabilize inference
+    and reduce bias, especially with immature data.
+  - Use the unique properties of AFT mixture cure models to quantify
+    clinical benefit in a novel way.
+- **Assess Data Maturity**: A novel non-identifiability test on model
+  parameters serves as a statistical proxy for data maturity, helping
+  determine if follow-up is sufficient to reliably estimate long-term
+  benefit.
+- **Calculate Holistic Benefit Scores**: Compute the BayeScores using
+  concave utility functions that reflect diminishing marginal returns
+  for each additional month of survival.
+- **Visualize Everything**: Comprehensive plotting tools for posterior
+  distributions, donut charts, sensitivity dashboards, AMIT toxicity
+  plots, and model diagnostics.
+- **Simulate Realistic Scenarios**: Generate complex survival data from
   mixture cure models to validate methods, perform power analyses, and
   plan future studies.
+- **Bayesian Shrinkage Priors**: Apply empirical priors from [van Zwet
+  et al. (2021)](https://doi.org/10.1002/sim.9173) or [Sherry et
+  al. (2024)](https://doi.org/10.1200/PO.24.00363) to regularize
+  treatment effects.
+- **IPD Reconstruction**: Reconstruct individual patient data from
+  published Kaplan-Meier curves using the [Guyot et
+  al. (2012)](https://doi.org/10.1186/1471-2288-12-9) algorithm.
 
 ## Installation
 
@@ -223,7 +243,7 @@ print(bayesian_fit$stan_fit, pars = c("beta_cure_arm", "beta_surv_arm", "alpha_c
 #> beta_surv_arm 0.26    0.01 0.29 -0.20 0.06 0.22 0.44  0.90  1677    1
 #> alpha_control 1.22    0.00 0.10  1.02 1.15 1.22 1.29  1.41  1884    1
 #> 
-#> Samples were drawn using NUTS(diag_e) at Fri Jan 30 20:07:42 2026.
+#> Samples were drawn using NUTS(diag_e) at Fri Jan 30 20:17:48 2026.
 #> For each parameter, n_eff is a crude measure of effective sample size,
 #> and Rhat is the potential scale reduction factor on split chains (at 
 #> convergence, Rhat=1).
@@ -542,13 +562,13 @@ cat("--- Final Bayescores Summary ---\n")
 #> --- Final Bayescores Summary ---
 print(final_scores$component_summary)
 #>                        Component    Median Lower_95_CrI.2.5% Upper_95_CrI.97.5%
-#> 1           Utility Cure (0-100) 82.535431           0.00000        93.85172165
-#> 2          Utility TR (for TR>1) 48.801244           0.00000        98.24367936
-#> 3          Penalty TR (for TR<1)  0.000000         -27.23494         0.00000000
-#> 4      Efficacy Score (Combined) 91.451942          65.10802        98.54577821
-#> 5      QoL Contribution (points)  3.953580          -9.68866        20.10829930
-#> 6 Toxicity Contribution (points) -3.268844         -22.13845        -0.05742913
-#> 7            FINAL UTILITY SCORE 92.875119          48.01128        99.87587228
+#> 1           Utility Cure (0-100) 82.535431          0.000000        93.85172165
+#> 2          Utility TR (for TR>1) 48.801244          0.000000        98.24367936
+#> 3          Penalty TR (for TR<1)  0.000000        -27.234938         0.00000000
+#> 4      Efficacy Score (Combined) 91.451942         65.108020        98.54577821
+#> 5      QoL Contribution (points)  3.940021         -9.560371        19.70425563
+#> 6 Toxicity Contribution (points) -3.288842        -22.472809        -0.05507841
+#> 7            FINAL UTILITY SCORE 92.840335         46.636106        99.87624304
 print(final_scores$identifiability_level)
 #> [1] "Strong"
 ```
@@ -656,9 +676,9 @@ comparison <- rbind(
 
 print(comparison)
 #>       prior   Median
-#> 7  unshrunk 92.87512
-#> 71     zwet 78.22219
-#> 72   sherry 87.55711
+#> 7  unshrunk 92.84034
+#> 71     zwet 78.62315
+#> 72   sherry 87.69943
 
 # plot utility donuts for each prior
 plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
@@ -873,50 +893,19 @@ library(bystools)
 
 bystools()
 
-## Why bayescores? a more meaningful approach
+## Why bayescores?
 
-- **Clinically interpretable**: time ratios are easier to explain to
-  clinicians and patients than hazard ratios, and mixture cure models
-  separate short-term survival effects from the long-term survivor
-  fraction. This resolves the problem of “double counting” benefit—first
-  via the HR and again through a separate long-term bonus—ensuring both
-  metrics remain independent.
-- **Incorporates mechanistic knowledge**: allows the encoding of
-  pharmacological context through priors. For example, the model can
-  account for the fact that immunotherapy often produces a “tail” of
-  long-term survivors, whereas agents like CDK4/6 inhibitors or
-  chemotherapy typically yield a temporal delay without a genuine cure
-  fraction.
-- **Resolves identifiability challenges**: uses informed priors to solve
-  “equifinality” in complex datasets (e.g., crossing curves),
-  effectively distinguishing between a genuine biological plateau and an
-  artifact caused by sparse data or heavy censoring.
-- **Contextualizes data maturity**: models the underlying structure
-  rather than just observed events, making the framework resilient to
-  “snapshots” taken at different follow-up times. It quantifies the
-  stability of the survival benefit, preventing premature claims of cure
-  in immature datasets while validating solid plateaus in mature ones.
-- **Embraces uncertainty**: the Bayesian framework propagates
-  uncertainty from all model stages, displaying full posterior
-  distributions rather than collapsing results into single point
-  estimates.
-- **No thresholds**: uses continuous parameters and proportional weights
-  rather than fixed cut-offs, producing smooth, gradual changes in the
-  score. This avoids all-or-nothing jumps and makes the valuation
-  process transparent, reproducible, and customizable to stakeholder
-  priorities.
-- **Integrates multiple dimensions**: combines efficacy, toxicity, and
-  quality of life within a unified decision-analytic framework (MAUT),
-  with hierarchical aggregation that mirrors clinical reasoning:
-  efficacy first, then QoL, then toxicity.
-- **Customizable toxicity weighting**: Weighted Toxicity Scores can
-  incorporate grade-specific and type-specific penalties, reflecting the
-  clinical relevance of different adverse events and aligning with
-  disease-specific “toxicity budgets.”
-- **Accessible implementation**: provided as an open-source R package
-  (`bayescores`) with full workflow examples on GitHub, including KM
-  curve digitization and IPD reconstruction tools, plus a web interface
-  for no-code calculation and visualization.
+| Principle                    | Description                                                                                                                                                                                 |
+|:-----------------------------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Clinically interpretable** | Time ratios are easier to explain than hazard ratios. Mixture cure models separate short-term survival effects from the long-term survivor fraction, avoiding “double counting” of benefit. |
+| **Mechanistic priors**       | Encode pharmacological context through priors (e.g., immunotherapy producing long-term survivors vs. CDK4/6 inhibitors yielding temporal delays).                                           |
+| **Identifiability-aware**    | Informed priors solve equifinality in complex datasets, distinguishing genuine plateaus from artifacts of sparse data or heavy censoring.                                                   |
+| **Data maturity**            | Quantifies the stability of survival benefit, preventing premature claims of cure in immature datasets while validating solid plateaus in mature ones.                                      |
+| **Full uncertainty**         | Propagates uncertainty from all model stages, displaying posterior distributions rather than collapsing results into point estimates.                                                       |
+| **No thresholds**            | Continuous parameters and proportional weights produce smooth score changes, avoiding all-or-nothing jumps.                                                                                 |
+| **Multi-dimensional**        | Combines efficacy, toxicity, and QoL within a unified MAUT framework with hierarchical aggregation mirroring clinical reasoning.                                                            |
+| **Customizable toxicity**    | Weighted Toxicity Scores incorporate grade- and type-specific penalties, aligning with disease-specific “toxicity budgets.”                                                                 |
+| **Open source**              | Full workflow examples, KM curve digitization, IPD reconstruction tools, and a Shiny web interface.                                                                                         |
 
 ## Citation
 
@@ -926,159 +915,233 @@ citation("bayescores")
 
 # Package index
 
-## All functions
+## Model Fitting & Diagnostics
 
-- [`AURA3_1A`](AURA3_1A.md) : Data from the AURA3_1A Trial
-- [`BOLERO3_2`](BOLERO3_2.md) : Data from the BOLERO3_2 Trial
-- [`CONCUR_2A`](CONCUR_2A.md) : Data from the CONCUR_2A Trial
-- [`COUAA202_2`](COUAA202_2.md) : Data from the COUAA202_2 Trial
-- [`DART0105_2A`](DART0105_2A.md) : Data from the DART0105_2A Trial
-- [`GEICAM2003_2A`](GEICAM2003_2A.md) : Data from the GEICAM2003_2A
-  Trial
-- [`GETUG12_2`](GETUG12_2.md) : Data from the GETUG12_2 Trial
-- [`IMELDA_2A`](IMELDA_2A.md) : Data from the IMELDA_2A Trial
-- [`KEYNOTE024_1A`](KEYNOTE024_1A.md) : Data from the KEYNOTE024_1A
-  Trial
-- [`KEYNOTE062`](KEYNOTE062.md) : Data from the KEYNOTE062 Trial
-- [`Keynote062_toxicity`](Keynote062_toxicity.md) : Toxicity and QoL
-  data from Keynote062_toxicity
-- [`LUXLung8_2A`](LUXLung8_2A.md) : Data from the LUXLung8_2A Trial
-- [`MA17R_1A`](MA17R_1A.md) : Data from the MA17R_1A Trial
-- [`MONALEESA2_1`](MONALEESA2_1.md) : Data from the MONALEESA2_1 Trial
-- [`NO16968_2A`](NO16968_2A.md) : Data from the NO16968_2A Trial
-- [`NO16968_2C`](NO16968_2C.md) : Data from the NO16968_2C Trial
-- [`NOAH_2A`](NOAH_2A.md) : Data from the NOAH_2A Trial
-- [`NOAH_2B`](NOAH_2B.md) : Data from the NOAH_2B Trial
-- [`NSABPB35_2`](NSABPB35_2.md) : Data from the NSABPB35_2 Trial
-- [`NSABPB35_3`](NSABPB35_3.md) : Data from the NSABPB35_3 Trial
-- [`NSABPB40_3A`](NSABPB40_3A.md) : Data from the NSABPB40_3A Trial
-- [`NSABPB40_3B`](NSABPB40_3B.md) : Data from the NSABPB40_3B Trial
-- [`PALOMA2_1A`](PALOMA2_1A.md) : Data from the PALOMA2_1A Trial
-- [`PROFILE1014_1A`](PROFILE1014_1A.md) : Data from the PROFILE1014_1A
-  Trial
-- [`RECOURSE_1A`](RECOURSE_1A.md) : Data from the RECOURSE_1A Trial
-- [`aura3_toxicity`](aura3_toxicity.md) : Toxicity and quality of life
-  data from the AURA3 trial
-- [`bolero3_toxicity`](bolero3_toxicity.md) : Toxicity and quality of
-  life data from the BOLERO3 trial
-- [`calculate_asco_nhb()`](calculate_asco_nhb.md) : Calculate the ASCO
-  Net Health Benefit (NHB) Score
-- [`calculate_esmo_mcbs()`](calculate_esmo_mcbs.md) : Calculate the
-  ESMO-MCBS v2.0 Score (Guided by Objective)
-- [`calculate_toxicity_analysis()`](calculate_toxicity_analysis.md) :
-  Calculate a complete toxicity analysis
-- [`check_false_plateau()`](check_false_plateau.md) : Check for False
-  Plateau or Structural Instability
-- [`checkmate649_toxicity`](checkmate649_toxicity.md) : Toxicity and
-  quality of life data from the CheckMate-649 trial
-- [`cm649`](cm649.md) : Data from the CheckMate-649 Trial
-- [`cm649_2024_update`](cm649_2024_update.md) : Data from the
-  CheckMate-649 Trial -2024 update
-- [`concur_toxicity`](concur_toxicity.md) : Toxicity and quality of life
-  data from the CONCUR trial
-- [`create_amit_plot()`](create_amit_plot.md) : Create an AMIT plot
-  (Adverse Event Dot Plot) from a clinical trial object.
-- [`dart0105_toxicity`](dart0105_toxicity.md) : Toxicity and quality of
-  life data from the DART0105 trial
-- [`diagnose_fit()`](diagnose_fit.md) : Diagnose Bayesian MCMC fit
-- [`esopec`](esopec.md) : Data from the esopec Trial
-- [`esopec_toxicity`](esopec_toxicity.md) : Toxicity and QoL data from
-  esopec_toxicity
-- [`extract_mcmc_cure_diffs()`](extract_mcmc_cure_diffs.md) : Extract
-  MCMC Samples for the Difference in Cure Rates
-- [`extract_mcmc_time_ratios()`](extract_mcmc_time_ratios.md) : Extract
-  MCMC Samples for the Time Ratio
-- [`fit_bayesian_cure_model()`](fit_bayesian_cure_model.md) : Fit the
-  Bayesian Cure Model (Engine)
-- [`geicam2003_toxicity`](geicam2003_toxicity.md) : Toxicity and quality
-  of life data from the GEICAM 2003 trial
-- [`generate_qol_vector()`](generate_qol_vector.md) : Interactively
-  Generate a Quality of Life (QoL) Probability Vector
-- [`generate_sensitivity_dashboard()`](generate_sensitivity_dashboard.md)
+Fit Bayesian AFT mixture cure models and assess convergence
+
+- [`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
+  : Fit the Bayesian Cure Model (Engine)
+- [`outcomes()`](https://albertocarm.github.io/bayescores/reference/outcomes.md)
+  : Generate a Summary Table of Model Outcomes (Final Version 2.1)
+- [`diagnose_fit()`](https://albertocarm.github.io/bayescores/reference/diagnose_fit.md)
+  : Diagnose Bayesian MCMC fit
+- [`model_diagnostics()`](https://albertocarm.github.io/bayescores/reference/model_diagnostics.md)
+  : Model Diagnostics
+- [`check_false_plateau()`](https://albertocarm.github.io/bayescores/reference/check_false_plateau.md)
+  : Check for False Plateau or Structural Instability
+
+## BayeScores Calculation
+
+Compute and summarize Bayesian clinical benefit scores
+
+- [`get_bayescores()`](https://albertocarm.github.io/bayescores/reference/get_bayescores.md)
+  : Calculate BayeScores Final Utility Score (Version 4, Corrected
+  Toxicity Model)
+- [`get_bayescores_draws()`](https://albertocarm.github.io/bayescores/reference/get_bayescores_draws.md)
+  : Get Original or Shrunk MCMC Draws for Subsequent Analyses (Updated)
+- [`summarize_final_utility()`](https://albertocarm.github.io/bayescores/reference/summarize_final_utility.md)
+  : Summarizes the final utility score with advanced dynamic weighting.
+- [`summarize_cure_rates()`](https://albertocarm.github.io/bayescores/reference/summarize_cure_rates.md)
+  : Summarize Cure Rate Results
+- [`time_ratio()`](https://albertocarm.github.io/bayescores/reference/time_ratio.md)
+  : Calculate the Time Ratio
+- [`calculate_asco_nhb()`](https://albertocarm.github.io/bayescores/reference/calculate_asco_nhb.md)
+  : Calculate the ASCO Net Health Benefit (NHB) Score
+- [`calculate_esmo_mcbs()`](https://albertocarm.github.io/bayescores/reference/calculate_esmo_mcbs.md)
+  : Calculate the ESMO-MCBS v2.0 Score (Guided by Objective)
+- [`print(`*`<bayes_summary>`*`)`](https://albertocarm.github.io/bayescores/reference/print.bayes_summary.md)
+  : Print method for bayes_summary objects
+
+## Posterior Extraction
+
+Extract MCMC posterior samples
+
+- [`extract_mcmc_time_ratios()`](https://albertocarm.github.io/bayescores/reference/extract_mcmc_time_ratios.md)
+  : Extract MCMC Samples for the Time Ratio
+- [`extract_mcmc_cure_diffs()`](https://albertocarm.github.io/bayescores/reference/extract_mcmc_cure_diffs.md)
+  : Extract MCMC Samples for the Difference in Cure Rates
+
+## Toxicity Analysis
+
+Weighted toxicity scoring and visualization
+
+- [`calculate_toxicity_analysis()`](https://albertocarm.github.io/bayescores/reference/calculate_toxicity_analysis.md)
+  : Calculate a complete toxicity analysis
+- [`create_amit_plot()`](https://albertocarm.github.io/bayescores/reference/create_amit_plot.md)
+  : Create an AMIT plot (Adverse Event Dot Plot) from a clinical trial
+  object.
+
+## Quality of Life
+
+Sample and visualize QoL distributions
+
+- [`sample_qol_scores()`](https://albertocarm.github.io/bayescores/reference/sample_qol_scores.md)
+  : Sample Quality of Life (QoL) Scores from a Multinomial Distribution
+- [`generate_qol_vector()`](https://albertocarm.github.io/bayescores/reference/generate_qol_vector.md)
+  : Interactively Generate a Quality of Life (QoL) Probability Vector
+
+## Visualization
+
+Plotting functions for model results and clinical scores
+
+- [`plot_densities()`](https://albertocarm.github.io/bayescores/reference/plot_densities.md)
+  : Plot Posterior Densities
+- [`plot_correlated_densities()`](https://albertocarm.github.io/bayescores/reference/plot_correlated_densities.md)
+  : Plot Correlated Posterior Densities
+- [`plot_utility_donut()`](https://albertocarm.github.io/bayescores/reference/plot_utility_donut.md)
+  : Plot Utility Score Gauge Visualization
+- [`plot_final_utility_density()`](https://albertocarm.github.io/bayescores/reference/plot_final_utility_density.md)
+  : Plot Utility Score Density Distribution
+- [`plot_km_curves()`](https://albertocarm.github.io/bayescores/reference/plot_km_curves.md)
+  : Plot Kaplan-Meier Survival Curves
+- [`plot_qol_histogram()`](https://albertocarm.github.io/bayescores/reference/plot_qol_histogram.md)
+  : Plot an Elegant Histogram of QoL Outcomes
+- [`plot_toxicity_density()`](https://albertocarm.github.io/bayescores/reference/plot_toxicity_density.md)
+  : Plot Toxicity Score Density
+- [`generate_sensitivity_dashboard()`](https://albertocarm.github.io/bayescores/reference/generate_sensitivity_dashboard.md)
   : Generate Comprehensive Sensitivity Analysis Dashboard
-- [`get_bayescores()`](get_bayescores.md) : Calculate BayeScores Final
-  Utility Score (Version 4, Corrected Toxicity Model)
-- [`get_bayescores_draws()`](get_bayescores_draws.md) : Get Original or
-  Shrunk MCMC Draws for Subsequent Analyses (Updated)
-- [`getug12_toxicity`](getug12_toxicity.md) : Toxicity and quality of
-  life data from the GETUG12 trial
-- [`glow`](glow.md) : Data from the glow Trial
-- [`glow_toxicity`](glow_toxicity.md) : Toxicity and quality of life
-  data from the GLOW trial
-- [`imbrave150_toxicity`](imbrave150_toxicity.md) : Toxicity and quality
-  of life data from the IMBRAVE150 trial
-- [`imelda_toxicity`](imelda_toxicity.md) : Toxicity and quality of life
-  data from the IMELDA trial
-- [`keynote024_toxicity`](keynote024_toxicity.md) : Toxicity and quality
-  of life data from the KEYNOTE024 trial
-- [`keynote_119_toxicity`](keynote_119_toxicity.md) : Toxicity and QoL
-  data from KEYNOTE-119
-- [`kn119`](kn119.md) : Digitized survival data from KEYNOTE-119
-- [`luxlung3_6_toxicity`](luxlung3_6_toxicity.md) : Toxicity and quality
-  of life data from the LUX‑Lung 3 and 6 trials
-- [`luxlung8_toxicity`](luxlung8_toxicity.md) : Toxicity and quality of
-  life data from the LUX‑Lung 8 trial
-- [`ma17r_toxicity`](ma17r_toxicity.md) : Toxicity and quality of life
-  data from the MA17R trial
-- [`model_diagnostics()`](model_diagnostics.md) : Model Diagnostics
-- [`monaleesa2_toxicity`](monaleesa2_toxicity.md) : Toxicity and quality
-  of life data from the MONALEESA‑2 trial
-- [`monarchE`](monarchE.md) : Data from the monarchE Trial
-- [`monarchE_toxicity`](monarchE_toxicity.md) : Toxicity and QoL data
-  from monarchE_toxicity
-- [`natalee`](natalee.md) : Data from the natalee Trial
-- [`natalee_toxicity`](natalee_toxicity.md) : Toxicity and QoL data from
-  natalee_toxicity
-- [`no16968_toxicity`](no16968_toxicity.md) : Toxicity and quality of
-  life data from the NO16968 trial
-- [`noah_toxicity`](noah_toxicity.md) : Toxicity and quality of life
-  data from the NOAH trial
-- [`nsabpb35_toxicity`](nsabpb35_toxicity.md) : Toxicity and quality of
-  life data from the NSABP B‑35 trial
-- [`nsabpb40_toxicity`](nsabpb40_toxicity.md) : Toxicity and quality of
-  life data from the NSABP B‑40 trial
-- [`outcomes()`](outcomes.md) : Generate a Summary Table of Model
-  Outcomes (Final Version 2.1)
-- [`paloma2_toxicity`](paloma2_toxicity.md) : Toxicity and quality of
-  life data from the PALOMA2 trial
-- [`plot_correlated_densities()`](plot_correlated_densities.md) : Plot
-  Correlated Posterior Densities
-- [`plot_densities()`](plot_densities.md) : Plot Posterior Densities
-- [`plot_final_utility_density()`](plot_final_utility_density.md) : Plot
-  Utility Score Density Distribution
-- [`plot_km_curves()`](plot_km_curves.md) : Plot Kaplan-Meier Survival
+- [`run_plot_scenario()`](https://albertocarm.github.io/bayescores/reference/run_plot_scenario.md)
+  : Run a Scenario for a Sensitivity Plot
+
+## Simulation & Data Reconstruction
+
+Generate synthetic trial data and reconstruct IPD from published curves
+
+- [`simulate_weibull_cure_data()`](https://albertocarm.github.io/bayescores/reference/simulate_weibull_cure_data.md)
+  : Simulate Survival Data from a Cure Model
+- [`simulate_trial_data()`](https://albertocarm.github.io/bayescores/reference/simulate_trial_data.md)
+  : Interactively or non-interactively simulate a realistic clinical
+  trial dataset
+- [`reconstruct_ipd()`](https://albertocarm.github.io/bayescores/reference/reconstruct_ipd.md)
+  : Reconstruct Individual Patient Data from Multiple Kaplan-Meier
   Curves
-- [`plot_qol_histogram()`](plot_qol_histogram.md) : Plot an Elegant
-  Histogram of QoL Outcomes
-- [`plot_toxicity_density()`](plot_toxicity_density.md) : Plot Toxicity
-  Score Density
-- [`plot_utility_donut()`](plot_utility_donut.md) : Plot Utility Score
-  Gauge Visualization
-- [`print(`*`<bayes_summary>`*`)`](print.bayes_summary.md) : Print
-  method for bayes_summary objects
-- [`profile1014_toxicity`](profile1014_toxicity.md) : Toxicity and
-  quality of life data from the PROFILE1014 trial
-- [`reconstruct_ipd()`](reconstruct_ipd.md) : Reconstruct Individual
-  Patient Data from Multiple Kaplan-Meier Curves
-- [`recourse_toxicity`](recourse_toxicity.md) : Toxicity and quality of
-  life data from the RECOURSE trial
-- [`run_plot_scenario()`](run_plot_scenario.md) : Run a Scenario for a
-  Sensitivity Plot
-- [`sample_qol_scores()`](sample_qol_scores.md) : Sample Quality of Life
-  (QoL) Scores from a Multinomial Distribution
-- [`simulate_trial_data()`](simulate_trial_data.md) : Interactively or
-  non-interactively simulate a realistic clinical trial dataset
-- [`simulate_weibull_cure_data()`](simulate_weibull_cure_data.md) :
-  Simulate Survival Data from a Cure Model
-- [`spotlight`](spotlight.md) : Data from the spotlight Trial
-- [`spotlight_toxicity`](spotlight_toxicity.md) : Toxicity and quality
-  of life data from the SPOTLIGHT trial
-- [`summarize_cure_rates()`](summarize_cure_rates.md) : Summarize Cure
-  Rate Results
-- [`summarize_final_utility()`](summarize_final_utility.md) : Summarizes
-  the final utility score with advanced dynamic weighting.
-- [`time_ratio()`](time_ratio.md) : Calculate the Time Ratio
-- [`toga`](toga.md) : Data from the toga Trial
-- [`toga_toxicity`](toga_toxicity.md) : Toxicity and quality of life
-  data from the TOGA trial
+
+## Included Datasets
+
+Pre-loaded RCT survival and toxicity data
+
+- [`AURA3_1A`](https://albertocarm.github.io/bayescores/reference/AURA3_1A.md)
+  : Data from the AURA3_1A Trial
+- [`BOLERO3_2`](https://albertocarm.github.io/bayescores/reference/BOLERO3_2.md)
+  : Data from the BOLERO3_2 Trial
+- [`CONCUR_2A`](https://albertocarm.github.io/bayescores/reference/CONCUR_2A.md)
+  : Data from the CONCUR_2A Trial
+- [`COUAA202_2`](https://albertocarm.github.io/bayescores/reference/COUAA202_2.md)
+  : Data from the COUAA202_2 Trial
+- [`DART0105_2A`](https://albertocarm.github.io/bayescores/reference/DART0105_2A.md)
+  : Data from the DART0105_2A Trial
+- [`GEICAM2003_2A`](https://albertocarm.github.io/bayescores/reference/GEICAM2003_2A.md)
+  : Data from the GEICAM2003_2A Trial
+- [`GETUG12_2`](https://albertocarm.github.io/bayescores/reference/GETUG12_2.md)
+  : Data from the GETUG12_2 Trial
+- [`IMELDA_2A`](https://albertocarm.github.io/bayescores/reference/IMELDA_2A.md)
+  : Data from the IMELDA_2A Trial
+- [`KEYNOTE024_1A`](https://albertocarm.github.io/bayescores/reference/KEYNOTE024_1A.md)
+  : Data from the KEYNOTE024_1A Trial
+- [`KEYNOTE062`](https://albertocarm.github.io/bayescores/reference/KEYNOTE062.md)
+  : Data from the KEYNOTE062 Trial
+- [`LUXLung8_2A`](https://albertocarm.github.io/bayescores/reference/LUXLung8_2A.md)
+  : Data from the LUXLung8_2A Trial
+- [`MA17R_1A`](https://albertocarm.github.io/bayescores/reference/MA17R_1A.md)
+  : Data from the MA17R_1A Trial
+- [`MONALEESA2_1`](https://albertocarm.github.io/bayescores/reference/MONALEESA2_1.md)
+  : Data from the MONALEESA2_1 Trial
+- [`NO16968_2A`](https://albertocarm.github.io/bayescores/reference/NO16968_2A.md)
+  : Data from the NO16968_2A Trial
+- [`NO16968_2C`](https://albertocarm.github.io/bayescores/reference/NO16968_2C.md)
+  : Data from the NO16968_2C Trial
+- [`NOAH_2A`](https://albertocarm.github.io/bayescores/reference/NOAH_2A.md)
+  : Data from the NOAH_2A Trial
+- [`NOAH_2B`](https://albertocarm.github.io/bayescores/reference/NOAH_2B.md)
+  : Data from the NOAH_2B Trial
+- [`NSABPB35_2`](https://albertocarm.github.io/bayescores/reference/NSABPB35_2.md)
+  : Data from the NSABPB35_2 Trial
+- [`NSABPB35_3`](https://albertocarm.github.io/bayescores/reference/NSABPB35_3.md)
+  : Data from the NSABPB35_3 Trial
+- [`NSABPB40_3A`](https://albertocarm.github.io/bayescores/reference/NSABPB40_3A.md)
+  : Data from the NSABPB40_3A Trial
+- [`NSABPB40_3B`](https://albertocarm.github.io/bayescores/reference/NSABPB40_3B.md)
+  : Data from the NSABPB40_3B Trial
+- [`PALOMA2_1A`](https://albertocarm.github.io/bayescores/reference/PALOMA2_1A.md)
+  : Data from the PALOMA2_1A Trial
+- [`PROFILE1014_1A`](https://albertocarm.github.io/bayescores/reference/PROFILE1014_1A.md)
+  : Data from the PROFILE1014_1A Trial
+- [`RECOURSE_1A`](https://albertocarm.github.io/bayescores/reference/RECOURSE_1A.md)
+  : Data from the RECOURSE_1A Trial
+- [`aura3_toxicity`](https://albertocarm.github.io/bayescores/reference/aura3_toxicity.md)
+  : Toxicity and quality of life data from the AURA3 trial
+- [`bolero3_toxicity`](https://albertocarm.github.io/bayescores/reference/bolero3_toxicity.md)
+  : Toxicity and quality of life data from the BOLERO3 trial
+- [`checkmate649_toxicity`](https://albertocarm.github.io/bayescores/reference/checkmate649_toxicity.md)
+  : Toxicity and quality of life data from the CheckMate-649 trial
+- [`cm649`](https://albertocarm.github.io/bayescores/reference/cm649.md)
+  : Data from the CheckMate-649 Trial
+- [`cm649_2024_update`](https://albertocarm.github.io/bayescores/reference/cm649_2024_update.md)
+  : Data from the CheckMate-649 Trial -2024 update
+- [`concur_toxicity`](https://albertocarm.github.io/bayescores/reference/concur_toxicity.md)
+  : Toxicity and quality of life data from the CONCUR trial
+- [`dart0105_toxicity`](https://albertocarm.github.io/bayescores/reference/dart0105_toxicity.md)
+  : Toxicity and quality of life data from the DART0105 trial
+- [`esopec`](https://albertocarm.github.io/bayescores/reference/esopec.md)
+  : Data from the esopec Trial
+- [`geicam2003_toxicity`](https://albertocarm.github.io/bayescores/reference/geicam2003_toxicity.md)
+  : Toxicity and quality of life data from the GEICAM 2003 trial
+- [`getug12_toxicity`](https://albertocarm.github.io/bayescores/reference/getug12_toxicity.md)
+  : Toxicity and quality of life data from the GETUG12 trial
+- [`glow`](https://albertocarm.github.io/bayescores/reference/glow.md) :
+  Data from the glow Trial
+- [`glow_toxicity`](https://albertocarm.github.io/bayescores/reference/glow_toxicity.md)
+  : Toxicity and quality of life data from the GLOW trial
+- [`imbrave150_toxicity`](https://albertocarm.github.io/bayescores/reference/imbrave150_toxicity.md)
+  : Toxicity and quality of life data from the IMBRAVE150 trial
+- [`imelda_toxicity`](https://albertocarm.github.io/bayescores/reference/imelda_toxicity.md)
+  : Toxicity and quality of life data from the IMELDA trial
+- [`keynote024_toxicity`](https://albertocarm.github.io/bayescores/reference/keynote024_toxicity.md)
+  : Toxicity and quality of life data from the KEYNOTE024 trial
+- [`luxlung3_6_toxicity`](https://albertocarm.github.io/bayescores/reference/luxlung3_6_toxicity.md)
+  : Toxicity and quality of life data from the LUX‑Lung 3 and 6 trials
+- [`luxlung8_toxicity`](https://albertocarm.github.io/bayescores/reference/luxlung8_toxicity.md)
+  : Toxicity and quality of life data from the LUX‑Lung 8 trial
+- [`ma17r_toxicity`](https://albertocarm.github.io/bayescores/reference/ma17r_toxicity.md)
+  : Toxicity and quality of life data from the MA17R trial
+- [`monaleesa2_toxicity`](https://albertocarm.github.io/bayescores/reference/monaleesa2_toxicity.md)
+  : Toxicity and quality of life data from the MONALEESA‑2 trial
+- [`monarchE`](https://albertocarm.github.io/bayescores/reference/monarchE.md)
+  : Data from the monarchE Trial
+- [`natalee`](https://albertocarm.github.io/bayescores/reference/natalee.md)
+  : Data from the natalee Trial
+- [`no16968_toxicity`](https://albertocarm.github.io/bayescores/reference/no16968_toxicity.md)
+  : Toxicity and quality of life data from the NO16968 trial
+- [`noah_toxicity`](https://albertocarm.github.io/bayescores/reference/noah_toxicity.md)
+  : Toxicity and quality of life data from the NOAH trial
+- [`nsabpb35_toxicity`](https://albertocarm.github.io/bayescores/reference/nsabpb35_toxicity.md)
+  : Toxicity and quality of life data from the NSABP B‑35 trial
+- [`nsabpb40_toxicity`](https://albertocarm.github.io/bayescores/reference/nsabpb40_toxicity.md)
+  : Toxicity and quality of life data from the NSABP B‑40 trial
+- [`paloma2_toxicity`](https://albertocarm.github.io/bayescores/reference/paloma2_toxicity.md)
+  : Toxicity and quality of life data from the PALOMA2 trial
+- [`profile1014_toxicity`](https://albertocarm.github.io/bayescores/reference/profile1014_toxicity.md)
+  : Toxicity and quality of life data from the PROFILE1014 trial
+- [`recourse_toxicity`](https://albertocarm.github.io/bayescores/reference/recourse_toxicity.md)
+  : Toxicity and quality of life data from the RECOURSE trial
+- [`spotlight`](https://albertocarm.github.io/bayescores/reference/spotlight.md)
+  : Data from the spotlight Trial
+- [`spotlight_toxicity`](https://albertocarm.github.io/bayescores/reference/spotlight_toxicity.md)
+  : Toxicity and quality of life data from the SPOTLIGHT trial
+- [`toga`](https://albertocarm.github.io/bayescores/reference/toga.md) :
+  Data from the toga Trial
+- [`toga_toxicity`](https://albertocarm.github.io/bayescores/reference/toga_toxicity.md)
+  : Toxicity and quality of life data from the TOGA trial
+- [`Keynote062_toxicity`](https://albertocarm.github.io/bayescores/reference/Keynote062_toxicity.md)
+  : Toxicity and QoL data from Keynote062_toxicity
+- [`esopec_toxicity`](https://albertocarm.github.io/bayescores/reference/esopec_toxicity.md)
+  : Toxicity and QoL data from esopec_toxicity
+- [`keynote_119_toxicity`](https://albertocarm.github.io/bayescores/reference/keynote_119_toxicity.md)
+  : Toxicity and QoL data from KEYNOTE-119
+- [`monarchE_toxicity`](https://albertocarm.github.io/bayescores/reference/monarchE_toxicity.md)
+  : Toxicity and QoL data from monarchE_toxicity
+- [`natalee_toxicity`](https://albertocarm.github.io/bayescores/reference/natalee_toxicity.md)
+  : Toxicity and QoL data from natalee_toxicity
+- [`kn119`](https://albertocarm.github.io/bayescores/reference/kn119.md)
+  : Digitized survival data from KEYNOTE-119
 
