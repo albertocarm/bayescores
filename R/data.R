@@ -1220,3 +1220,33 @@ NULL
 #' @docType data
 #' @usage data(esopec_toxicity)
 NULL
+
+#' IPD data from the Galaxy Circulate Japan trial
+#'
+#' @format A data frame with 1791 rows and 4 variables
+#' \describe{
+#'   \item{time}{Numerical time to event or censoring.}
+#'   \item{status}{Event indicator (1 = event, 0 = censored).}
+#'   \item{curve}{Numeric identifier for the survival curve.}
+#'   \item{arm}{Character string indicating the treatment arm (e.g., "Group 1", "Group 2").}
+#' }
+#' @source Individual Patient Data (IPD) reconstructed from Galaxy Circulate Japan.
+#' @name galaxy_circulate_japan
+#' @docType data
+#' @usage data(galaxy_circulate_japan)
+NULL
+
+#' IPD data from the MOSAIC trial
+#'
+#' @format A data frame with 4 variables
+#' \describe{
+#'   \item{time}{Numerical time to event or censoring.}
+#'   \item{status}{Event indicator (1 = event, 0 = censored).}
+#'   \item{curve}{Numeric identifier for the survival curve.}
+#'   \item{arm}{Character string indicating the treatment arm.}
+#' }
+#' @source \url{onconorte modelos cura/mosaic/ipd.xlsx}
+#' @name mosaic
+#' @docType data
+#' @usage data(mosaic)
+NULL
