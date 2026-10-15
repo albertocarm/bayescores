@@ -1,0 +1,33 @@
+Package: bayescores
+Title: Comprehensive Quantification of Clinical Benefit in Randomized 
+    Controlled Trials using Bayesian AFT Cure Models and BayeScores
+Version: 1.0
+Author: Alberto Carmona Bayonas <alberto.carmonabayonas@gmail.com>
+Maintainer: Alberto Carmona Bayonas <alberto.carmonabayonas@gmail.com>
+Description: Provides a comprehensive decision-making framework for the holistic analysis of randomized controlled trials (RCTs). This package introduces the Bayesian Clinical Benefit Scores (BayeScores), a novel metric to quantify the magnitude of clinical benefit by accounting for both survival prolongation and cure rates. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports: 
+    survival,
+    rstan,
+    ggplot2,
+    broom,
+    patchwork,
+    dplyr,
+    bde,
+    viridis,
+    stats,
+    scales,
+    tibble,
+    ggridges,
+    HH,
+    ggsci,
+    MASS,
+    tidyr,
+    rlang     
+RoxygenNote: 7.2.3
+URL: https://github.com/albertocarm/bayescores, https://albertocarm.github.io/bayescores/
+BugReports: https://github.com/albertocarm/bayescores/issues
+Depends: 
+    R (>= 3.5.0)

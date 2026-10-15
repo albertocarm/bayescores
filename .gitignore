@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.RDataTmp
+.httr-oauth
+.DS_Store
+.quarto
+inst/stan/*.rds
+README_files
