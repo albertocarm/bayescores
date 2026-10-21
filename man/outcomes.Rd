@@ -21,7 +21,7 @@ outcomes(
 \item{digits}{The number of decimal places for rounding.}
 
 \item{shrinkage_method}{A character string specifying the shrinkage method.
-Options are "none" (default), "zwet", "sherry", or "skeptical".}
+Options are "none" (default) or "skeptical".}
 
 \item{shrinkage_target}{A character string controlling the application of
 shrinkage. Options are "primary" or "both_if_uncorrelated".}
