@@ -27,8 +27,7 @@ fit_bayesian_cure_model(
 \item{time_col, event_col, arm_col}{Character strings for column names.}
 
 \item{tail_assumption}{Character string. Sets the prior belief strategy for the adjuvant
-cure effect. One of "neutral", "immature_skeptical", "biologically_null",
-"supportive", or "optimistic".}
+cure effect. One of "neutral", "immature_skeptical", or "biologically_null".}
 
 \item{shared_shape}{Logical. If TRUE, both treatment arms share the same Weibull
 shape parameter (proportional hazards). If FALSE (default), allows independent
