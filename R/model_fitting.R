@@ -5,8 +5,7 @@
 #' @param data A data frame with time, event, and arm columns.
 #' @param time_col,event_col,arm_col Character strings for column names.
 #' @param tail_assumption Character string. Sets the prior belief strategy for the adjuvant
-#'    cure effect. One of "neutral", "immature_skeptical", "biologically_null",
-#'    "supportive", or "optimistic".
+#'    cure effect. One of "neutral", "immature_skeptical", or "biologically_null".
 #' @param use_historical_prior Logical. If TRUE, overrides `tail_assumption` and uses
 #'    an informative historical prior defined by `historical_prior_params`.
 #'    Default is FALSE.
@@ -44,7 +43,7 @@ fit_bayesian_cure_model <- function(data,
                                     historical_prior_params = c(0, 1),
                                     ...) {
 
-  tail_assumption <- match.arg(tail_assumption, c("neutral", "immature_skeptical", "biologically_null", "supportive", "optimistic"))
+  tail_assumption <- match.arg(tail_assumption, c("neutral", "immature_skeptical", "biologically_null"))
 
   # Validate and convert 'arm' to a factor
   if (!is.factor(data[[arm_col]])) {
@@ -58,7 +57,7 @@ fit_bayesian_cure_model <- function(data,
     stop("Cannot find 'cure_model.stan'. Is the package installed correctly?")
   }
 
-  prior_int_map <- c("neutral" = 1, "immature_skeptical" = 2, "biologically_null" = 3, "supportive" = 4, "optimistic" = 5)
+  prior_int_map <- c("neutral" = 1, "immature_skeptical" = 2, "biologically_null" = 3)
   cure_prior_type <- prior_int_map[tail_assumption]
 
   # Prepare data for Stan
@@ -82,13 +81,7 @@ fit_bayesian_cure_model <- function(data,
 
   # Initialization function
   init_fun <- function() {
-    if (cure_prior_type >= 4) {
-      # Safe positive start for radial priors (4 and 5)
-      list(beta_cure_arm_raw = runif(1, 0.05, 0.2))
-    } else {
-      # Standard random start for others
-      list(beta_cure_arm_raw = rnorm(1, 0, 0.1))
-    }
+    list(beta_cure_arm_raw = rnorm(1, 0, 0.1))
   }
 
   # Fit model
