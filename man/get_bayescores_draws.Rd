@@ -15,7 +15,7 @@ get_bayescores_draws(
 \item{fit}{The fitted model object from `fit_bayesian_cure_model`.}
 
 \item{shrinkage_method}{A character string specifying the shrinkage method.
-Options are "zwet", "sherry", "skeptical", or "none" (default).}
+Options are "skeptical" or "none" (default).}
 
 \item{shrinkage_target}{A character string controlling shrinkage application.
 Options are "primary" or "both_if_uncorrelated".}
@@ -33,7 +33,6 @@ A list containing two named vectors of posterior samples:
 }
 \description{
 Extracts or generates posterior draws for efficacy inputs. This version
-incorporates advanced shrinkage methods, including a skeptical prior via
-whitening, and strategically applies them based on the primary utility
-endpoint and parameter correlation.
+can apply a skeptical shrinkage via whitening, targeted according to the
+primary utility endpoint and parameter correlation.
 }
