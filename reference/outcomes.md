@@ -34,7 +34,7 @@ outcomes(
 - shrinkage_method:
 
   A character string specifying the shrinkage method. Options are "none"
-  (default), "zwet", "sherry", or "skeptical".
+  (default) or "skeptical".
 
 - shrinkage_target:
 

@@ -37,8 +37,8 @@ fit_bayesian_cure_model(
 - tail_assumption:
 
   Character string. Sets the prior belief strategy for the adjuvant cure
-  effect. One of "neutral", "immature_skeptical", "biologically_null",
-  "supportive", or "optimistic".
+  effect. One of "neutral", "immature_skeptical", or
+  "biologically_null".
 
 - shared_shape:
 

@@ -32,7 +32,7 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
 
 - **Fit Robust Bayesian Models**: Bayesian Accelerated Failure Time
   (AFT) mixture cure models via Stan.
-  - Incorporate empirical and skeptical priors to stabilize inference
+  - Incorporate skeptical or historical priors to stabilize inference
     and reduce bias, especially with immature data.
   - Use the unique properties of AFT mixture cure models to quantify
     clinical benefit in a novel way.
@@ -49,10 +49,6 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
 - **Simulate Realistic Scenarios**: Generate complex survival data from
   mixture cure models to validate methods, perform power analyses, and
   plan future studies.
-- **Bayesian Shrinkage Priors**: Apply empirical priors from [van Zwet
-  et al. (2021)](https://doi.org/10.1002/sim.9173) or [Sherry et
-  al. (2024)](https://doi.org/10.1200/PO.24.00363) to regularize
-  treatment effects.
 - **IPD Reconstruction**: Reconstruct individual patient data from
   published Kaplan-Meier curves using the [Guyot et
   al. (2012)](https://doi.org/10.1186/1471-2288-12-9) algorithm.
@@ -629,87 +625,6 @@ plot_final_utility_density(final_scores)
 distribution.](reference/figures/README-plot-score-density-1.png)
 
 Figure 7: Final BayeScore posterior distribution.
-
-# Empirical bayesian shrinkage
-
-Applying the Zwet prior is appropriate as a Bayesian regularization
-mechanism to contain bias under conditions of limited information. This
-approach controls model instability; it does not magically resolve the
-underlying identifiability problem, which can only be overcome with
-longer follow-up. This package implements two such data-driven priors:
-
-- **“zwet”**: a general prior based on 23 551 trials from all fields of
-  medicine.
-
-  van Zwet E, Schwab S, Senn S. (2021). *The statistical properties of
-  RCTs and a proposal for shrinkage*. Statistics in Medicine. DOI:
-  10.1002/sim.9173.
-
-- **“sherry”**: a more specific prior based on 415 phase III oncology
-  trials, so an option for cancer-related studies.
-
-  Sherry AD, Msaouel P, et al. (2024). *An Evidence-Based Prior for
-  Estimating the Treatment Effect of Phase III Randomized Trials in
-  Oncology*. JCO Precision Oncology. DOI: 10.1200/PO.24.00363.
-
-Let’s see how applying these corrections affects our final utility
-score.
-
-``` r
-
-# apply shrinkage with zwet prior
-efficacy_draws_zwet <- get_bayescores_draws(
-  fit = bayesian_fit,
-  shrinkage_method = "zwet",
-  shrinkage_target = "primary"
-)
-
-final_scores_zwet <- get_bayescores(
-  efficacy_inputs = efficacy_draws_zwet, 
-  qol_scores = qol_scores,
-  toxicity_scores = toxicity_output$toxicity_effect_vector,
-  calibration_args = my_final_calibration
-)
-
-# apply shrinkage with zwet prior
-efficacy_draws_sherry <- get_bayescores_draws(
-  fit = bayesian_fit,
-  shrinkage_method = "sherry",
-  shrinkage_target = "primary"
-)
-
-final_scores_sherry <- get_bayescores(
-  efficacy_inputs = efficacy_draws_sherry, 
-  qol_scores = qol_scores,
-  toxicity_scores = toxicity_output$toxicity_effect_vector,
-  calibration_args = my_final_calibration
-)
-
-# compare unshrunk vs. zwet vs. sherry
-comparison <- rbind(
-  cbind(prior = "unshrunk", final_scores$component_summary[7,2 , drop = FALSE]),
-  cbind(prior = "zwet",     final_scores_zwet$component_summary[7,2 , drop = FALSE]),
-  cbind(prior = "sherry",   final_scores_sherry$component_summary[7,2 , drop = FALSE])
-)
-
-print(comparison)
-#>       prior   Median
-#> 7  unshrunk 92.84034
-#> 71     zwet 78.62315
-#> 72   sherry 87.69943
-
-# plot utility donuts for each prior
-plot_utility_donut(final_scores_zwet, trial_name ="Zwet's shrinkage")
-```
-
-![](reference/figures/README-apply_shrinkage-1.png)
-
-``` r
-
-plot_utility_donut(final_scores_sherry, trial_name ="sherry's shrinkage")
-```
-
-![](reference/figures/README-apply_shrinkage-2.png)
 
 ***Sensitivity Analysis Dashboard***
 
