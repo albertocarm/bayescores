@@ -6,7 +6,7 @@ data {
   int<lower=0, upper=1> evento[N];
   vector[N] arm;
   
-  int<lower=1, upper=5> cure_prior_type;
+  int<lower=1, upper=3> cure_prior_type;
   int<lower=0, upper=1> use_historical_prior;
   vector[2] historical_prior_params;
   int<lower=0, upper=1> shared_shape;
@@ -63,18 +63,6 @@ model {
       beta_cure_arm ~ double_exponential(0, 0.2); 
     } else if (cure_prior_type == 3) {
       beta_cure_arm ~ double_exponential(0, 0.1);
-    } else if (cure_prior_type == 4) {
-      if (beta_cure_arm < 0) {
-        target += negative_infinity();
-      } else {
-        beta_cure_arm ~ weibull(2.0, 0.707);
-      }
-    } else if (cure_prior_type == 5) {
-      if (beta_cure_arm < 0) {
-        target += negative_infinity();
-      } else {
-        beta_cure_arm ~ weibull(1.5, 1.0);
-      }
     }
   }
 
