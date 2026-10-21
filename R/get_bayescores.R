@@ -104,13 +104,12 @@ get_bayescores <- function(
 #'
 #' @description
 #' Extracts or generates posterior draws for efficacy inputs. This version
-#' incorporates advanced shrinkage methods, including a skeptical prior via
-#' whitening, and strategically applies them based on the primary utility
-#' endpoint and parameter correlation.
+#' can apply a skeptical shrinkage via whitening, targeted according to the
+#' primary utility endpoint and parameter correlation.
 #'
 #' @param fit The fitted model object from `fit_bayesian_cure_model`.
 #' @param shrinkage_method A character string specifying the shrinkage method.
-#'   Options are "zwet", "sherry", "skeptical", or "none" (default).
+#'   Options are "skeptical" or "none" (default).
 #' @param shrinkage_target A character string controlling shrinkage application.
 #'   Options are "primary" or "both_if_uncorrelated".
 #' @param calibration_args An optional list to override default utility calibration,
@@ -133,7 +132,7 @@ get_bayescores_draws <- function(fit,
                                  calibration_args = list()) {
 
   # --- Input Validation ---
-  valid_methods <- c("zwet", "sherry", "skeptical", "none")
+  valid_methods <- c("skeptical", "none")
   if (!shrinkage_method %in% valid_methods) {
     stop(paste("Invalid shrinkage_method specified. Use one of:", paste(valid_methods, collapse = ", ")))
   }
@@ -208,9 +207,6 @@ get_bayescores_draws <- function(fit,
         b <- mean(log_tr_draws); shrunk_b <- b / 2
         final_log_tr_draws <- log_tr_draws - (b - shrunk_b)
       }
-    } else { # Zwet or Sherry
-      if (apply_to_or) final_log_or_draws <- sample_shrinkage_draws(log_or_draws, method = shrinkage_method)
-      if (apply_to_tr) final_log_tr_draws <- sample_shrinkage_draws(log_tr_draws, method = shrinkage_method)
     }
   }
 

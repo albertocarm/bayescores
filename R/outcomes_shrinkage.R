@@ -1,66 +1,3 @@
-# -------------------------------------------------------------------
-# Internal Helper Functions (not exported to the user)
-# These functions are used by both main functions to avoid code duplication.
-# -------------------------------------------------------------------
-
-#' @noRd
-#' @title Conditional Distribution Calculator
-#' @description Computes the parameters of the corrected posterior distribution for the SNR.
-#' This code is an implementation of the method from Van Zwet et al. (2021).
-#' @param z The observed z-score.
-#' @param p A vector of mixture proportions for the prior.
-#' @param tau A vector of standard deviations for the SNR prior components.
-#' @return A data frame with the parameters (q, m, sigma) of the conditional mixture distribution.
-conditional <- function(z, p, tau) {
-  tau2 <- tau^2
-  q_unscaled <- p * dnorm(z, 0, sqrt(tau2 + 1))
-  if (all(q_unscaled == 0)) {
-    q <- rep(1/length(p), length(p))
-  } else {
-    q <- q_unscaled / sum(q_unscaled)
-  }
-  m <- z * tau2 / (tau2 + 1)
-  v <- tau2 / (tau2 + 1)
-  sigma <- sqrt(v)
-  data.frame(q, m, sigma)
-}
-
-#' @noRd
-#' @title Shrinkage Sampler
-#' @description Generates a new vector of "corrected" MCMC draws based on an empirical prior.
-#' @param original_draws A numeric vector of the original MCMC draws (on the log scale).
-#' @param method A character string, either "zwet" or "sherry", specifying the prior.
-#' @return A numeric vector of the new, corrected MCMC draws.
-sample_shrinkage_draws <- function(original_draws, method) {
-  b <- mean(original_draws)
-  s <- sd(original_draws)
-  if (s == 0) return(original_draws) # No variation, no shrinkage
-  z_obs <- b / s
-  n_samples <- length(original_draws)
-
-  if (method == "zwet") {
-    p_prior <- c(0.32, 0.31, 0.30, 0.07)
-    tau_prior <- c(0.61, 1.42, 2.16, 5.64)
-  } else if (method == "sherry") {
-    p_prior <- c(0.0137, 0.2015, 0.7848)
-    tau_prior <- c(1.357, 1.368, 3.603)
-  } else {
-    stop("Internal error: Invalid shrinkage method passed to sampler.")
-  }
-
-  corrected_dist_params <- conditional(z = z_obs, p = p_prior, tau = tau_prior)
-  q_corr <- corrected_dist_params$q
-  m_corr <- corrected_dist_params$m
-  sigma_corr <- corrected_dist_params$sigma
-  n_components <- length(p_prior)
-
-  corrected_snr_samples <- numeric(n_samples)
-  for (i in 1:n_samples) {
-    component <- sample(1:n_components, size = 1, prob = q_corr)
-    corrected_snr_samples[i] <- rnorm(1, mean = m_corr[component], sd = sigma_corr[component])
-  }
-  s * corrected_snr_samples
-}
 #' Generate a Summary Table of Model Outcomes (Final Version 2.1)
 #'
 #' @description
@@ -71,7 +8,7 @@ sample_shrinkage_draws <- function(original_draws, method) {
 #' @param calibration_args An optional list to override default utility calibration.
 #' @param digits The number of decimal places for rounding.
 #' @param shrinkage_method A character string specifying the shrinkage method.
-#'    Options are "none" (default), "zwet", "sherry", or "skeptical".
+#'    Options are "none" (default) or "skeptical".
 #' @param shrinkage_target A character string controlling the application of
 #'    shrinkage. Options are "primary" or "both_if_uncorrelated".
 #' @param correlation_method Character. The method to use: 'pearson' (default),
@@ -94,7 +31,7 @@ outcomes <- function(fit,
                      correlation_method = c("pearson", "spearman", "kendall")) {
 
   # --- 1) Input Validation and Data Extraction ---
-  valid_methods <- c("zwet", "sherry", "skeptical", "none")
+  valid_methods <- c("skeptical", "none")
   if (!shrinkage_method %in% valid_methods) {
     stop(paste("Invalid shrinkage_method. Use one of:", paste(valid_methods, collapse = ", ")))
   }
@@ -229,9 +166,6 @@ outcomes <- function(fit,
         }
         cor_log_tr <- temp_skeptical_sampler(log_tr)
       }
-    } else {
-      if (apply_to_or) cor_log_or <- sample_shrinkage_draws(log_or, method = shrinkage_method)
-      if (apply_to_tr) cor_log_tr <- sample_shrinkage_draws(log_tr, method = shrinkage_method)
     }
 
     p_exp_cor <- 1 / (1 + exp(-(posterior$beta_cure_intercept + cor_log_or)))
