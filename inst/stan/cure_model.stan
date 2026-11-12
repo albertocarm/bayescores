@@ -3,7 +3,7 @@
 data {
   int<lower=1> N;
   vector<lower=0>[N] tiempo;
-  int<lower=0, upper=1> evento[N];
+  vector<lower=0, upper=1>[N] evento;
   vector[N] arm;
   
   int<lower=1, upper=3> cure_prior_type;
