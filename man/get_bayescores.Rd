@@ -24,7 +24,8 @@ get_bayescores(
 \item{correlation_method}{Character. The method to use: 'pearson' (default), 'spearman', or 'kendall'.}
 }
 \value{
-A list with the final utility vector and a summary data frame.
+A list with the final utility vector and a summary data frame. The
+  final utility is bounded to the 0-100 range.
 }
 \description{
 This version corrects the toxicity calculation model as per user feedback.
