@@ -50,8 +50,9 @@ for the treatment effect log-OR. Default is c(0, 1).}
 times of the non-cured patients. One of "weibull" (default), "exponential",
 "lognormal", "loglogistic", "gamma", or "gengamma" (generalized gamma).
 All of them are accelerated failure time models, so the time ratio keeps
-its interpretation. Candidate distributions can be compared with
-`compare_models`.}
+its interpretation. The Weibull distribution is the pre-specified default;
+the alternatives are intended for sensitivity analyses and can optionally
+be compared with `compare_models`.}
 
 \item{...}{Additional arguments passed to `rstan::stan`.}
 }
@@ -89,8 +90,26 @@ has the following meaning:
 The priors of the parameters shared with the Weibull model are the same for
 every distribution; `q_shape` has a standard normal prior. With
 "exponential" the argument `shared_shape` has no effect.
+
+Priors of the treatment effects. With `tail_assumption = "neutral"` (the
+default) the log odds ratio of cure (`beta_cure_arm`) and the log time ratio
+(`beta_surv_arm`) have independent Normal(0, 2.5) priors. A standard
+deviation of 2.5 is the scale of the weakly informative default of Gelman
+et al. (2008): a shift of 5 on the logit scale moves a probability from
+0.01 to 0.5, so larger effects are implausible but not excluded. The prior
+places 95\% of its mass on odds ratios and time ratios between 0.007 and
+134 and is nearly flat over the range of effects seen in clinical trials,
+so it stabilizes the computation without pulling the estimates towards the
+null. With "immature_skeptical" and "biologically_null" the log odds ratio
+has a Laplace(0, 0.2) and a Laplace(0, 0.1) prior, respectively, and the log
+time ratio keeps the Normal(0, 2.5) prior. The intercepts have
+Student-t(4, 0, 2.5) priors and the shape parameter a Gamma(1, 1) prior.
 }
 \references{
+Gelman A, Jakulin A, Pittau MG, Su YS (2008). A weakly informative default
+prior distribution for logistic and other regression models. The Annals of
+Applied Statistics, 2, 1360-1383.
+
 Prentice RL (1974). A log gamma model and its maximum likelihood estimation.
 Biometrika, 61, 539-544.
 }
