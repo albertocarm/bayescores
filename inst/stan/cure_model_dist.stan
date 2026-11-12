@@ -200,11 +200,7 @@ transformed parameters {
     beta_alpha_arm = 0.0;
   }
 
-  if (cure_prior_type == 2 || cure_prior_type == 3) {
-    beta_surv_arm = 2.5 * beta_surv_arm_raw;
-  } else {
-    beta_surv_arm = 1.0 * beta_surv_arm_raw;
-  }
+  beta_surv_arm = 2.5 * beta_surv_arm_raw;
 }
 
 model {
@@ -229,7 +225,7 @@ model {
     beta_cure_arm ~ normal(historical_prior_params[1], historical_prior_params[2]);
   } else {
     if (cure_prior_type == 1) {
-      beta_cure_arm ~ std_normal();
+      beta_cure_arm ~ normal(0, 2.5);
     } else if (cure_prior_type == 2) {
       beta_cure_arm ~ double_exponential(0, 0.2);
     } else if (cure_prior_type == 3) {
