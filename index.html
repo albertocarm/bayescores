@@ -110,13 +110,20 @@
 <li>
 <strong>More distributions for the non-cured patients.</strong> <code><a href="reference/fit_bayesian_cure_model.html">fit_bayesian_cure_model()</a></code> has a new argument, <code>dist</code>, to choose among six accelerated failure time distributions: <code>"weibull"</code> (the default, as before), <code>"exponential"</code>, <code>"lognormal"</code>, <code>"loglogistic"</code>, <code>"gamma"</code> and <code>"gengamma"</code> (generalized gamma).</li>
 <li>
-<strong>Bayesian choice of the distribution.</strong> The new function <code><a href="reference/compare_models.html">compare_models()</a></code> ranks models that have already been fitted, recommends one and flags practical ties. See <a href="#choosing-the-distribution-for-the-non-cured-patients">Choosing the distribution for the non-cured patients</a>.</li>
+<strong>Optional comparison of distributions.</strong> The Weibull model remains the pre-specified default and no data-driven model selection is done by default. For sensitivity analyses, the new function <code><a href="reference/compare_models.html">compare_models()</a></code> ranks models that have already been fitted and flags practical ties. See <a href="#choosing-the-distribution-for-the-non-cured-patients">Choosing the distribution for the non-cured patients</a>.</li>
+<li>
+<strong>Neutral prior: Normal(0, 2.5).</strong> With <code>tail_assumption = "neutral"</code> the log odds ratio of cure and the log time ratio now have independent Normal(0, 2.5) priors, the default weakly informative specification of the manuscript (previously Normal(0, 1)). See <a href="#why-a-standard-deviation-of-25">Why a standard deviation of 2.5?</a>.</li>
 <li>
 <strong>Compatibility with Stan.</strong> The Stan models now compile with both older and current versions of Stan.</li>
 <li>
 <strong>Risk penalty and score range.</strong> When the time ratio is below 1, the efficacy score is the cure utility reduced in proportion to the early harm: <code>U_cure * (1 - D / 100)</code>, where <code>D</code> is the disutility of the harm on a 0-100 scale. The penalty is a product, not a ratio, so it fades smoothly as the cure utility approaches zero and the efficacy score stays within 0-100 by construction. The final score, after the quality-of-life and toxicity adjustments, is also kept within 0-100.</li>
 </ul>
-<p>Existing code keeps working: with the default settings, the model and its results are the same as in the previous version.</p>
+<p>Existing code keeps working. The default model is the Weibull model of the manuscript; the only change in the defaults is the neutral prior, so results obtained with <code>tail_assumption = "neutral"</code> can differ from those of earlier versions, mainly when the data are immature. Version 1.2 is the version of record for the manuscript.</p>
+<div class="section level3">
+<h3 id="why-a-standard-deviation-of-25">Why a standard deviation of 2.5?<a class="anchor" aria-label="anchor" href="#why-a-standard-deviation-of-25"></a>
+</h3>
+<p>The neutral prior has to stabilize the computation without deciding the answer. A standard deviation of 2.5 is the scale of the weakly informative default proposed by <a href="https://doi.org/10.1214/08-AOAS191" class="external-link">Gelman et al. (2008)</a> for logistic regression coefficients, and the cure component of the model is a logistic regression: a shift of 5 on the logit scale moves a probability from 0.01 to 0.5, so larger effects are implausible but not excluded. Normal(0, 2.5) places 95% of its mass on odds ratios and time ratios between 0.007 and 134, and it is nearly flat over the range of effects seen in clinical trials. A Normal(0, 1) prior, in contrast, places 95% of its mass between 0.14 and 7.1 and pulls the estimates towards the null when the data are immature, which is a skeptical rather than a neutral position. Skepticism about cure is expressed explicitly with <code>tail_assumption = "immature_skeptical"</code> or <code>"biologically_null"</code>, which place a Laplace prior on the log odds ratio and keep the Normal(0, 2.5) prior on the log time ratio.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -678,7 +685,7 @@ Figure 7: Final BayeScore posterior distribution.
 <div class="section level2">
 <h2 id="choosing-the-distribution-for-the-non-cured-patients">Choosing the distribution for the non-cured patients<a class="anchor" aria-label="anchor" href="#choosing-the-distribution-for-the-non-cured-patients"></a>
 </h2>
-<p>By default, the survival times of the non-cured patients follow a Weibull distribution. The argument <code>dist</code> of <code><a href="reference/fit_bayesian_cure_model.html">fit_bayesian_cure_model()</a></code> offers five alternatives: <code>"exponential"</code>, <code>"lognormal"</code>, <code>"loglogistic"</code>, <code>"gamma"</code> and <code>"gengamma"</code> (generalized gamma, which contains the Weibull, the gamma and the log-normal as special cases). All of them are accelerated failure time models, so the time ratio keeps its meaning and the rest of the package (<code><a href="reference/outcomes.html">outcomes()</a></code>, the plots, the BayeScores) works in the same way with any of them.</p>
+<p>By default, the survival times of the non-cured patients follow a Weibull distribution. This is the pre-specified model: the package does not select the distribution from the data, which would add a data-driven step and a risk of overfitting. The alternatives described here are optional and are meant for sensitivity analyses, to check that the conclusions do not depend on the distribution. The argument <code>dist</code> of <code><a href="reference/fit_bayesian_cure_model.html">fit_bayesian_cure_model()</a></code> offers five alternatives: <code>"exponential"</code>, <code>"lognormal"</code>, <code>"loglogistic"</code>, <code>"gamma"</code> and <code>"gengamma"</code> (generalized gamma, which contains the Weibull, the gamma and the log-normal as special cases). All of them are accelerated failure time models, so the time ratio keeps its meaning and the rest of the package (<code><a href="reference/outcomes.html">outcomes()</a></code>, the plots, the BayeScores) works in the same way with any of them.</p>
 <p>Fitting is the slow step, so the workflow is meant to be practical: fit each candidate once, keep the fitted objects (or save them with <code><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS()</a></code>), and compare them afterwards. <code><a href="reference/compare_models.html">compare_models()</a></code> accepts any number of fitted models and does not refit anything.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># The Weibull model fitted in Step 4</span></span>
@@ -701,20 +708,20 @@ Figure 7: Final BayeScore posterior distribution.
 <span><span class="co"># Optional: save a fit and load it later with readRDS()</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">saveRDS</a></span><span class="op">(</span><span class="va">fit_gengamma</span>, <span class="st">"fit_gengamma.rds"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Rank the models and get a recommendation</span></span>
+<span><span class="co"># Rank the models</span></span>
 <span><span class="va">comparison</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/compare_models.html">compare_models</a></span><span class="op">(</span><span class="va">fit_weibull</span>, <span class="va">fit_lognormal</span>, <span class="va">fit_loglogistic</span>, <span class="va">fit_gengamma</span><span class="op">)</span></span>
 <span><span class="va">comparison</span></span>
 <span><span class="co">#&gt; Comparison of Bayesian cure models (PSIS-LOO)</span></span>
 <span><span class="co">#&gt; 300 observations, 4 models</span></span>
 <span><span class="co">#&gt;</span></span>
 <span><span class="co">#&gt;            model        dist elpd_diff se_diff       verdict</span></span>
-<span><span class="co">#&gt;      fit_weibull     weibull       0.0     0.0          best</span></span>
-<span><span class="co">#&gt;     fit_gengamma    gengamma      -0.3     1.0 practical tie</span></span>
-<span><span class="co">#&gt;  fit_loglogistic loglogistic      -1.7     1.9 practical tie</span></span>
-<span><span class="co">#&gt;    fit_lognormal   lognormal      -2.4     3.3 practical tie</span></span>
+<span><span class="co">#&gt;     fit_gengamma    gengamma       0.0     0.0          best</span></span>
+<span><span class="co">#&gt;      fit_weibull     weibull      -0.2     1.2 practical tie</span></span>
+<span><span class="co">#&gt;  fit_loglogistic loglogistic      -0.9     1.1 practical tie</span></span>
+<span><span class="co">#&gt;    fit_lognormal   lognormal      -1.1     2.0 practical tie</span></span>
 <span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; Highest predictive accuracy: fit_weibull (weibull). Practical ties:</span></span>
-<span><span class="co">#&gt; fit_gengamma (gengamma), fit_loglogistic (loglogistic), fit_lognormal</span></span>
+<span><span class="co">#&gt; Highest predictive accuracy: fit_gengamma (gengamma). Practical ties:</span></span>
+<span><span class="co">#&gt; fit_weibull (weibull), fit_loglogistic (loglogistic), fit_lognormal</span></span>
 <span><span class="co">#&gt; (lognormal). These models predict the data equally well for practical purposes:</span></span>
 <span><span class="co">#&gt; choose among them on other grounds (pre-specified model, parsimony) and check</span></span>
 <span><span class="co">#&gt; that the conclusions agree.</span></span>
@@ -734,7 +741,7 @@ Figure 7: Final BayeScore posterior distribution.
 <li>
 <strong>clearly worse</strong>: at least 4 ELPD units and at least 2 standard errors below the best model.</li>
 </ul>
-<p>In this example the Weibull model has the highest predictive accuracy and the three alternatives are practical ties: the data give no reason to move away from the default. The thresholds can be changed with the arguments <code>tie_elpd</code> and <code>tie_se</code>, and the full table (ELPD, effective number of parameters, stacking weights and Pareto k diagnostics) is stored in <code>comparison$comparison</code>.</p>
+<p>In this example the four models are practical ties: the pre-specified Weibull model is 0.2 ELPD units below the generalized gamma, so the data give no reason to move away from the default. The thresholds can be changed with the arguments <code>tie_elpd</code> and <code>tie_se</code>, and the full table (ELPD, effective number of parameters, stacking weights and Pareto k diagnostics) is stored in <code>comparison$comparison</code>.</p>
 <p><strong>How it is implemented</strong></p>
 <ol style="list-style-type: decimal">
 <li>For each posterior draw and each patient, the log-likelihood is computed in R from the fitted object. A patient with an event contributes <code>log(1 - p) + log f(t)</code> and a censored patient contributes <code>log(p + (1 - p) * S(t))</code>, where <code>p</code> is the cure probability of the patient’s arm, and <code>f</code> and <code>S</code> are the density and the survival function of the chosen distribution.</li>

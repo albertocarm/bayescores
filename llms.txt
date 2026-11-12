@@ -61,11 +61,18 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
   time distributions: `"weibull"` (the default, as before),
   `"exponential"`, `"lognormal"`, `"loglogistic"`, `"gamma"` and
   `"gengamma"` (generalized gamma).
-- **Bayesian choice of the distribution.** The new function
+- **Optional comparison of distributions.** The Weibull model remains
+  the pre-specified default and no data-driven model selection is done
+  by default. For sensitivity analyses, the new function
   [`compare_models()`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
-  ranks models that have already been fitted, recommends one and flags
-  practical ties. See [Choosing the distribution for the non-cured
+  ranks models that have already been fitted and flags practical ties.
+  See [Choosing the distribution for the non-cured
   patients](#choosing-the-distribution-for-the-non-cured-patients).
+- **Neutral prior: Normal(0, 2.5).** With `tail_assumption = "neutral"`
+  the log odds ratio of cure and the log time ratio now have independent
+  Normal(0, 2.5) priors, the default weakly informative specification of
+  the manuscript (previously Normal(0, 1)). See [Why a standard
+  deviation of 2.5?](#why-a-standard-deviation-of-25).
 - **Compatibility with Stan.** The Stan models now compile with both
   older and current versions of Stan.
 - **Risk penalty and score range.** When the time ratio is below 1, the
@@ -76,8 +83,30 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
   score stays within 0-100 by construction. The final score, after the
   quality-of-life and toxicity adjustments, is also kept within 0-100.
 
-Existing code keeps working: with the default settings, the model and
-its results are the same as in the previous version.
+Existing code keeps working. The default model is the Weibull model of
+the manuscript; the only change in the defaults is the neutral prior, so
+results obtained with `tail_assumption = "neutral"` can differ from
+those of earlier versions, mainly when the data are immature. Version
+1.2 is the version of record for the manuscript.
+
+### Why a standard deviation of 2.5?
+
+The neutral prior has to stabilize the computation without deciding the
+answer. A standard deviation of 2.5 is the scale of the weakly
+informative default proposed by [Gelman et al.
+(2008)](https://doi.org/10.1214/08-AOAS191) for logistic regression
+coefficients, and the cure component of the model is a logistic
+regression: a shift of 5 on the logit scale moves a probability from
+0.01 to 0.5, so larger effects are implausible but not excluded.
+Normal(0, 2.5) places 95% of its mass on odds ratios and time ratios
+between 0.007 and 134, and it is nearly flat over the range of effects
+seen in clinical trials. A Normal(0, 1) prior, in contrast, places 95%
+of its mass between 0.14 and 7.1 and pulls the estimates towards the
+null when the data are immature, which is a skeptical rather than a
+neutral position. Skepticism about cure is expressed explicitly with
+`tail_assumption = "immature_skeptical"` or `"biologically_null"`, which
+place a Laplace prior on the log odds ratio and keep the Normal(0, 2.5)
+prior on the log time ratio.
 
 ## Installation
 
@@ -861,7 +890,11 @@ bystools()
 ## Choosing the distribution for the non-cured patients
 
 By default, the survival times of the non-cured patients follow a
-Weibull distribution. The argument `dist` of
+Weibull distribution. This is the pre-specified model: the package does
+not select the distribution from the data, which would add a data-driven
+step and a risk of overfitting. The alternatives described here are
+optional and are meant for sensitivity analyses, to check that the
+conclusions do not depend on the distribution. The argument `dist` of
 [`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
 offers five alternatives: `"exponential"`, `"lognormal"`,
 `"loglogistic"`, `"gamma"` and `"gengamma"` (generalized gamma, which
@@ -900,20 +933,20 @@ fit_gengamma <- fit_bayesian_cure_model(
 # Optional: save a fit and load it later with readRDS()
 saveRDS(fit_gengamma, "fit_gengamma.rds")
 
-# Rank the models and get a recommendation
+# Rank the models
 comparison <- compare_models(fit_weibull, fit_lognormal, fit_loglogistic, fit_gengamma)
 comparison
 #> Comparison of Bayesian cure models (PSIS-LOO)
 #> 300 observations, 4 models
 #>
 #>            model        dist elpd_diff se_diff       verdict
-#>      fit_weibull     weibull       0.0     0.0          best
-#>     fit_gengamma    gengamma      -0.3     1.0 practical tie
-#>  fit_loglogistic loglogistic      -1.7     1.9 practical tie
-#>    fit_lognormal   lognormal      -2.4     3.3 practical tie
+#>     fit_gengamma    gengamma       0.0     0.0          best
+#>      fit_weibull     weibull      -0.2     1.2 practical tie
+#>  fit_loglogistic loglogistic      -0.9     1.1 practical tie
+#>    fit_lognormal   lognormal      -1.1     2.0 practical tie
 #>
-#> Highest predictive accuracy: fit_weibull (weibull). Practical ties:
-#> fit_gengamma (gengamma), fit_loglogistic (loglogistic), fit_lognormal
+#> Highest predictive accuracy: fit_gengamma (gengamma). Practical ties:
+#> fit_weibull (weibull), fit_loglogistic (loglogistic), fit_lognormal
 #> (lognormal). These models predict the data equally well for practical purposes:
 #> choose among them on other grounds (pre-specified model, parsimony) and check
 #> that the conclusions agree.
@@ -939,12 +972,12 @@ Every model receives a verdict:
 - **clearly worse**: at least 4 ELPD units and at least 2 standard
   errors below the best model.
 
-In this example the Weibull model has the highest predictive accuracy
-and the three alternatives are practical ties: the data give no reason
-to move away from the default. The thresholds can be changed with the
-arguments `tie_elpd` and `tie_se`, and the full table (ELPD, effective
-number of parameters, stacking weights and Pareto k diagnostics) is
-stored in `comparison$comparison`.
+In this example the four models are practical ties: the pre-specified
+Weibull model is 0.2 ELPD units below the generalized gamma, so the data
+give no reason to move away from the default. The thresholds can be
+changed with the arguments `tie_elpd` and `tie_se`, and the full table
+(ELPD, effective number of parameters, stacking weights and Pareto k
+diagnostics) is stored in `comparison$comparison`.
 
 **How it is implemented**
 
