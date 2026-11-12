@@ -43,6 +43,7 @@ reference:
     desc: "Fit Bayesian AFT mixture cure models and assess convergence"
     contents:
       - fit_bayesian_cure_model
+      - compare_models
       - outcomes
       - diagnose_fit
       - model_diagnostics

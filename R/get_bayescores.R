@@ -8,7 +8,8 @@
 #' @param toxicity_scores A numeric vector of posterior samples for Toxicity effect.
 #' @param calibration_args Optional list to override default calibration.
 #' @param correlation_method Character. The method to use: 'pearson' (default), 'spearman', or 'kendall'.
-#' @return A list with the final utility vector and a summary data frame.
+#' @return A list with the final utility vector and a summary data frame. The
+#'   final utility is bounded to the 0-100 range.
 #' @export
 #' @importFrom stats median quantile cor
 get_bayescores <- function(
@@ -55,6 +56,7 @@ get_bayescores <- function(
   tox_effect <- toxicity_scores
   tox_power <- tox_effect * (score_post_eficacia / 100)
   final_utility_vector <- score_post_qol + tox_power * (100 - score_post_qol)
+  final_utility_vector <- base::pmax(0, base::pmin(100, final_utility_vector))
 
   # --- Step 6: Summarize Components ---
   .summarize <- function(vec) { c(Median = median(vec, na.rm=TRUE), Lower_95_CrI=quantile(vec, .025, na.rm=TRUE), Upper_95_CrI=quantile(vec, .975, na.rm=TRUE)) }

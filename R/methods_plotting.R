@@ -97,6 +97,8 @@ plot.bcm_fit <- function(x, ...) {
   }
   # --------------------------------------------------------------------
 
+  dist_name <- if (is.null(x$dist)) "weibull" else x$dist
+
   time_grid <- seq(0, max(plot_data[[time_col]]), length.out = 150)
 
   predicted_curves <- list()
@@ -125,7 +127,11 @@ plot.bcm_fit <- function(x, ...) {
     # 4. Generate survival curves
     surv_matrix <- sapply(time_grid, function(t) {
       # Weibull formula: S(t) = exp( - (t/scale)^shape )
-      s_weibull <- exp(-(t / scale)^shape)
+      s_weibull <- if (dist_name == "weibull") {
+        exp(-(t / scale)^shape)
+      } else {
+        exp(.cure_latency_logsurv(t, dist_name, log_scale, shape, posterior_samples$q_shape))
+      }
       s_total <- cure_prob + (1 - cure_prob) * s_weibull
       return(s_total)
     })

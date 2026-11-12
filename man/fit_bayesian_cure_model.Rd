@@ -18,6 +18,7 @@ fit_bayesian_cure_model(
   adapt_delta = 0.99,
   use_historical_prior = FALSE,
   historical_prior_params = c(0, 1),
+  dist = "weibull",
   ...
 )
 }
@@ -45,6 +46,13 @@ Default is FALSE.}
 Used only if `use_historical_prior = TRUE`. Defines the Normal prior
 for the treatment effect log-OR. Default is c(0, 1).}
 
+\item{dist}{Character string. Parametric distribution assumed for the event
+times of the non-cured patients. One of "weibull" (default), "exponential",
+"lognormal", "loglogistic", "gamma", or "gengamma" (generalized gamma).
+All of them are accelerated failure time models, so the time ratio keeps
+its interpretation. Candidate distributions can be compared with
+`compare_models`.}
+
 \item{...}{Additional arguments passed to `rstan::stan`.}
 }
 \value{
@@ -54,7 +62,35 @@ A custom S3 object of class `bcm_fit`, a list with elements:
    - `column_map`: list mapping `time_col`, `event_col`, `arm_col`
    - `posterior_draws`: list of posterior samples for each parameter
    - `n_draws`: the total number of post-warmup posterior draws
+   - `dist`: the distribution used for the non-cured patients
 }
 \description{
 Prepares data, calls the external Stan cure model, and stores MCMC draws.
+}
+\details{
+For every distribution the location of the non-cured patients on the log-time
+scale is `beta_surv_intercept + beta_surv_arm * arm`, and `exp(beta_surv_arm)`
+is the time ratio. The shape parameter `alpha_control` (multiplied by
+`exp(beta_alpha_arm)` in the experimental arm when `shared_shape = FALSE`)
+has the following meaning:
+\itemize{
+  \item "weibull": Weibull shape; `exp(location)` is the Weibull scale.
+  \item "exponential": no shape parameter (fixed at 1); `exp(location)` is the mean.
+  \item "lognormal": inverse of the standard deviation of the log times;
+    `exp(location)` is the median.
+  \item "loglogistic": log-logistic shape; `exp(location)` is the median.
+  \item "gamma": gamma shape; `exp(location)` is the mean.
+  \item "gengamma": inverse of the scale parameter `sigma` of the generalized
+    gamma distribution in the parameterization of Prentice (1974), with
+    `location` as `mu` and the additional shape parameter `q_shape`, common
+    to both arms, as `Q` (`Q = 1` is the Weibull and `Q = 0` the log-normal
+    distribution).
+}
+The priors of the parameters shared with the Weibull model are the same for
+every distribution; `q_shape` has a standard normal prior. With
+"exponential" the argument `shared_shape` has no effect.
+}
+\references{
+Prentice RL (1974). A log gamma model and its maximum likelihood estimation.
+Biometrika, 61, 539-544.
 }
