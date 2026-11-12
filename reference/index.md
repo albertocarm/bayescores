@@ -6,6 +6,9 @@ Fit Bayesian AFT mixture cure models and assess convergence
 
 - [`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
   : Fit the Bayesian Cure Model (Engine)
+- [`compare_models()`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+  [`print(`*`<bcm_comparison>`*`)`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+  : Compare Bayesian Cure Models and Recommend a Distribution
 - [`outcomes()`](https://albertocarm.github.io/bayescores/reference/outcomes.md)
   : Generate a Summary Table of Model Outcomes (Final Version 2.1)
 - [`diagnose_fit()`](https://albertocarm.github.io/bayescores/reference/diagnose_fit.md)

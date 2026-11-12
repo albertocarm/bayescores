@@ -53,6 +53,32 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
   published Kaplan-Meier curves using the [Guyot et
   al. (2012)](https://doi.org/10.1186/1471-2288-12-9) algorithm.
 
+## What’s new in version 1.2
+
+- **More distributions for the non-cured patients.**
+  [`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
+  has a new argument, `dist`, to choose among six accelerated failure
+  time distributions: `"weibull"` (the default, as before),
+  `"exponential"`, `"lognormal"`, `"loglogistic"`, `"gamma"` and
+  `"gengamma"` (generalized gamma).
+- **Bayesian choice of the distribution.** The new function
+  [`compare_models()`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+  ranks models that have already been fitted, recommends one and flags
+  practical ties. See [Choosing the distribution for the non-cured
+  patients](#choosing-the-distribution-for-the-non-cured-patients).
+- **Compatibility with Stan.** The Stan models now compile with both
+  older and current versions of Stan.
+- **Risk penalty and score range.** When the time ratio is below 1, the
+  efficacy score is the cure utility reduced in proportion to the early
+  harm: `U_cure * (1 - D / 100)`, where `D` is the disutility of the
+  harm on a 0-100 scale. The penalty is a product, not a ratio, so it
+  fades smoothly as the cure utility approaches zero and the efficacy
+  score stays within 0-100 by construction. The final score, after the
+  quality-of-life and toxicity adjustments, is also kept within 0-100.
+
+Existing code keeps working: with the default settings, the model and
+its results are the same as in the previous version.
+
 ## Installation
 
 Install the development version of `bayescores` from GitHub:
@@ -832,6 +858,122 @@ library(bystools)
 
 bystools()
 
+## Choosing the distribution for the non-cured patients
+
+By default, the survival times of the non-cured patients follow a
+Weibull distribution. The argument `dist` of
+[`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
+offers five alternatives: `"exponential"`, `"lognormal"`,
+`"loglogistic"`, `"gamma"` and `"gengamma"` (generalized gamma, which
+contains the Weibull, the gamma and the log-normal as special cases).
+All of them are accelerated failure time models, so the time ratio keeps
+its meaning and the rest of the package
+([`outcomes()`](https://albertocarm.github.io/bayescores/reference/outcomes.md),
+the plots, the BayeScores) works in the same way with any of them.
+
+Fitting is the slow step, so the workflow is meant to be practical: fit
+each candidate once, keep the fitted objects (or save them with
+[`saveRDS()`](https://rdrr.io/r/base/readRDS.html)), and compare them
+afterwards.
+[`compare_models()`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+accepts any number of fitted models and does not refit anything.
+
+``` r
+
+# The Weibull model fitted in Step 4
+fit_weibull <- bayesian_fit
+
+# Other candidates, with the same data and settings
+fit_lognormal <- fit_bayesian_cure_model(
+  sim_data, dist = "lognormal",
+  iter = 4000, chains = 4, tail_assumption = "neutral", shared_shape = TRUE
+)
+fit_loglogistic <- fit_bayesian_cure_model(
+  sim_data, dist = "loglogistic",
+  iter = 4000, chains = 4, tail_assumption = "neutral", shared_shape = TRUE
+)
+fit_gengamma <- fit_bayesian_cure_model(
+  sim_data, dist = "gengamma",
+  iter = 4000, chains = 4, tail_assumption = "neutral", shared_shape = TRUE
+)
+
+# Optional: save a fit and load it later with readRDS()
+saveRDS(fit_gengamma, "fit_gengamma.rds")
+
+# Rank the models and get a recommendation
+comparison <- compare_models(fit_weibull, fit_lognormal, fit_loglogistic, fit_gengamma)
+comparison
+#> Comparison of Bayesian cure models (PSIS-LOO)
+#> 300 observations, 4 models
+#>
+#>            model        dist elpd_diff se_diff       verdict
+#>      fit_weibull     weibull       0.0     0.0          best
+#>     fit_gengamma    gengamma      -0.3     1.0 practical tie
+#>  fit_loglogistic loglogistic      -1.7     1.9 practical tie
+#>    fit_lognormal   lognormal      -2.4     3.3 practical tie
+#>
+#> Highest predictive accuracy: fit_weibull (weibull). Practical ties:
+#> fit_gengamma (gengamma), fit_loglogistic (loglogistic), fit_lognormal
+#> (lognormal). These models predict the data equally well for practical purposes:
+#> choose among them on other grounds (pre-specified model, parsimony) and check
+#> that the conclusions agree.
+#>
+#> Rule: practical tie if the ELPD difference is below 4; beyond that, clearly
+#> worse if the difference is at least 2 standard errors and probably worse
+#> otherwise.
+```
+
+**How to read the report**
+
+`elpd_diff` is the difference in expected log predictive density (ELPD)
+with respect to the best model, and `se_diff` is its standard error.
+Every model receives a verdict:
+
+- **best**: the model with the highest predictive accuracy.
+- **practical tie**: less than 4 ELPD units below the best model. Such a
+  difference is small: the models make very similar predictions. Among
+  tied models, choose on other grounds (the pre-specified model,
+  parsimony) and check that the conclusions agree.
+- **probably worse**: at least 4 ELPD units below the best model, but
+  less than 2 standard errors, so the evidence is not conclusive.
+- **clearly worse**: at least 4 ELPD units and at least 2 standard
+  errors below the best model.
+
+In this example the Weibull model has the highest predictive accuracy
+and the three alternatives are practical ties: the data give no reason
+to move away from the default. The thresholds can be changed with the
+arguments `tie_elpd` and `tie_se`, and the full table (ELPD, effective
+number of parameters, stacking weights and Pareto k diagnostics) is
+stored in `comparison$comparison`.
+
+**How it is implemented**
+
+1.  For each posterior draw and each patient, the log-likelihood is
+    computed in R from the fitted object. A patient with an event
+    contributes `log(1 - p) + log f(t)` and a censored patient
+    contributes `log(p + (1 - p) * S(t))`, where `p` is the cure
+    probability of the patient’s arm, and `f` and `S` are the density
+    and the survival function of the chosen distribution.
+2.  The ELPD of each model is estimated by leave-one-out
+    cross-validation with Pareto smoothed importance sampling
+    (PSIS-LOO), using the `loo` package ([Vehtari, Gelman and Gabry,
+    2017](https://doi.org/10.1007/s11222-016-9696-4)). WAIC is available
+    with `criterion = "waic"`.
+3.  The models are ordered by ELPD, and the differences and their
+    standard errors are computed from the pointwise values. Stacking
+    weights ([Yao et al., 2018](https://doi.org/10.1214/17-BA1091)) are
+    also reported.
+4.  The verdicts follow the practical recommendations of [Sivula et
+    al. (2020)](https://arxiv.org/abs/2008.10296): differences below 4
+    are small, and beyond that the difference is judged against its
+    standard error.
+
+A word of caution: predictive accuracy does not solve identifiability.
+With immature follow-up, distributions that fit the observed data
+equally well can imply different long-term survival fractions. In that
+case, report how the results change with the distribution, together with
+the identifiability check of Step 5.
+
 ## Why bayescores?
 
 | Principle | Description |
@@ -861,6 +1003,9 @@ Fit Bayesian AFT mixture cure models and assess convergence
 
 - [`fit_bayesian_cure_model()`](https://albertocarm.github.io/bayescores/reference/fit_bayesian_cure_model.md)
   : Fit the Bayesian Cure Model (Engine)
+- [`compare_models()`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+  [`print(`*`<bcm_comparison>`*`)`](https://albertocarm.github.io/bayescores/reference/compare_models.md)
+  : Compare Bayesian Cure Models and Recommend a Distribution
 - [`outcomes()`](https://albertocarm.github.io/bayescores/reference/outcomes.md)
   : Generate a Summary Table of Model Outcomes (Final Version 2.1)
 - [`diagnose_fit()`](https://albertocarm.github.io/bayescores/reference/diagnose_fit.md)

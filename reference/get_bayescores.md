@@ -41,4 +41,5 @@ get_bayescores(
 
 ## Value
 
-A list with the final utility vector and a summary data frame.
+A list with the final utility vector and a summary data frame. The final
+utility is bounded to the 0-100 range.
