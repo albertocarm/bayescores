@@ -129,6 +129,14 @@ model_diagnostics.bcm_fit <- function(x, ...) {
     params_to_check <- c(params_to_check, "beta_alpha_arm")
   }
 
+  # Distribution-specific parameters
+  if (identical(x$dist, "exponential")) {
+    params_to_check <- setdiff(params_to_check, "alpha_control")
+  }
+  if (identical(x$dist, "gengamma")) {
+    params_to_check <- c(params_to_check, "q_shape")
+  }
+
   # Generate and print the trace plots for the selected parameters
   trace_plot <- rstan::stan_trace(stan_fit, pars = params_to_check)
   print(trace_plot)
