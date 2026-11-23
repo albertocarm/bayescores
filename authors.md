@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/albertocarm/bayescores/blob/master/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/albertocarm/bayescores/blob/v1.2/DESCRIPTION)
 
 Bayonas AC (2026). *bayescores: Comprehensive Quantification of Clinical
 Benefit in Randomized Controlled Trials using Bayesian AFT Cure Models
