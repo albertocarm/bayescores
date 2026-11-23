@@ -84,10 +84,11 @@ Trial Data --> Bayesian AFT Cure Model --> Posterior Draws
   quality-of-life and toxicity adjustments, is also kept within 0-100.
 
 Existing code keeps working. The default model is the Weibull model of
-the manuscript; the only change in the defaults is the neutral prior, so
-results obtained with `tail_assumption = "neutral"` can differ from
-those of earlier versions, mainly when the data are immature. Version
-1.2 is the version of record for the manuscript.
+the manuscript, with a shape parameter common to both arms. Two defaults
+have changed, so results obtained with the default settings can differ
+from those of earlier versions: the neutral prior, mainly when the data
+are immature, and `shared_shape`, which is now `TRUE` (previously
+`FALSE`). Version 1.2 is the version of record for the manuscript.
 
 ### Why a standard deviation of 2.5?
 

@@ -12,7 +12,7 @@ fit_bayesian_cure_model(
   event_col = "event",
   arm_col = "arm",
   tail_assumption = "neutral",
-  shared_shape = FALSE,
+  shared_shape = TRUE,
   chains = 4,
   iter = 2000,
   warmup = 1000,
@@ -43,9 +43,9 @@ fit_bayesian_cure_model(
 
 - shared_shape:
 
-  Logical. If TRUE, both treatment arms share the same Weibull shape
-  parameter (proportional hazards). If FALSE (default), allows
-  independent shapes for each arm.
+  Logical. If TRUE (default), both treatment arms share the same Weibull
+  shape parameter (proportional hazards). If FALSE, allows independent
+  shapes for each arm.
 
 - chains, iter, warmup, seed:
 

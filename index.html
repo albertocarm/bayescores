@@ -118,7 +118,7 @@
 <li>
 <strong>Risk penalty and score range.</strong> When the time ratio is below 1, the efficacy score is the cure utility reduced in proportion to the early harm: <code>U_cure * (1 - D / 100)</code>, where <code>D</code> is the disutility of the harm on a 0-100 scale. The penalty is a product, not a ratio, so it fades smoothly as the cure utility approaches zero and the efficacy score stays within 0-100 by construction. The final score, after the quality-of-life and toxicity adjustments, is also kept within 0-100.</li>
 </ul>
-<p>Existing code keeps working. The default model is the Weibull model of the manuscript; the only change in the defaults is the neutral prior, so results obtained with <code>tail_assumption = "neutral"</code> can differ from those of earlier versions, mainly when the data are immature. Version 1.2 is the version of record for the manuscript.</p>
+<p>Existing code keeps working. The default model is the Weibull model of the manuscript, with a shape parameter common to both arms. Two defaults have changed, so results obtained with the default settings can differ from those of earlier versions: the neutral prior, mainly when the data are immature, and <code>shared_shape</code>, which is now <code>TRUE</code> (previously <code>FALSE</code>). Version 1.2 is the version of record for the manuscript.</p>
 <div class="section level3">
 <h3 id="why-a-standard-deviation-of-25">Why a standard deviation of 2.5?<a class="anchor" aria-label="anchor" href="#why-a-standard-deviation-of-25"></a>
 </h3>
