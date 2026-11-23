@@ -10,7 +10,7 @@ fit_bayesian_cure_model(
   event_col = "event",
   arm_col = "arm",
   tail_assumption = "neutral",
-  shared_shape = FALSE,
+  shared_shape = TRUE,
   chains = 4,
   iter = 2000,
   warmup = 1000,
@@ -30,8 +30,8 @@ fit_bayesian_cure_model(
 \item{tail_assumption}{Character string. Sets the prior belief strategy for the adjuvant
 cure effect. One of "neutral", "immature_skeptical", or "biologically_null".}
 
-\item{shared_shape}{Logical. If TRUE, both treatment arms share the same Weibull
-shape parameter (proportional hazards). If FALSE (default), allows independent
+\item{shared_shape}{Logical. If TRUE (default), both treatment arms share the same
+Weibull shape parameter (proportional hazards). If FALSE, allows independent
 shapes for each arm.}
 
 \item{chains, iter, warmup, seed}{Numeric arguments passed to `rstan::stan`.}

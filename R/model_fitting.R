@@ -12,8 +12,8 @@
 #' @param historical_prior_params Numeric vector of length 2 (Mean, SD).
 #'    Used only if `use_historical_prior = TRUE`. Defines the Normal prior
 #'    for the treatment effect log-OR. Default is c(0, 1).
-#' @param shared_shape Logical. If TRUE, both treatment arms share the same Weibull
-#'    shape parameter (proportional hazards). If FALSE (default), allows independent
+#' @param shared_shape Logical. If TRUE (default), both treatment arms share the same
+#'    Weibull shape parameter (proportional hazards). If FALSE, allows independent
 #'    shapes for each arm.
 #' @param chains,iter,warmup,seed Numeric arguments passed to `rstan::stan`.
 #' @param adapt_delta Target acceptance rate for Stan's NUTS algorithm.
@@ -86,7 +86,7 @@ fit_bayesian_cure_model <- function(data,
                                     event_col     = "event",
                                     arm_col       = "arm",
                                     tail_assumption = "neutral",
-                                    shared_shape  = FALSE,
+                                    shared_shape  = TRUE,
                                     chains        = 4,
                                     iter          = 2000,
                                     warmup        = 1000,
