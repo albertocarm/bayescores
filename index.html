@@ -30,7 +30,7 @@
 
     <a class="navbar-brand me-2" href="index.html">bayescores</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -118,7 +118,7 @@
 <li>
 <strong>Risk penalty and score range.</strong> When the time ratio is below 1, the efficacy score is the cure utility reduced in proportion to the early harm: <code>U_cure * (1 - D / 100)</code>, where <code>D</code> is the disutility of the harm on a 0-100 scale. The penalty is a product, not a ratio, so it fades smoothly as the cure utility approaches zero and the efficacy score stays within 0-100 by construction. The final score, after the quality-of-life and toxicity adjustments, is also kept within 0-100.</li>
 </ul>
-<p>Existing code keeps working. The default model is the Weibull model of the manuscript, with a shape parameter common to both arms. Two defaults have changed, so results obtained with the default settings can differ from those of earlier versions: the neutral prior, mainly when the data are immature, and <code>shared_shape</code>, which is now <code>TRUE</code> (previously <code>FALSE</code>). Version 1.2 is the version of record for the manuscript.</p>
+<p>Existing code keeps working. The default model is the Weibull model of the manuscript, with a shape parameter common to both arms. Two defaults have changed, so results obtained with the default settings can differ from those of earlier versions: the neutral prior, mainly when the data are immature, and <code>shared_shape</code>, which is now <code>TRUE</code> (previously <code>FALSE</code>). Version 1.2.1 adds the scripts of Scenarios 1 to 5 (Table 1 of the manuscript) to <code>inst/simulations</code>, which now covers all twelve simulation scenarios (see <a href="#simulation-study">Simulation study</a>); the model and the functions of the package are unchanged. Version 1.2.1 is the version of record for the manuscript.</p>
 <div class="section level3">
 <h3 id="why-a-standard-deviation-of-25">Why a standard deviation of 2.5?<a class="anchor" aria-label="anchor" href="#why-a-standard-deviation-of-25"></a>
 </h3>
@@ -752,6 +752,99 @@ Figure 7: Final BayeScore posterior distribution.
 <p>A word of caution: predictive accuracy does not solve identifiability. With immature follow-up, distributions that fit the observed data equally well can imply different long-term survival fractions. In that case, report how the results change with the distribution, together with the identifiability check of Step 5.</p>
 </div>
 <div class="section level2">
+<h2 id="simulation-study">Simulation study<a class="anchor" aria-label="anchor" href="#simulation-study"></a>
+</h2>
+<p>The scripts of the simulation study of the manuscript (Scenarios 1 to 12) are in <code>inst/simulations</code>. Every simulated dataset is analyzed with the default model of the package: a Weibull mixture cure model with neutral Normal(0, 2.5) priors on the log odds ratio of cure and on the log time ratio, and a shape parameter common to both arms.</p>
+<p>Each scenario has 500 replicates (seed = replicate number), with patients randomized 1:1 and a Weibull shape of 1.5. With benefit, the cure fractions are 0.30 (control) and 0.75 (experimental) and the time ratio is 2. Under the null, the cure fraction is 0.40 in both arms and the time ratio is 1. Scenarios 1 to 4 and 6 to 12 have 200 patients, a median survival time of uncured control patients of 12 months and administrative censoring at 120 months. Scenario 5 has 5,000 patients, a median survival time of uncured control patients of 30.1 months (Weibull scale exp(3.65)) and administrative censoring at 84 months, which leaves about 58% of the patients censored.</p>
+<table class="table">
+<colgroup>
+<col width="10%">
+<col width="28%">
+<col width="61%">
+</colgroup>
+<thead><tr>
+<th>Scenario</th>
+<th>Name in the code</th>
+<th>Design</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>sc01_benefit</code></td>
+<td>Benefit for the cure fraction and the survival time</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>sc02_null</code></td>
+<td>Null effects</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>sc03_cure_up_time_down</code></td>
+<td>Cure fractions 0.30 and 0.75, time ratio 0.5</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>sc04_detrimental</code></td>
+<td>Cure fractions 0.60 and 0.30, time ratio 0.5</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>sc05_high_censoring</code></td>
+<td>Benefit, with high censoring</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>sc06_lognormal_benefit</code></td>
+<td>Log-normal survival times, benefit</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>sc07_lognormal_null</code></td>
+<td>Log-normal survival times, null effects</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>sc08_loglogistic_benefit</code></td>
+<td>Log-logistic survival times, benefit</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>sc09_loglogistic_null</code></td>
+<td>Log-logistic survival times, null effects</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>sc10_delayed_effect</code></td>
+<td>No effect on event times during the first 3 months</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>sc11_random_dropout</code></td>
+<td>Random loss to follow-up, 5% per year</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>sc12_staggered_accrual</code></td>
+<td>Uniform accrual over 24 months, data cut-off at 120 months</td>
+</tr>
+</tbody>
+</table>
+<p>Scenarios 1 to 5 are those of Table 1 of the manuscript. Scenarios 6 to 12 use the true parameter values of Scenarios 1 (benefit) and 2 (null). Log-normal and log-logistic survival times share the median and the standard deviation of the log time of the Weibull distribution with shape 1.5.</p>
+<p>To reproduce the simulations, install the package, copy the scripts to a working directory and run them from the copied folder:</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"albertocarm/bayescores@v1.2.1"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"simulations"</span>, package <span class="op">=</span> <span class="st">"bayescores"</span><span class="op">)</span>, <span class="st">"."</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb28"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="bu">cd</span> simulations</span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a><span class="ex">Rscript</span> run_scenarios.R 500 results</span></code></pre></div>
+<p>The first argument is the number of replicates per scenario and the second the output folder. A third argument selects scenarios (names separated by commas) and a fourth splits the replicates between parallel processes:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" tabindex="-1"></a><span class="ex">Rscript</span> run_scenarios.R 500 results sc05_high_censoring 1/2</span>
+<span id="cb29-2"><a href="#cb29-2" tabindex="-1"></a><span class="ex">Rscript</span> run_scenarios.R 500 results sc05_high_censoring 2/2</span></code></pre></div>
+<p>One file is saved per replicate, so an interrupted run can be resumed. When all replicates are available, the per-replicate results (<code>per_replicate_results.csv</code>) and the performance metrics by scenario and parameter (<code>summary_by_scenario.csv</code>: bias, coverage of the 95% credible interval, mean squared error, empirical and model-based standard errors, and proportion of intervals that exclude zero) are written to the output folder. Scenario 5 takes about 4 minutes per replicate and the other scenarios about 5 seconds.</p>
+<p>The models are fitted with 2 chains of 2,000 iterations (1,000 warm-up) and <code>adapt_delta</code> 0.99. The results in the manuscript were obtained with R 4.3.3 and rstan 2.32.5.</p>
+</div>
+<div class="section level2">
 <h2 id="why-bayescores">Why bayescores?<a class="anchor" aria-label="anchor" href="#why-bayescores"></a>
 </h2>
 <table class="table">
@@ -806,7 +899,7 @@ Figure 7: Final BayeScore posterior distribution.
 <div class="section level2">
 <h2 id="citation">Citation<a class="anchor" aria-label="anchor" href="#citation"></a>
 </h2>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/citation.html" class="external-link">citation</a></span><span class="op">(</span><span class="st">"bayescores"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
