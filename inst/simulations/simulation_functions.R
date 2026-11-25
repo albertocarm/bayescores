@@ -1,8 +1,9 @@
-# Additional simulation scenarios of the BayeScores manuscript (Scenarios 6
-# to 12): scenario definitions and data generation.
+# Simulation scenarios of the BayeScores manuscript (Scenarios 1 to 12):
+# scenario definitions and data generation.
 
 # Scenario definitions ---------------------------------------------------
-# True parameter values as in Scenarios 1 (benefit) and 2 (null) of Table 1.
+# Scenarios 1 to 5 are those of Table 1. Scenarios 6 to 12 use the true
+# parameter values of Scenarios 1 (benefit) and 2 (null).
 base <- list(n = 200, median_ctrl = 12, max_fu = 120, weibull_shape = 1.5,
              latency = "weibull", delay = 0, dropout_annual = 0, accrual = 0)
 benefit <- list(cure_ctrl = 0.30, cure_exp = 0.75, tr = 2)
@@ -10,6 +11,17 @@ null    <- list(cure_ctrl = 0.40, cure_exp = 0.40, tr = 1)
 sc <- function(...) utils::modifyList(base, c(...))
 
 scenarios <- list(
+  # Table 1. Scenarios 3 and 4 are given as complete lists, because sc() keeps
+  # the first of two elements with the same name.
+  sc01_benefit           = sc(benefit),
+  sc02_null              = sc(null),
+  sc03_cure_up_time_down = sc(list(cure_ctrl = 0.30, cure_exp = 0.75, tr = 0.5)),
+  sc04_detrimental       = sc(list(cure_ctrl = 0.60, cure_exp = 0.30, tr = 0.5)),
+  # High censoring: 5,000 patients, Weibull scale exp(3.65) in the control arm
+  # (median 30.1 months) and administrative censoring at 84 months.
+  sc05_high_censoring    = sc(benefit, list(n = 5000,
+                                            median_ctrl = exp(3.65) * log(2)^(1 / 1.5),
+                                            max_fu = 84)),
   # Non-Weibull survival times of the uncured patients.
   sc06_lognormal_benefit   = sc(benefit, list(latency = "lognormal")),
   sc07_lognormal_null      = sc(null,    list(latency = "lognormal")),
